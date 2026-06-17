@@ -1,0 +1,25 @@
+<!-- @dsCard group="Colors" viewport="700x150" name="Neutral" subtitle="--colour-neutral-0 → 1000 · greys for text, surfaces & borders" -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<link rel="stylesheet" href="../styles.css" />
+<style>
+  body { margin: 0; padding: 20px; background: var(--surface-page); }
+  .scale { display: flex; gap: 6px; }
+  .sw { flex: 1; }
+  .chip { height: 64px; border-radius: var(--radius-sm); border: 1px solid rgba(0,0,0,0.08); }
+  .name { font: var(--helper-size)/1.4 var(--font-mono); color: var(--text-caption); margin-top: 6px; }
+  .val { font: 700 var(--helper-size)/1.4 var(--font-normal); color: var(--text-title); }
+</style>
+</head>
+<body>
+<div class="scale" id="s"></div>
+<script>
+  const steps = [["0","255 255 255"],["50","245 246 248"],["100","233 235 238"],["200","213 219 222"],["300","192 199 207"],["400","169 181 191"],["500","152 163 173"],["600","119 128 136"],["700","88 95 101"],["800","60 64 68"],["900","32 34 37"],["950","20 22 24"]];
+  document.getElementById("s").innerHTML = steps.map(([k,v]) =>
+    `<div class="sw"><div class="chip" style="background:var(--colour-neutral-${k})"></div><div class="val">${k}</div><div class="name">${v}</div></div>`
+  ).join("");
+</script>
+</body>
+</html>

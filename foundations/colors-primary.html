@@ -1,0 +1,25 @@
+<!-- @dsCard group="Colors" viewport="700x150" name="Primary blue" subtitle="--colour-primaryblue-50 → 950 · brand action colour" -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<link rel="stylesheet" href="../styles.css" />
+<style>
+  body { margin: 0; padding: 20px; background: var(--surface-page); }
+  .scale { display: flex; gap: 6px; }
+  .sw { flex: 1; }
+  .chip { height: 64px; border-radius: var(--radius-sm); border: 1px solid rgba(0,0,0,0.06); }
+  .name { font: var(--helper-size)/1.4 var(--font-mono); color: var(--text-caption); margin-top: 6px; }
+  .val { font: 700 var(--helper-size)/1.4 var(--font-normal); color: var(--text-title); }
+</style>
+</head>
+<body>
+<div class="scale" id="s"></div>
+<script>
+  const steps = [["50","232 233 255"],["100","213 215 255"],["200","167 173 255"],["300","122 133 255"],["400","68 92 255"],["500","0 54 221"],["600","1 43 182"],["700","0 32 143"],["800","0 20 106"],["900","0 12 75"],["950","0 5 49"]];
+  document.getElementById("s").innerHTML = steps.map(([k,v]) =>
+    `<div class="sw"><div class="chip" style="background:var(--colour-primaryblue-${k})"></div><div class="val">${k}</div><div class="name">${v}</div></div>`
+  ).join("");
+</script>
+</body>
+</html>

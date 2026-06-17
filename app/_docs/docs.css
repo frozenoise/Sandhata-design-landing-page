@@ -1,0 +1,85 @@
+/* Sandhata docs — shared layout for Components + Documentation pages. */
+
+:root {
+  --doc-bg: #FBF6F1;          /* warm paper */
+  --doc-surface: #FFFFFF;
+  --doc-line: #ECE3DA;        /* warm hairline */
+  --doc-active: #F6E7DA;      /* peach sidebar highlight */
+  --doc-code-bg: #F6F7F9;     /* cool light code surface */
+  --c-kw: #0036DD; --c-str: rgb(0,122,72); --c-tag: #2A3F6C; --c-prop: rgb(96,45,234); --c-com: #98A3AD;
+}
+body { margin: 0; background: var(--doc-bg); }
+.doc-root { display: flex; flex-direction: column; height: 100vh; }
+
+/* Top bar */
+.doc-topbar { display: flex; align-items: center; justify-content: space-between; height: 64px; padding: 0 28px; background: var(--doc-bg); border-bottom: 1px solid var(--doc-line); flex-shrink: 0; }
+.doc-logo-link { display: flex; align-items: center; }
+.doc-topnav { display: flex; gap: 6px; }
+.doc-topnav a { display: flex; align-items: center; height: 36px; padding: 0 16px; border: none; border-radius: var(--radius-md); background: transparent; cursor: pointer; font: 15px/1 var(--font-normal); color: var(--text-subtitle); text-decoration: none; }
+.doc-topnav a:hover { background: rgba(20,22,24,0.05); }
+.doc-topnav a.on { background: rgba(20,22,24,0.08); color: var(--text-title); }
+
+.doc-body { display: flex; flex: 1; overflow: hidden; }
+
+/* Sidebar */
+.doc-sidebar { width: 248px; flex-shrink: 0; overflow-y: auto; padding: 20px 14px 40px; border-right: 1px solid var(--doc-line); }
+.doc-search { display: flex; align-items: center; gap: 8px; height: 38px; padding: 0 12px; background: var(--doc-surface); border: 1px solid var(--doc-line); border-radius: var(--radius-md); color: var(--icon-secondary); margin-bottom: 18px; }
+.doc-search input { border: none; outline: none; background: transparent; width: 100%; font: 14px/1 var(--font-normal); color: var(--text-body); }
+.doc-nav-all { display: block; padding: 7px 12px; border-radius: var(--radius-sm); font: 14px/1.3 var(--font-normal); color: var(--text-title); cursor: pointer; }
+.doc-nav-all.on, .doc-nav-item.on { background: var(--doc-active); color: var(--text-title); font-family: var(--font-bold); font-weight: 700; }
+.doc-group { margin-top: 18px; }
+.doc-group-label { font: 700 11px/1 var(--font-bold); letter-spacing: 0.4px; color: var(--text-caption); text-transform: none; padding: 0 12px 8px; }
+.doc-nav-item { display: block; padding: 7px 12px; border-radius: var(--radius-sm); font: 14px/1.3 var(--font-normal); color: var(--text-subtitle); cursor: pointer; }
+.doc-nav-item:hover, .doc-nav-all:hover { background: rgba(20,22,24,0.04); }
+
+/* Scroll area + page layout */
+.doc-scroll { flex: 1; overflow-y: auto; padding: 36px 48px 80px; }
+.doc-page-wrap { display: flex; gap: 40px; align-items: flex-start; max-width: 1180px; }
+.doc-main { flex: 1; min-width: 0; max-width: 780px; }
+.doc-head h1 { font-family: var(--font-bold); font-weight: 700; font-size: 30px; line-height: 1.2; color: var(--text-title); margin: 0 0 10px; }
+.doc-head p { font-family: var(--font-normal); font-size: 16px; line-height: 1.55; color: var(--text-subtitle); margin: 0; max-width: 720px; }
+.doc-rule { height: 1px; background: var(--doc-line); margin: 24px 0 8px; }
+
+.doc-section { padding-top: 28px; }
+.doc-section h2 { font-family: var(--font-bold); font-weight: 700; font-size: 18px; color: var(--text-title); margin: 0 0 12px; }
+.doc-bullets { margin: 0 0 18px; padding-left: 18px; }
+.doc-bullets li { font-family: var(--font-normal); font-size: 14.5px; line-height: 1.9; color: var(--text-body); }
+.doc-bullets b { color: var(--text-title); }
+.doc-note { font-family: var(--font-normal); font-size: 13px; color: var(--text-caption); margin: 0 0 12px; }
+
+.doc-example { border: 1px solid var(--doc-line); border-radius: var(--radius-lg); overflow: hidden; background: var(--doc-surface); }
+.doc-preview { padding: 28px 24px; }
+.doc-divider { height: 1px; background: var(--doc-line); }
+pre.doc-code { margin: 0; padding: 18px 22px; background: var(--doc-code-bg); color: var(--text-body); font: 12.5px/1.7 var(--font-mono); overflow-x: auto; white-space: pre; }
+pre.doc-code .c-kw { color: var(--c-kw); } pre.doc-code .c-str { color: var(--c-str); }
+pre.doc-code .c-tag { color: var(--c-tag); } pre.doc-code .c-prop { color: var(--c-prop); }
+pre.doc-code .c-com { color: var(--c-com); }
+
+/* Tables */
+.doc-table { width: 100%; border-collapse: collapse; border: 1px solid var(--doc-line); border-radius: var(--radius-md); overflow: hidden; margin-bottom: 6px; }
+.doc-table th { text-align: left; padding: 11px 16px; font: 700 13px/1 var(--font-bold); color: var(--text-subtitle); background: var(--doc-surface); border-bottom: 1px solid var(--doc-line); }
+.doc-table td { padding: 11px 16px; font: 14px/1.4 var(--font-normal); color: var(--text-body); border-bottom: 1px solid var(--doc-line); }
+.doc-table tr:last-child td { border-bottom: none; }
+.doc-table .mono-cell { font-family: var(--font-mono); color: var(--c-kw); }
+.doc-table .type-cell { font-family: var(--font-mono); font-size: 12.5px; color: var(--text-caption); }
+.prop-pill { font-family: var(--font-mono); font-size: 12.5px; background: rgba(20,22,24,0.05); padding: 2px 7px; border-radius: var(--radius-xs); color: var(--text-body); }
+
+/* Right rail — quick scroll navigation (scroll-spy) */
+.doc-toc { width: 180px; flex-shrink: 0; position: sticky; top: 0; align-self: flex-start; }
+.toc-inner { border-left: 1px solid var(--doc-line); padding: 2px 0; }
+.doc-toc a { display: block; padding: 6px 16px; font: 13px/1.4 var(--font-normal); color: var(--text-caption); text-decoration: none; border-left: 2px solid transparent; margin-left: -1px; cursor: pointer; }
+.doc-toc a:hover { color: var(--text-title); }
+.doc-toc a.on { color: var(--text-action); border-left-color: var(--colour-primaryblue-500); font-family: var(--font-bold); font-weight: 700; }
+
+/* All components grid */
+.all-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; }
+@media (max-width: 900px) { .all-grid { grid-template-columns: repeat(2, 1fr); } }
+.all-card {
+  text-align: left; padding: 18px 16px;
+  border: 1px solid var(--doc-line); border-radius: var(--radius-lg);
+  background: var(--doc-surface); cursor: pointer;
+  transition: box-shadow var(--duration-fast), border-color var(--duration-fast);
+}
+.all-card:hover { box-shadow: var(--shadow-sm); border-color: var(--colour-primaryblue-200); }
+.all-card-name { font-family: var(--font-bold); font-weight: 700; font-size: 14px; color: var(--text-title); margin-bottom: 6px; }
+.all-card-variants { font-family: var(--font-normal); font-size: 12px; line-height: 1.5; color: var(--text-caption); }

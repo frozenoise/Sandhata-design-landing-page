@@ -1,0 +1,29 @@
+<!-- @dsCard group="Brand" viewport="700x200" name="Logo" subtitle="Full lockup, mark & reversed on dark" -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<link rel="stylesheet" href="../styles.css" />
+<style>
+  body { margin: 0; padding: 0; background: var(--surface-page); display: grid; grid-template-columns: 2fr 1fr; }
+  .light { padding: 28px; display: flex; flex-direction: column; gap: 22px; justify-content: center; }
+  .dark { background: var(--colour-secondaryblue-700); display: flex; align-items: center; justify-content: center; padding: 28px; }
+  .full { width: 240px; }
+  .mark { width: 56px; }
+  .full-rev { width: 200px; }
+  .cap { font: var(--helper-size)/1.3 var(--font-mono); color: var(--text-caption); }
+</style>
+</head>
+<body>
+  <div class="light">
+    <div><img class="full" src="../assets/logo/sandhata-logo.svg" alt="Sandhata logo" /></div>
+    <div style="display:flex;align-items:center;gap:18px">
+      <img class="mark" src="../assets/logo/sandhata-mark.svg" alt="Sandhata mark" />
+      <span class="cap">Mark — cyan twist + orange dot.<br>Min size 24px. Keep clear space ≥ mark height.</span>
+    </div>
+  </div>
+  <div class="dark">
+    <img class="full-rev" src="../assets/logo/sandhata-mark.svg" alt="Sandhata mark on dark" />
+  </div>
+</body>
+</html>

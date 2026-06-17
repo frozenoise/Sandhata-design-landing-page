@@ -1,0 +1,60 @@
+<!-- @dsCard group="Components" viewport="700x300" name="Buttons" subtitle="Hierarchies, sizes, icons & states" -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<link rel="stylesheet" href="../../styles.css" />
+<style>
+  .row { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; margin-bottom: 14px; }
+  .row:last-child { margin-bottom: 0; }
+  .lbl { font: 700 var(--label-size)/1 var(--font-normal); letter-spacing: var(--label-tracking); color: var(--text-caption); text-transform: uppercase; width: 100%; margin-bottom: 2px; }
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+<script src="../../_ds_bundle.js"></script>
+<script src="../cardshell.js"></script>
+<script type="text/babel">
+  const { Button, IconButton } = window.SandhataDesignSystem_081a0e;
+  const { CardShell } = window;
+  const Plus = () => (<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>);
+  const Pencil = () => (<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>);
+
+  const code = `<span class="t">&lt;Button</span> <span class="p">hierarchy</span>=<span class="s">"primary"</span><span class="t">&gt;</span>Primary<span class="t">&lt;/Button&gt;</span>
+<span class="t">&lt;Button</span> <span class="p">hierarchy</span>=<span class="s">"secondary"</span><span class="t">&gt;</span>Secondary<span class="t">&lt;/Button&gt;</span>
+<span class="t">&lt;Button</span> <span class="p">hierarchy</span>=<span class="s">"tertiary"</span><span class="t">&gt;</span>Tertiary<span class="t">&lt;/Button&gt;</span>
+<span class="t">&lt;Button</span> <span class="p">hierarchy</span>=<span class="s">"danger"</span><span class="t">&gt;</span>Danger<span class="t">&lt;/Button&gt;</span>
+
+<span class="t">&lt;Button</span> <span class="p">size</span>=<span class="s">"medium"</span> <span class="p">iconLeft</span>={&lt;Plus/&gt;}<span class="t">&gt;</span>Add field<span class="t">&lt;/Button&gt;</span>
+<span class="t">&lt;Button</span> <span class="p">disabled</span><span class="t">&gt;</span>Disabled<span class="t">&lt;/Button&gt;</span>
+<span class="t">&lt;IconButton</span> <span class="p">icon</span>={&lt;Pencil/&gt;} <span class="p">ariaLabel</span>=<span class="s">"Edit"</span> /<span class="t">&gt;</span>`;
+
+  function Demo() {
+    return (
+      <CardShell code={code}>
+        <div className="row"><span className="lbl">Hierarchy</span>
+          <Button hierarchy="primary">Primary</Button>
+          <Button hierarchy="secondary">Secondary</Button>
+          <Button hierarchy="tertiary">Tertiary</Button>
+          <Button hierarchy="inverse">Inverse</Button>
+          <Button hierarchy="danger">Danger</Button>
+          <Button hierarchy="ghost">Ghost</Button>
+        </div>
+        <div className="row"><span className="lbl">Sizes & icons</span>
+          <Button size="small">Small</Button>
+          <Button size="medium" iconLeft={<Plus/>}>Add field</Button>
+          <Button size="large" iconRight={<Plus/>}>Large</Button>
+          <Button disabled>Disabled</Button>
+          <IconButton icon={<Pencil/>} ariaLabel="Edit" />
+          <IconButton icon={<Pencil/>} ariaLabel="Edit" hierarchy="primary" />
+        </div>
+      </CardShell>
+    );
+  }
+  ReactDOM.createRoot(document.getElementById("root")).render(<Demo/>);
+</script>
+</body>
+</html>

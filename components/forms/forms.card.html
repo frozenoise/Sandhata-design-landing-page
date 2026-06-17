@@ -1,0 +1,63 @@
+<!-- @dsCard group="Components" viewport="700x360" name="Form controls" subtitle="Input, select, checkbox, radio, switch" -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<link rel="stylesheet" href="../../styles.css" />
+<style>
+  .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px 28px; align-items: start; }
+  .stack { display: flex; flex-direction: column; gap: 14px; }
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+<script src="../../_ds_bundle.js"></script>
+<script src="../cardshell.js"></script>
+<script type="text/babel">
+  const { Input, Select, Checkbox, Radio, Switch, Textarea } = window.SandhataDesignSystem_081a0e;
+  const { CardShell } = window;
+
+  const code = `<span class="t">&lt;Input</span> <span class="p">label</span>=<span class="s">"Field label"</span> <span class="p">placeholder</span>=<span class="s">"John Doe"</span>
+  <span class="p">helper</span>=<span class="s">"Help or instruction text goes here"</span> /<span class="t">&gt;</span>
+<span class="t">&lt;Input</span> <span class="p">label</span>=<span class="s">"Mandatory field"</span> <span class="p">required</span>
+  <span class="p">error</span>=<span class="s">"This is a mandatory field!"</span> /<span class="t">&gt;</span>
+<span class="t">&lt;Select</span> <span class="p">label</span>=<span class="s">"Party"</span> <span class="p">options</span>={[<span class="s">"Federalist"</span>, <span class="s">"Whig"</span>]} /<span class="t">&gt;</span>
+<span class="t">&lt;Textarea</span> <span class="p">label</span>=<span class="s">"Notes"</span> <span class="p">rows</span>={2} /<span class="t">&gt;</span>
+<span class="t">&lt;Checkbox</span> <span class="p">label</span>=<span class="s">"Remember me"</span> <span class="p">checked</span> /<span class="t">&gt;</span>
+<span class="t">&lt;Radio</span> <span class="p">name</span>=<span class="s">"plan"</span> <span class="p">label</span>=<span class="s">"Pro"</span> <span class="p">checked</span> /<span class="t">&gt;</span>
+<span class="t">&lt;Switch</span> <span class="p">checked</span>={dark} <span class="p">onChange</span>={setDark} <span class="p">label</span>=<span class="s">"Dark mode"</span> /<span class="t">&gt;</span>`;
+
+  function Demo() {
+    const [on, setOn] = React.useState(true);
+    const [dark, setDark] = React.useState(true);
+    return (
+      <CardShell code={code}>
+        <div className="grid">
+          <div className="stack">
+            <Input label="Field label" placeholder="John Doe" helper="Help or instruction text goes here" />
+            <Input label="Mandatory field" required error="This is a mandatory field!" placeholder="John Doe" />
+            <Select label="Party" placeholder="Select party" options={["Federalist","Democratic-Republican","Whig"]} />
+          </div>
+          <div className="stack">
+            <Textarea label="Notes" placeholder="Enter your text here" rows={2} />
+            <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+              <Checkbox label="Remember me" checked={on} onChange={(e)=>setOn(e.target.checked)} />
+              <Checkbox label="Indeterminate" indeterminate />
+              <div style={{ display: "flex", gap: 16 }}>
+                <Radio name="p" label="Pro" checked />
+                <Radio name="p" label="Team" />
+              </div>
+              <Switch checked={dark} onChange={setDark} label="Dark mode" />
+            </div>
+          </div>
+        </div>
+      </CardShell>
+    );
+  }
+  ReactDOM.createRoot(document.getElementById("root")).render(<Demo/>);
+</script>
+</body>
+</html>

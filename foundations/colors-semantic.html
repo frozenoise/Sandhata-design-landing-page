@@ -1,0 +1,33 @@
+<!-- @dsCard group="Colors" viewport="700x200" name="Semantic status" subtitle="Success · Error · Alert · Info — 50/300/500/700" -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<link rel="stylesheet" href="../styles.css" />
+<style>
+  body { margin: 0; padding: 20px; background: var(--surface-page); display: flex; flex-direction: column; gap: 14px; }
+  .group { }
+  .lbl { font: 700 var(--label-size)/1 var(--font-normal); letter-spacing: var(--label-tracking); color: var(--text-subtitle); margin-bottom: 6px; text-transform: uppercase; }
+  .scale { display: flex; gap: 6px; }
+  .sw { flex: 1; }
+  .chip { height: 36px; border-radius: var(--radius-sm); border: 1px solid rgba(0,0,0,0.06); }
+  .name { font: var(--helper-size)/1.4 var(--font-mono); color: var(--text-caption); margin-top: 4px; }
+</style>
+</head>
+<body>
+<div id="s"></div>
+<script>
+  const groups = [
+    ["Success","success",["50","300","500","700"]],
+    ["Error","error",["50","300","500","700"]],
+    ["Alert","alert",["50","300","500","700"]],
+    ["Info","info",["50","300","500","700"]],
+  ];
+  document.getElementById("s").innerHTML = groups.map(([label,key,steps]) =>
+    `<div class="group"><div class="lbl">${label}</div><div class="scale">${
+      steps.map(k=>`<div class="sw"><div class="chip" style="background:var(--colour-${key}-${k})"></div><div class="name">${key}-${k}</div></div>`).join("")
+    }</div></div>`
+  ).join("");
+</script>
+</body>
+</html>

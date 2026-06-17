@@ -1,0 +1,1151 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Sandhata Design System</title>
+<link rel="stylesheet" href="styles.css" />
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+body { background: #FEFAF7; overflow-x: hidden; font-family: var(--font-normal); color: #0a0a14; }
+
+/* ─── Tokens local ────────────────────────────────────────────── */
+:root { --blue: #0036DD; --blue-50: #EEF3FF; --page: #FEFAF7; }
+
+/* ─── Nav ────────────────────────────────────────────────────── */
+.nav {
+  position: sticky; top: 0; z-index: 200;
+  height: 100px; padding: 20px 40px;
+  display: flex; align-items: center; justify-content: space-between;
+  background: rgba(255,255,255,0.1);
+  backdrop-filter: blur(12px) saturate(1.2);
+  border-bottom: 1px solid #e6e7eb;
+}
+.nav-logo { display: flex; align-items: center; }
+.nav-logo img { height: 37px; }
+.nav-links { display: flex; align-items: center; gap: 37px; }
+.nl {
+  display: inline-flex; align-items: center; height: 48px; padding: 12px;
+  border-radius: 4px; font: 400 16px/24px var(--font-normal);
+  color: #000; text-decoration: none; border: none; background: none; cursor: pointer;
+  transition: background .12s, color .12s;
+}
+.nl:hover { background: rgba(10,10,20,0.05); }
+
+/* ─── Hero ───────────────────────────────────────────────────── */
+/* Aurora fills the hero; a cream "cut" layer (with the gradient rule line
+   on its top edge) sits behind the window from the window's halfmark down,
+   so the window straddles the cut — matches Figma 5252:46348. */
+.hero {
+  position: relative; isolation: isolate;
+  padding: 101px 40px 0; text-align: center;
+  background: #fdf5f0; /* cream base behind the animated aurora */
+}
+/* animated aurora layer — breathes between a narrow and a wide gradient
+   (Figma component 5252:45431, Frame 400 ⇄ Frame 458) */
+.hero-aurora {
+  position: absolute; inset: 0; z-index: 0; pointer-events: none;
+  background:
+    radial-gradient(135% 82% at 50% 118%,
+      #ff9b00 0%,
+      #ffab29 12%,
+      #ffbb52 19%,
+      #fecb7c 26%,
+      #fedba5 36%,
+      rgba(243,174,202,0.5) 47%,
+      rgba(231,128,240,0.26) 57%,
+      rgba(183,212,248,0.16) 73%,
+      #fdf5f0 87%
+    );
+  transform-origin: 50% 100%;
+  animation: auroraBreathe 11s ease-in-out infinite alternate;
+}
+@keyframes auroraBreathe {
+  0%   { transform: scale(1, 1); }
+  100% { transform: scale(1.9, 1.42); }
+}
+/* faint concentric-arc texture from the bottom corners */
+.hero::before {
+  content: '';
+  position: absolute; inset: 0; pointer-events: none; z-index: 1;
+  background-image:
+    repeating-radial-gradient(circle at 2% 100%, transparent 0 37px, rgba(120,95,70,0.05) 37px 38px),
+    repeating-radial-gradient(circle at 98% 100%, transparent 0 37px, rgba(120,95,70,0.05) 37px 38px);
+  mask-image: radial-gradient(70% 70% at 50% 90%, transparent 32%, #000 72%);
+  -webkit-mask-image: radial-gradient(70% 70% at 50% 90%, transparent 32%, #000 72%);
+}
+@media (prefers-reduced-motion: reduce) {
+  .hero-aurora { animation: none; }
+}
+
+.hero h1 {
+  font: 700 80px/1.2 var(--font-bold);
+  color: #000; margin: 0 auto;
+  max-width: 760px; letter-spacing: -2px;
+  position: relative; z-index: 2;
+}
+.hero h1 em {
+  font-style: normal; color: #d58b03;
+  white-space: nowrap;
+}
+.hero-sparkle {
+  display: inline-block; vertical-align: 0.5em;
+  margin-left: 1px; color: #F2C44A;
+}
+
+.hero-sub {
+  font: 18px/1.4 var(--font-normal); color: #6b7280;
+  max-width: 570px; margin: 24px auto 0; position: relative; z-index: 2;
+}
+.hero-actions {
+  display: flex; gap: 40px; justify-content: center;
+  flex-wrap: wrap; position: relative; z-index: 2; margin-top: 24px;
+}
+.btn-primary {
+  height: 48px; padding: 0 32px; border-radius: 4px;
+  border: none; background: var(--blue); color: #fff;
+  font: 700 16px/24px var(--font-bold); letter-spacing: 0.5px; cursor: pointer;
+  transition: background .12s;
+}
+.btn-primary:hover { background: #0029b0; }
+
+/* ─── Browser window ─────────────────────────────────────────── */
+/* Sits inside the hero. A full-bleed cream "cut" layer is anchored to the
+   window's vertical midpoint and carries the orange→purple rule line on its
+   top edge, so the window straddles the cut and the line shows at the sides. */
+.browser-outer {
+  position: relative; z-index: 2;
+  max-width: 1232px; margin: 56px auto 0;
+  padding: 0 40px;
+}
+.browser-cut {
+  content: ''; position: absolute; z-index: 0;
+  top: 50%; height: 320px;
+  left: -50vw; right: -50vw;
+  background: var(--page);
+  border-top: 2px solid transparent;
+  border-image: linear-gradient(90deg, #f68136 0%, #f199cf 52%, #c77bf0 100%) 1;
+}
+.browser {
+  position: relative; z-index: 1;
+  border: 10px solid #fff; border-radius: 26px; overflow: hidden;
+  background: #fff;
+  box-shadow: 0 0 0 1px rgba(10,10,20,0.04),
+              5px 5px 26px rgba(0,0,0,0.08);
+}
+.browser-bar {
+  height: 40px; background: #ffffff;
+  display: flex; align-items: center; padding: 0 16px; gap: 8px;
+}
+.bdot { width: 12px; height: 12px; border-radius: 50%; }
+.browser-video {
+  display: block; width: 100%; height: 560px;
+  object-fit: cover; object-position: top center; background: #f2f2f2;
+  border-radius: 0 0 16px 16px;
+}
+
+/* ─── Stats strip ────────────────────────────────────────────── */
+.stats {
+  position: relative; z-index: 2;
+  padding: 132px 40px 96px;
+  background: var(--page);
+}
+.stats-band { max-width: 1200px; margin: 0 auto; }
+/* gradient rule lines above and below the stats */
+.stats-line {
+  height: 1px; border: none;
+  background: linear-gradient(90deg,
+    transparent 0%,
+    rgba(246,129,54,0.7) 16%,
+    rgba(241,153,207,0.7) 50%,
+    rgba(199,123,240,0.7) 84%,
+    transparent 100%);
+}
+.stats-inner {
+  max-width: 720px; margin: 0 auto;
+  padding: 40px 0;
+  display: grid; grid-template-columns: repeat(3, 1fr);
+}
+.stat-cell { text-align: center; padding: 0 24px; }
+.stat-cell + .stat-cell { border-left: 1px solid rgba(10,10,20,0.09); }
+.stat-val {
+  display: block;
+  font: 900 52px/1 var(--font-bold); color: #0a0a14;
+  letter-spacing: -2px; margin-bottom: 8px;
+}
+.stat-val em { font-style: normal; color: var(--blue); }
+.stat-lbl { font: 13px/1 var(--font-normal); color: #7a7f8a; }
+
+/* ─── Section divider ────────────────────────────────────────── */
+.section-sep {
+  width: 100%; height: 1px;
+  background: linear-gradient(to right, transparent 0%, rgba(10,10,20,0.08) 20%, rgba(10,10,20,0.08) 80%, transparent 100%);
+  max-width: 1200px; margin: 0 auto;
+}
+
+/* ─── What you can expect ────────────────────────────────────── */
+.expect { padding: 80px 40px; background: var(--page); }
+.expect-card {
+  max-width: 1120px; margin: 0 auto;
+  background: #fff;
+  border: 1px solid rgba(10,10,20,0.08);
+  border-radius: 20px;
+  box-shadow: 0 4px 24px rgba(10,10,20,0.06), 0 1px 2px rgba(10,10,20,0.04);
+  padding: 52px 56px 48px;
+  position: relative; overflow: hidden;
+}
+/* subtle corner brackets on the card */
+.expect-card::before,
+.expect-card::after {
+  content: '';
+  position: absolute;
+  width: 20px; height: 20px;
+  border-color: rgba(0,54,221,0.2); border-style: solid;
+}
+.expect-card::before { top: 14px; left: 14px; border-width: 1.5px 0 0 1.5px; border-radius: 2px 0 0 0; }
+.expect-card::after  { bottom: 14px; right: 14px; border-width: 0 1.5px 1.5px 0; border-radius: 0 0 2px 0; }
+
+.expect-h {
+  font: 900 46px/1.1 var(--font-bold); color: #0a0a14;
+  letter-spacing: -1.5px; margin-bottom: 40px; max-width: 360px;
+}
+.expect-body {
+  display: grid; grid-template-columns: 42% 1fr; gap: 48px; align-items: start;
+}
+.acc-item { border-bottom: 1px solid rgba(10,10,20,0.08); }
+.acc-btn {
+  width: 100%; display: flex; align-items: center; justify-content: space-between;
+  padding: 18px 0; cursor: pointer; border: none; background: none; text-align: left;
+  font: 700 15px/1.3 var(--font-bold); color: #0a0a14; gap: 10px;
+  transition: color .12s;
+}
+.acc-btn:hover { color: var(--blue); }
+.acc-btn .chev { flex-shrink: 0; color: rgba(10,10,20,0.28); transition: transform .2s, color .12s; }
+.acc-btn.open .chev { transform: rotate(180deg); color: var(--blue); }
+.acc-btn.open { color: var(--blue); }
+.acc-body {
+  font: 14px/1.7 var(--font-normal); color: #5c616e;
+  padding-bottom: 18px;
+}
+.expect-panel {
+  background: #FEFAF7;
+  border: 1px solid rgba(10,10,20,0.07);
+  border-radius: 14px;
+  overflow: hidden;
+  position: sticky; top: 72px;
+  min-height: 420px;
+}
+.expect-footer {
+  display: flex; justify-content: center; padding-top: 36px;
+}
+.btn-outline-blue {
+  height: 38px; padding: 0 20px; border-radius: 7px;
+  border: 1.5px solid var(--blue); background: transparent;
+  color: var(--blue); font: 700 13px/1 var(--font-bold); cursor: pointer;
+  transition: background .12s;
+}
+.btn-outline-blue:hover { background: var(--blue-50); }
+
+/* ─── Annotated form panel ────────────────────────────────────── */
+.fp { padding: 22px 22px 18px; }
+.fp-lbl {
+  display: inline-flex; padding: 2px 7px; border-radius: 4px;
+  background: #FF3D9A; color: #fff;
+  font: 700 9px/1.5 var(--font-bold); letter-spacing: 0.2px;
+}
+.fp-row { display: flex; align-items: center; justify-content: space-between; margin-bottom: 4px; }
+.fp-field { margin-bottom: 11px; }
+.fp-field-label { font: 11px/1 var(--font-normal); color: #8a8f9b; margin-bottom: 4px; }
+.fp-input { width: 100%; height: 30px; border: 1px solid #e2e4e9; border-radius: 5px; background: #fff; padding: 0 9px; font: 12px/30px var(--font-normal); color: #374151; display: flex; align-items: center; }
+.fp-textarea { width: 100%; height: 48px; border: 1px solid #e2e4e9; border-radius: 5px; background: #fff; padding: 7px 9px; font: 12px/1.5 var(--font-normal); color: #374151; }
+.fp-radios { display: flex; flex-direction: column; gap: 5px; }
+.fp-radio { display: flex; align-items: center; gap: 6px; font: 12px/1 var(--font-normal); color: #374151; }
+.fp-dot { width: 13px; height: 13px; border-radius: 50%; border: 1.5px solid #d1d5db; flex-shrink: 0; display: flex; align-items: center; justify-content: center; }
+.fp-dot.on { border-color: var(--blue); }
+.fp-dot.on::after { content:''; width:6px; height:6px; border-radius:50%; background:var(--blue); }
+.fp-actions { display: flex; gap: 8px; justify-content: flex-end; margin-top: 14px; }
+.fp-cancel { height: 28px; padding: 0 12px; border-radius: 5px; border: 1px solid #e2e4e9; background: #fff; font: 700 11px/1 var(--font-bold); color: #374151; cursor: pointer; }
+.fp-approve { height: 28px; padding: 0 12px; border-radius: 5px; border: none; background: var(--blue); font: 700 11px/1 var(--font-bold); color: #fff; cursor: pointer; }
+
+/* ─── Token panel ────────────────────────────────────────────── */
+.tp { padding: 22px; }
+.tp-title { font: 700 13px/1 var(--font-bold); color: #0a0a14; margin-bottom: 14px; }
+.tp-swatches { display: flex; gap: 3px; margin-bottom: 6px; }
+.tp-swatch { flex: 1; height: 28px; border-radius: 4px; }
+.tp-name { font: 11px/1 var(--font-normal); color: #8a8f9b; margin-bottom: 12px; }
+.tp-code { background: #111827; border-radius: 7px; padding: 12px 14px; font: 11px/1.9 var(--font-mono); }
+.tp-k { color: #93c5fd; } .tp-v { color: #86efac; }
+
+/* ─── WCAG panel ─────────────────────────────────────────────── */
+.wp { padding: 22px; }
+.wp-title { font: 700 13px/1 var(--font-bold); color: #0a0a14; margin-bottom: 14px; }
+.wc { display: flex; align-items: flex-start; gap: 10px; padding: 10px 12px; border: 1px solid #eaebee; border-radius: 7px; margin-bottom: 8px; }
+.wc-icon { width: 28px; height: 28px; border-radius: 6px; background: #dcfce7; display: flex; align-items: center; justify-content: center; font: 700 12px/1 sans-serif; color: #15803d; flex-shrink: 0; }
+.wc-lbl { font: 700 12px/1 var(--font-bold); color: #0a0a14; margin-bottom: 3px; }
+.wc-sub { font: 11px/1.4 var(--font-normal); color: #8a8f9b; }
+.wc-ratio { display: flex; align-items: center; gap: 10px; padding: 10px 14px; background: var(--blue-50); border-radius: 7px; margin-top: 10px; }
+.wc-num { font: 900 22px/1 var(--font-bold); color: var(--blue); }
+.wc-numl { font: 11px/1.4 var(--font-normal); color: #3b5ecc; }
+
+/* ─── Dark mode panel ────────────────────────────────────────── */
+.dmp { display: flex; flex-direction: column; }
+.dmp-h { flex: 1; padding: 18px 20px; }
+.dmp-h.dk { background: #0d1117; }
+.dmp-bar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+.dmp-lbl { font: 700 10px/1 var(--font-bold); letter-spacing: 0.5px; }
+.dmp-lbl.lt { color: #374151; } .dmp-lbl.dk { color: rgba(255,255,255,0.4); }
+.dmp-card { border-radius: 6px; padding: 12px; }
+.dmp-card.lt { background: #fff; border: 1px solid #e5e7eb; }
+.dmp-card.dk { background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.08); }
+.dmp-line { height: 8px; border-radius: 3px; margin-bottom: 5px; }
+.dmp-line.lt { background: rgba(10,10,20,0.1); }
+.dmp-line.dk { background: rgba(255,255,255,0.08); }
+.dmp-btn { height: 22px; border-radius: 4px; border: none; margin-top: 8px; padding: 0 10px; font: 700 10px/1 sans-serif; cursor: pointer; }
+.dmp-btn.lt { background: var(--blue); color: #fff; }
+.dmp-btn.dk { background: rgba(0,54,221,0.7); color: #fff; }
+.dmp-div { height: 1px; background: rgba(10,10,20,0.06); }
+
+/* ─── Framework panel ────────────────────────────────────────── */
+.fwp { padding: 20px 22px; }
+.fwp-tabs { display: flex; gap: 4px; margin-bottom: 14px; }
+.fwp-tab { padding: 4px 10px; border-radius: 5px; font: 700 11px/1 var(--font-bold); border: 1px solid transparent; cursor: pointer; }
+.fwp-tab.on { background: var(--blue-50); color: var(--blue); border-color: rgba(0,54,221,0.2); }
+.fwp-tab:not(.on) { color: #8a8f9b; }
+.fwp-code { background: #0d1117; border-radius: 8px; padding: 14px 16px; font: 11.5px/1.85 var(--font-mono); }
+.fk { color: #93c5fd; } .fs { color: #86efac; } .ft { color: #c4b5fd; } .fc { color: #4b5563; } .ff { color: #fde68a; }
+
+/* ─── Figma sync panel ────────────────────────────────────────── */
+.figp { padding: 22px; }
+.figp-title { font: 700 13px/1 var(--font-bold); color: #0a0a14; margin-bottom: 14px; }
+.figp-row { display: flex; align-items: center; gap: 10px; padding: 10px 12px; border: 1px solid #eaebee; border-radius: 7px; margin-bottom: 8px; }
+.figp-ico { width: 30px; height: 30px; border-radius: 6px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+.figp-ico.fig { background: #f0eeff; }
+.figp-ico.code { background: var(--blue-50); }
+.figp-lbl { font: 700 12px/1 var(--font-bold); color: #0a0a14; margin-bottom: 3px; }
+.figp-sub { font: 11px/1 var(--font-mono); color: #8a8f9b; }
+.figp-arrow { text-align: center; color: rgba(0,54,221,0.4); padding: 4px 0; font-size: 14px; }
+.figp-ok { display: flex; align-items: center; gap: 6px; padding: 7px 10px; background: #dcfce7; border-radius: 6px; margin-top: 10px; }
+.figp-dot { width: 6px; height: 6px; border-radius: 50%; background: #15803d; flex-shrink: 0; }
+.figp-txt { font: 700 11px/1 var(--font-bold); color: #15803d; }
+
+/* ─── Ready-to-use ───────────────────────────────────────────── */
+.ready { padding: 72px 40px 80px; background: var(--page); }
+.ready-inner { max-width: 1160px; margin: 0 auto; }
+.ready-head { text-align: center; margin-bottom: 44px; }
+.section-tag {
+  font: 700 11px/1 var(--font-bold); letter-spacing: 1.2px;
+  color: #9aa0ac; text-transform: uppercase; margin-bottom: 16px; display: block;
+}
+.section-h { font: 900 42px/1.1 var(--font-bold); color: #0a0a14; letter-spacing: -1.5px; margin-bottom: 14px; }
+.section-sub { font: 15px/1.6 var(--font-normal); color: #6b7280; max-width: 440px; margin: 0 auto; }
+
+/* collage */
+.collage { display: flex; flex-direction: column; gap: 20px; }
+.collage-top {
+  display: grid; grid-template-columns: 0.78fr 1fr 1.3fr; gap: 20px; align-items: stretch;
+}
+.collage-bottom {
+  display: grid; grid-template-columns: 1fr 1.1fr; gap: 20px; align-items: stretch;
+}
+.cc {
+  background: #fff; border: 1px solid rgba(10,10,20,0.08);
+  border-radius: 14px; padding: 18px; overflow: hidden;
+  box-shadow: 0 2px 14px rgba(10,10,20,0.04);
+}
+
+/* token-list mini panel */
+.tok-panel { display: flex; flex-direction: column; gap: 2px; position: relative; }
+.tok-tabbar { display: flex; gap: 4px; margin-bottom: 8px; }
+.tok-tab { padding: 3px 8px; border-radius: 4px; font: 700 9px/1 var(--font-bold); }
+.tok-tab.on { background: #FF3D9A; color: #fff; }
+.tok-tab.off { background: #f1f2f4; color: #9aa0ac; }
+.tok-item { display: flex; align-items: center; justify-content: space-between; padding: 5px 6px; border-radius: 4px; font: 11px/1 var(--font-normal); color: #4b5563; }
+.tok-item:hover { background: #f7f8fa; }
+.tok-item .v { font: 10px/1 var(--font-mono); color: #9aa0ac; }
+.tok-item.head { font-family: var(--font-bold); color: #0a0a14; font-weight: 700; }
+
+/* palette card */
+.pal-block { margin-bottom: 14px; }
+.pal-block:last-child { margin-bottom: 0; }
+.pal-name { font: 700 11px/1 var(--font-bold); color: #374151; margin-bottom: 7px; }
+.pal-row { display: flex; gap: 3px; }
+.pal-sw { flex: 1; height: 26px; border-radius: 4px; }
+.pal-step { flex: 1; text-align: center; font: 7px/1 var(--font-mono); color: #b5bac3; margin-top: 3px; }
+
+/* button-variants grid */
+.bvg-head { display: flex; gap: 6px; margin-bottom: 12px; }
+.bvg-col-label { flex: 1; text-align: center; font: 700 8px/1 var(--font-bold); color: #9aa0ac; }
+.bvg-row { display: flex; gap: 6px; margin-bottom: 8px; }
+.bvg-cell { flex: 1; display: flex; justify-content: center; }
+
+/* weather widget */
+.weather { padding: 0; position: relative; min-height: 200px; display: flex; flex-direction: column; justify-content: space-between; color: #fff;
+  background: linear-gradient(135deg, #7ba7d4 0%, #9cb8d8 45%, #c8d4e0 100%); }
+.weather-top { display: flex; align-items: center; gap: 6px; padding: 16px 18px 0; font: 700 12px/1 var(--font-bold); }
+.weather-main { padding: 0 18px; }
+.weather-temp { font: 900 44px/1 var(--font-bold); letter-spacing: -2px; }
+.weather-date { font: 11px/1 var(--font-normal); opacity: .85; margin-top: 4px; }
+.weather-cloud { position: absolute; right: 18px; top: 34px; opacity: .92; }
+.weather-foot { background: linear-gradient(90deg, #f5a623, #f7b733); padding: 11px 18px; display: flex; align-items: center; justify-content: space-between; font: 700 11px/1 var(--font-bold); }
+
+/* annotated input card */
+.ainput { position: relative; display: flex; align-items: center; justify-content: center; min-height: 200px; }
+.ainput-field { width: 230px; }
+.ainput-label { font: 700 11px/1 var(--font-bold); color: #374151; margin-bottom: 7px; }
+.ainput-box { height: 38px; border: 1.5px solid var(--blue); border-radius: 6px; background: #fff; display: flex; align-items: center; padding: 0 12px; font: 12px/1 var(--font-normal); color: #9aa0ac; }
+.ainput-hint { font: 10px/1 var(--font-normal); color: #b5bac3; margin-top: 6px; }
+.stag { position: absolute; padding: 2px 6px; border-radius: 3px; font: 700 8px/1.4 var(--font-bold); color: #fff; white-space: nowrap; z-index: 2; }
+.stag.pad { background: #FF3D9A; }
+.stag.sp  { background: #8b5cf6; }
+.stag.spx { background: #06b6d4; }
+
+/* trusted-by */
+.trusted {
+  display: flex; align-items: center; justify-content: center; gap: 14px;
+  margin: 40px auto 0; padding: 11px 18px;
+  background: #fff; border: 1px solid rgba(10,10,20,0.08); border-radius: 12px;
+  width: fit-content; box-shadow: 0 2px 12px rgba(10,10,20,0.04);
+}
+.trusted-avatars { display: flex; }
+.trusted-avatar {
+  width: 30px; height: 30px; border-radius: 50%;
+  border: 2px solid #fff;
+  margin-left: -8px; overflow: hidden;
+  display: flex; align-items: center; justify-content: center;
+  font: 700 10px/1 var(--font-bold);
+}
+.trusted-avatar:first-child { margin-left: 0; }
+.trusted-divider { width: 1px; height: 28px; background: rgba(10,10,20,0.1); }
+.trusted-text { font: 13px/1.4 var(--font-normal); color: #6b7280; }
+.trusted-text strong { font-family: var(--font-bold); color: #0a0a14; }
+
+/* ─── CTA: Start building today ──────────────────────────────── */
+.build {
+  padding: 80px 40px 88px;
+  position: relative; overflow: hidden;
+  background:
+    radial-gradient(ellipse 70% 90% at 50% 120%, rgba(120,160,230,0.55) 0%, transparent 60%),
+    radial-gradient(ellipse 60% 70% at 15% 10%, rgba(150,180,235,0.4) 0%, transparent 55%),
+    radial-gradient(ellipse 60% 70% at 85% 10%, rgba(150,180,235,0.4) 0%, transparent 55%),
+    linear-gradient(180deg, #eef2fb 0%, #dde6f7 100%);
+}
+.build-inner { max-width: 1100px; margin: 0 auto; position: relative; }
+.build-h {
+  text-align: center;
+  font: 900 44px/1.1 var(--font-bold); color: #0a0a14;
+  letter-spacing: -1.5px; margin-bottom: 56px;
+  display: flex; align-items: center; justify-content: center; gap: 14px; flex-wrap: wrap;
+}
+/* animated word slot-machine: building → designing → shipping,
+   with the pill colour changing to match each word (Figma 5252:45684) */
+.word-pill {
+  display: inline-block; position: relative;
+  width: 221px; height: 60px; border: 1px solid #fff; border-radius: 5px;
+  overflow: hidden; vertical-align: middle;
+  animation: wordbg 6s infinite;
+}
+.word-track {
+  position: absolute; left: 0; right: 0; top: 0;
+  display: flex; flex-direction: column;
+  animation: wordslide 6s infinite;
+}
+.word-track span {
+  height: 60px; line-height: 60px; text-align: center;
+  font: 400 44px/60px var(--font-bold); color: #fdf5f0; letter-spacing: -1px;
+}
+@keyframes wordslide {
+  0%,    20%   { transform: translateY(0); }
+  26.7%, 46.7% { transform: translateY(-60px); }
+  53.3%, 73.3% { transform: translateY(-120px); }
+  80%,   100%  { transform: translateY(-180px); }
+}
+@keyframes wordbg {
+  0%,    23%   { background: #f68136; }   /* building — orange */
+  26.7%, 50%   { background: #5636f6; }   /* designing — purple */
+  53.3%, 76%   { background: #ff0083; }   /* shipping — pink */
+  80%,   100%  { background: #f68136; }   /* building — orange (loop) */
+}
+@media (prefers-reduced-motion: reduce) {
+  .word-track { animation: none; }
+  .word-pill { animation: none; background: #f68136; }
+}
+.build-steps { display: grid; grid-template-columns: repeat(3, 1fr); gap: 28px; margin-bottom: 44px; }
+.bstep { display: flex; gap: 16px; align-items: flex-start; }
+.bstep-num {
+  width: 40px; height: 40px; border-radius: 50%; flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center;
+  font: 700 16px/1 var(--font-bold);
+  background: #fff;
+}
+.bstep-num.n1 { border: 2px solid #F5A623; color: #F5A623; }
+.bstep-num.n2 { border: 2px solid #8b5cf6; color: #8b5cf6; }
+.bstep-num.n3 { border: 2px solid #EC4899; color: #EC4899; }
+.bstep-h { font: 700 18px/1 var(--font-bold); color: #0a0a14; margin-bottom: 8px; }
+.bstep-p { font: 13.5px/1.6 var(--font-normal); color: #5c616e; }
+.build-actions { display: flex; gap: 12px; justify-content: center; }
+.build-btn-ghost {
+  height: 44px; padding: 0 22px; border-radius: 8px;
+  border: 1.5px solid rgba(10,10,20,0.2); background: rgba(255,255,255,0.7);
+  color: #0a0a14; font: 700 14px/1 var(--font-bold); cursor: pointer;
+  transition: border-color .12s, background .12s;
+}
+.build-btn-ghost:hover { background: #fff; border-color: rgba(10,10,20,0.35); }
+.build-btn-primary {
+  height: 44px; padding: 0 22px; border-radius: 8px;
+  border: none; background: var(--blue); color: #fff;
+  font: 700 14px/1 var(--font-bold); cursor: pointer;
+  box-shadow: 0 4px 14px rgba(0,54,221,0.28);
+  transition: background .12s;
+}
+.build-btn-primary:hover { background: #0029b0; }
+
+/* ─── Footer ─────────────────────────────────────────────────── */
+.footer { background: #09090f; padding: 52px 40px 32px; }
+.footer-inner { max-width: 1120px; margin: 0 auto; }
+.footer-top {
+  display: grid; grid-template-columns: 1.6fr 0.7fr 0.7fr 0.7fr; gap: 40px;
+  padding-bottom: 44px;
+  border-bottom: 1px solid rgba(255,255,255,0.06);
+}
+.footer-brand p { font: 13px/1.6 var(--font-normal); color: rgba(255,255,255,0.3); margin-top: 12px; max-width: 190px; }
+.footer-socials { display: flex; gap: 8px; margin-top: 20px; }
+.footer-social {
+  width: 28px; height: 28px; border-radius: 6px;
+  border: 1px solid rgba(255,255,255,0.1);
+  display: flex; align-items: center; justify-content: center;
+  color: rgba(255,255,255,0.4); cursor: pointer;
+  transition: border-color .12s, color .12s;
+}
+.footer-social:hover { border-color: rgba(255,255,255,0.3); color: rgba(255,255,255,0.8); }
+.footer-col h5 { font: 700 10px/1 var(--font-bold); letter-spacing: 0.5px; text-transform: uppercase; color: rgba(255,255,255,0.28); margin-bottom: 16px; }
+.footer-col a { display: block; font: 13px/1 var(--font-normal); color: rgba(255,255,255,0.45); text-decoration: none; margin-bottom: 11px; transition: color .12s; }
+.footer-col a:hover { color: rgba(255,255,255,0.82); }
+.footer-bottom { display: flex; align-items: center; justify-content: space-between; padding-top: 28px; }
+.footer-copy { font: 12px/1 var(--font-normal); color: rgba(255,255,255,0.2); }
+
+/* ─── Responsive ─────────────────────────────────────────────── */
+@media (max-width: 960px) {
+  .hero h1 { font-size: 50px; letter-spacing: -2px; }
+  .expect-body { grid-template-columns: 1fr; }
+  .build-steps { grid-template-columns: 1fr; gap: 22px; }
+  .stats-inner { max-width: 400px; }
+  .footer-top { grid-template-columns: 1fr 1fr; gap: 28px; }
+  .expect-card { padding: 32px 24px; }
+  .collage-top { grid-template-columns: 1fr; }
+  .collage-bottom { grid-template-columns: 1fr; }
+}
+</style>
+</head>
+<body>
+<div id="app"></div>
+
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+<script src="_ds_bundle.js"></script>
+
+<script type="text/babel">
+const {
+  Button, Badge, Alert, Spinner, Avatar, Tag, StatCard, Switch, Checkbox,
+} = window.SandhataDesignSystem_081a0e;
+
+/* ── Icons ────────────────────────────────────────────────────── */
+const I = ({ d, size=16, sw=1.6 }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none"
+    stroke="currentColor" strokeWidth={sw} strokeLinecap="round" strokeLinejoin="round">
+    {d}
+  </svg>
+);
+const SunIco   = () => <I size={15} d={<><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></>}/>;
+const Sparkle = () => (
+  <svg className="hero-sparkle" width="0.62em" height="0.62em" viewBox="0 0 64 64" fill="currentColor" aria-hidden="true">
+    {/* large four-point star */}
+    <path d="M42 4c1.6 9.8 5.4 13.6 15.2 15.2C47.4 20.8 43.6 24.6 42 34.4 40.4 24.6 36.6 20.8 26.8 19.2 36.6 17.6 40.4 13.8 42 4z"/>
+    {/* small four-point star */}
+    <path d="M16 30c1 6.4 3.5 8.9 9.9 9.9-6.4 1-8.9 3.5-9.9 9.9-1-6.4-3.5-8.9-9.9-9.9 6.4-1 8.9-3.5 9.9-9.9z"/>
+  </svg>
+);
+const SearchIco = () => <I size={15} d={<><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></>}/>;
+const ArrowR   = () => <I size={14} d={<><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></>}/>;
+const ChevD    = () => <I size={14} d={<polyline points="6 9 12 15 18 9"/>} sw={2}/>;
+const GitH     = () => (
+  <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
+    <path d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.531 1.032 1.531 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0 1 12 6.844a9.59 9.59 0 0 1 2.504.337c1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0 0 22 12.017C22 6.484 17.522 2 12 2z"/>
+  </svg>
+);
+const FigmaIco = () => <I size={15} sw={1.4} d={<><path d="M5 5.5A3.5 3.5 0 0 1 8.5 2H12v7H8.5A3.5 3.5 0 0 1 5 5.5z"/><path d="M12 2h3.5a3.5 3.5 0 1 1 0 7H12V2z"/><path d="M12 12.5a3.5 3.5 0 1 1 7 0 3.5 3.5 0 1 1-7 0z"/><path d="M5 19.5A3.5 3.5 0 0 1 8.5 16H12v3.5a3.5 3.5 0 1 1-7 0z"/><path d="M5 12.5A3.5 3.5 0 0 1 8.5 9H12v7H8.5A3.5 3.5 0 0 1 5 12.5z"/></>}/>;
+const CodeIco  = () => <I size={15} sw={1.4} d={<><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></>}/>;
+const LayersIco = () => <I size={18} d={<><polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/></>}/>;
+const BoxIco   = () => <I size={18} d={<><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></>}/>;
+const ZapIco   = () => <I size={18} d={<polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/>}/>;
+
+/* ── Accordion panel content ──────────────────────────────────── */
+function AnnBadge({ children }) {
+  return (
+    <span className="fp-lbl">{children}</span>
+  );
+}
+
+function PanelComposable() {
+  return (
+    <div className="fp">
+      <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:14 }}>
+        <span style={{ font:"700 12px/1 var(--font-bold)", color:"#0a0a14" }}>Delivery Information</span>
+        <AnnBadge>Delivery Card</AnnBadge>
+      </div>
+      <div style={{ background:"#fff", border:"1px solid #eaebee", borderRadius:8, padding:"14px 14px 10px" }}>
+        <div className="fp-field">
+          <div className="fp-row"><div className="fp-field-label">Name</div><AnnBadge>Single-line Input</AnnBadge></div>
+          <div className="fp-input">S Gungly</div>
+        </div>
+        <div className="fp-field">
+          <div className="fp-row"><div className="fp-field-label">Address</div><AnnBadge>Multi-line Input</AnnBadge></div>
+          <div className="fp-textarea">440 Division St, Kingston, ON K7K 4A9</div>
+        </div>
+        <div className="fp-field">
+          <div className="fp-row"><div className="fp-field-label">Save as</div><AnnBadge>Radio</AnnBadge></div>
+          <div className="fp-radios">
+            {["Home","Work","School"].map((v,i) => (
+              <div key={v} className="fp-radio">
+                <div className={`fp-dot${i===0?" on":""}`}/>{v}
+              </div>
+            ))}
+          </div>
+        </div>
+        <div className="fp-field">
+          <div className="fp-row"><div className="fp-field-label">Delivery date</div><AnnBadge>Date Picker</AnnBadge></div>
+          <div className="fp-input" style={{color:"#8a8f9b"}}>22 / 12 / 2026</div>
+        </div>
+        <div className="fp-row" style={{ alignItems:"center", marginTop:12 }}>
+          <div style={{ display:"flex", gap:5 }}><AnnBadge>Secondary</AnnBadge><AnnBadge>Primary CTA</AnnBadge></div>
+          <div className="fp-actions" style={{ marginTop:0 }}>
+            <button className="fp-cancel">Cancel</button>
+            <button className="fp-approve">Approve</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function PanelTokens() {
+  const rows = [
+    { name:"Primary blue",  varName:"primaryblue",          steps:[50,100,200,300,400,500,600,700,800,900] },
+    { name:"Purple",        varName:"alternativepurple",     steps:[50,100,200,300,400,500,600,700,800,900] },
+    { name:"Neutral",       varName:"neutral",               steps:[50,100,200,300,400,500,600,700,800,900] },
+    { name:"Rose pink",     varName:"alternativerosepink",   steps:[50,100,200,300,400,500,600,700,800,900] },
+  ];
+  return (
+    <div className="tp">
+      <div className="tp-title">Colour token palette</div>
+      {rows.map(r => (
+        <div key={r.name} className="palette-block" style={{marginBottom:12}}>
+          <div className="palette-label">{r.name}</div>
+          <div className="tp-swatches">
+            {r.steps.map(s => <div key={s} className="tp-swatch" style={{background:`var(--colour-${r.varName}-${s})`}}/>)}
+          </div>
+        </div>
+      ))}
+      <div className="tp-code">
+        <div><span className="tp-k">--colour-primaryblue-500</span>: <span className="tp-v">#0036DD</span>;</div>
+        <div><span className="tp-k">--background-action</span>: <span className="tp-v">var(--colour-primaryblue-500)</span>;</div>
+        <div><span className="tp-k">--text-link</span>: <span className="tp-v">var(--colour-primaryblue-500)</span>;</div>
+      </div>
+    </div>
+  );
+}
+
+function PanelWCAG() {
+  return (
+    <div className="wp">
+      <div className="wp-title">Accessibility at a glance</div>
+      {[
+        ["Text contrast",       "4.5:1 minimum on all body text"],
+        ["Large text contrast", "3:1 minimum on heading text"],
+        ["Focus indicator",     "3px focus ring on all interactive elements"],
+        ["ARIA roles",          "Semantic role attributes on every component"],
+      ].map(([l,s]) => (
+        <div key={l} className="wc">
+          <div className="wc-icon">✓</div>
+          <div><div className="wc-lbl">{l}</div><div className="wc-sub">{s}</div></div>
+        </div>
+      ))}
+      <div className="wc-ratio">
+        <div><div className="wc-num">7.2:1</div><div className="wc-numl">Primary text ratio</div></div>
+        <div style={{marginLeft:"auto",padding:"2px 8px",background:"#dbeafe",borderRadius:5,font:"700 11px/1 var(--font-bold)",color:"#1d4ed8"}}>AA Pass</div>
+      </div>
+    </div>
+  );
+}
+
+function PanelDarkMode() {
+  return (
+    <div className="dmp">
+      <div className="dmp-h" style={{background:"#fff"}}>
+        <div className="dmp-bar">
+          <span className="dmp-lbl lt">Light mode</span>
+          <SunIco/>
+        </div>
+        <div className="dmp-card lt">
+          <div className="dmp-line lt" style={{width:"60%"}}/>
+          <div className="dmp-line lt" style={{width:"88%"}}/>
+          <div className="dmp-line lt" style={{width:"72%"}}/>
+          <button className="dmp-btn lt">Submit</button>
+        </div>
+        <div style={{marginTop:8,display:"flex",gap:5,flexWrap:"wrap"}}>
+          <Badge tone="success" dot>Active</Badge>
+          <Badge tone="warning">Pending</Badge>
+          <Badge tone="info">Info</Badge>
+        </div>
+      </div>
+      <div className="dmp-div"/>
+      <div className="dmp-h dk">
+        <div className="dmp-bar">
+          <span className="dmp-lbl dk">Dark mode</span>
+          <I size={14} sw={1.5} d={<path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>}/>
+        </div>
+        <div className="dmp-card dk">
+          <div className="dmp-line dk" style={{width:"60%"}}/>
+          <div className="dmp-line dk" style={{width:"88%"}}/>
+          <div className="dmp-line dk" style={{width:"72%"}}/>
+          <button className="dmp-btn dk">Submit</button>
+        </div>
+        <div style={{marginTop:8,font:"11px/1.5 var(--font-normal)",color:"rgba(255,255,255,0.3)"}}>
+          Add <code style={{fontFamily:"var(--font-mono)",fontSize:10,color:"rgba(255,255,255,0.5)"}}>data-theme="dark"</code> to any container.
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function PanelFramework() {
+  const [fw, setFw] = React.useState("React");
+  const snippets = {
+    React: (
+      <div className="fwp-code">
+        <div><span className="fk">import</span> {"{"} <span className="ff">Button</span> {"}"} <span className="fk">from</span> <span className="fs">'sandhata-ui'</span>;</div>
+        <br/>
+        <div><span className="fk">export function</span> <span className="ff">App</span>() {"{"}</div>
+        <div style={{paddingLeft:16}}><span className="fk">return</span> (</div>
+        <div style={{paddingLeft:32}}><span className="ft">{"<Button"}</span> <span className="ff">hierarchy</span>=<span className="fs">"primary"</span><span className="ft">{">"}</span>Submit<span className="ft">{"</Button>"}</span></div>
+        <div style={{paddingLeft:16}}>);</div>
+        <div>{"}"}</div>
+      </div>
+    ),
+    Vue: (
+      <div className="fwp-code">
+        <div><span className="ft">{"<template>"}</span></div>
+        <div style={{paddingLeft:16}}><span className="ft">{"<Button"}</span> <span className="ff">hierarchy</span>=<span className="fs">"primary"</span><span className="ft">{">"}</span>Submit<span className="ft">{"</Button>"}</span></div>
+        <div><span className="ft">{"</template>"}</span></div>
+        <br/>
+        <div><span className="ft">{"<script"}</span> <span className="ff">setup</span><span className="ft">{">"}</span></div>
+        <div style={{paddingLeft:16}}><span className="fk">import</span> {"{"} Button {"}"} <span className="fk">from</span> <span className="fs">'sandhata-ui/vue'</span></div>
+        <div><span className="ft">{"</"}</span><span className="ft">{"script>"}</span></div>
+      </div>
+    ),
+    HTML: (
+      <div className="fwp-code">
+        <div><span className="fc">{"<!-- Link tokens -->"}</span></div>
+        <div><span className="ft">{"<link"}</span> <span className="ff">rel</span>=<span className="fs">"stylesheet"</span> <span className="ff">href</span>=<span className="fs">"styles.css"</span><span className="ft">{"/>"}</span></div>
+        <br/>
+        <div><span className="ft">{"<button"}</span> <span className="ff">class</span>=<span className="fs">"sd-btn sd-btn--primary"</span><span className="ft">{">"}</span></div>
+        <div style={{paddingLeft:16}}>Submit</div>
+        <div><span className="ft">{"</button>"}</span></div>
+      </div>
+    ),
+  };
+  return (
+    <div className="fwp">
+      <div style={{font:"700 13px/1 var(--font-bold)",color:"#0a0a14",marginBottom:12}}>Works with any framework</div>
+      <div className="fwp-tabs">
+        {["React","Vue","HTML"].map(f => (
+          <button key={f} className={`fwp-tab${fw===f?" on":""}`} onClick={()=>setFw(f)}>{f}</button>
+        ))}
+      </div>
+      {snippets[fw]}
+      <div style={{font:"11px/1.5 var(--font-normal)",color:"#8a8f9b",marginTop:10}}>
+        Token layer is plain CSS — pair it with any framework or no framework at all.
+      </div>
+    </div>
+  );
+}
+
+function PanelFigmaSync() {
+  return (
+    <div className="figp">
+      <div className="figp-title">One source of truth</div>
+      <div className="figp-row">
+        <div className="figp-ico fig"><FigmaIco/></div>
+        <div>
+          <div className="figp-lbl">Figma variable</div>
+          <div className="figp-sub">--colour-primaryblue-500 = #0036DD</div>
+        </div>
+      </div>
+      <div className="figp-arrow">↓</div>
+      <div className="figp-row">
+        <div className="figp-ico code"><CodeIco/></div>
+        <div>
+          <div className="figp-lbl">CSS custom property</div>
+          <div className="figp-sub">var(--colour-primaryblue-500)</div>
+        </div>
+      </div>
+      <div className="figp-ok">
+        <div className="figp-dot"/>
+        <span className="figp-txt">Token values materialised directly from Figma Variables</span>
+      </div>
+      <div style={{font:"11px/1.5 var(--font-normal)",color:"#8a8f9b",marginTop:10}}>
+        Change a token in Figma and it flows to code automatically — no spreadsheets, no drift.
+      </div>
+    </div>
+  );
+}
+
+const PANELS = [PanelComposable, PanelTokens, PanelWCAG, PanelDarkMode, PanelFramework, PanelFigmaSync];
+
+const FEATURES = [
+  { title:"Composable components",    body:"Simple primitives that snap together cleanly. Build complex interfaces without fighting the system." },
+  { title:"Token-first architecture", body:"Colour, spacing, type and elevation live as CSS custom properties. Override one variable and re-skin the entire product." },
+  { title:"WCAG 2.1 AA throughout",  body:"Contrast, focus rings, ARIA roles and keyboard navigation are built in — not bolted on after the fact." },
+  { title:"Dark mode native",         body:"Add data-theme=\"dark\" to any container and every semantic token flips automatically. No extra stylesheets required." },
+  { title:"Framework agnostic",       body:"The token layer is plain CSS. The bundle ships React 18 primitives, and the patterns work in Vue, Angular or vanilla HTML." },
+  { title:"Figma-to-code sync",       body:"Token values are materialised directly from Figma Variables. Design and code share one source of truth." },
+];
+
+/* ── Avatar placeholders ──────────────────────────────────────── */
+const INITIALS = ["AO","SK","MP","JL","RN","TE"];
+const AV_COLOURS = ["#dbeafe","#fce7f3","#d1fae5","#fef3c7","#ede9fe","#fee2e2"];
+
+/* ── Main app ─────────────────────────────────────────────────── */
+function App() {
+  const [open, setOpen] = React.useState(0);
+  const ActivePanel = PANELS[open];
+
+  return (
+    <div>
+
+      {/* NAV */}
+      <header className="nav">
+        <a className="nav-logo" href="index.html">
+          <img src="assets/logo/sandhata-logo.svg" alt="Sandhata"/>
+        </a>
+        <nav className="nav-links">
+          <a className="nl" href="docs/index.html">Components</a>
+          <a className="nl" href="docs/documentation.html">Documentation</a>
+          <a className="nl" href="../ui_kits/showcase/index.html">Demo</a>
+        </nav>
+      </header>
+
+      {/* HERO */}
+      <section className="hero">
+        <div className="hero-aurora"/>
+        <h1>
+          The design system built for&nbsp;<em>clarity<Sparkle/></em>
+        </h1>
+
+        <p className="hero-sub">
+          Everything your team needs to ship consistent, accessible interfaces
+          components, tokens, and guidelines in one place.
+        </p>
+
+        <div className="hero-actions">
+          <button className="btn-primary" onClick={()=>location.href="../ui_kits/showcase/index.html"}>
+            View Demo
+          </button>
+        </div>
+
+        {/* BROWSER WINDOW — straddles the cut line at its halfmark */}
+        <div className="browser-outer">
+          <div className="browser-cut"/>
+          <div className="browser">
+            <div className="browser-bar">
+              <div className="bdot" style={{background:"#ff5f57"}}/>
+              <div className="bdot" style={{background:"#febc2e"}}/>
+              <div className="bdot" style={{background:"#28c840"}}/>
+            </div>
+            <video className="browser-video" src="assets/hero.mp4" autoPlay loop muted playsInline/>
+          </div>
+        </div>
+      </section>
+
+      {/* STATS */}
+      <section className="stats">
+        <div className="stats-band">
+          <hr className="stats-line"/>
+          <div className="stats-inner">
+            {[
+              { num:"120", plus:true,  lbl:"Components" },
+              { num:"1.2k", plus:true, lbl:"Design tokens" },
+              { num:"AA",  plus:false, lbl:"Accessibility" },
+            ].map((s,i) => (
+              <div key={i} className="stat-cell">
+                <span className="stat-val">{s.num}{s.plus && <em>+</em>}</span>
+                <span className="stat-lbl">{s.lbl}</span>
+              </div>
+            ))}
+          </div>
+          <hr className="stats-line"/>
+        </div>
+      </section>
+
+      {/* WHAT YOU CAN EXPECT */}
+      <section className="expect">
+        <div className="expect-card">
+          <h2 className="expect-h">What you can<br/>expect</h2>
+          <div className="expect-body">
+            {/* Accordion */}
+            <div>
+              {FEATURES.map((f,i) => (
+                <div key={i} className="acc-item">
+                  <button className={`acc-btn${open===i?" open":""}`} onClick={()=>setOpen(i)}>
+                    {f.title}
+                    <span className="chev"><ChevD/></span>
+                  </button>
+                  {open===i && <div className="acc-body">{f.body}</div>}
+                </div>
+              ))}
+            </div>
+            {/* Dynamic right panel */}
+            <div className="expect-panel">
+              <ActivePanel/>
+            </div>
+          </div>
+          <div className="expect-footer">
+            <button className="btn-outline-blue" onClick={()=>location.href="docs/documentation.html"}>
+              View documentation
+            </button>
+          </div>
+        </div>
+      </section>
+
+      <div className="section-sep"/>
+
+      {/* READY-TO-USE */}
+      <section className="ready">
+        <div className="ready-inner">
+          <div className="ready-head">
+            <span className="section-tag">Components</span>
+            <h2 className="section-h">Ready-to-use</h2>
+            <p className="section-sub">
+              A growing library of styles, variables and 240+ components, all
+              documented, tested, and ready to drop in.
+            </p>
+          </div>
+
+          <div className="collage">
+            {/* TOP ROW */}
+            <div className="collage-top">
+
+              {/* token list panel */}
+              <div className="cc tok-panel">
+                <div className="tok-tabbar">
+                  <span className="tok-tab on">Colours</span>
+                  <span className="tok-tab off">Type</span>
+                  <span className="tok-tab off">Spacing</span>
+                </div>
+                {[
+                  ["Aliases", "116", false],
+                  ["Primitives", "338", false],
+                  ["SPM_Alias", "", false],
+                  ["SPM_Mapping", "", false],
+                  ["SPM_Primitives", "", false],
+                  ["Type primitive", "", false],
+                  ["Type Tokens", "", false],
+                  ["Groups", "", false],
+                  ["All", "454", true],
+                ].map(([n,v,head],i) => (
+                  <div key={i} className={`tok-item${head?" head":""}`}>
+                    <span>{n}</span><span className="v">{v}</span>
+                  </div>
+                ))}
+              </div>
+
+              {/* palettes */}
+              <div className="cc">
+                <div className="pal-block">
+                  <div className="pal-name">Aqua</div>
+                  <div className="pal-row">
+                    {[50,100,200,300,400,500,600,700,800,900].map(s =>
+                      <div key={s} className="pal-sw" style={{background:`var(--colour-secondarycyan-${s})`}}/>)}
+                  </div>
+                </div>
+                <div className="pal-block">
+                  <div className="pal-name">Indigo purple</div>
+                  <div className="pal-row">
+                    {[50,100,200,300,400,500,600,700,800,900].map(s =>
+                      <div key={s} className="pal-sw" style={{background:`var(--colour-alternativepurple-${s})`}}/>)}
+                  </div>
+                </div>
+                <div className="pal-block">
+                  <div className="pal-name">Rose</div>
+                  <div className="pal-row">
+                    {[50,100,200,300,400,500,600,700,800,900].map(s =>
+                      <div key={s} className="pal-sw" style={{background:`var(--colour-alternativerosepink-${s})`}}/>)}
+                  </div>
+                </div>
+              </div>
+
+              {/* button variants grid */}
+              <div className="cc">
+                <div className="bvg-head">
+                  {["Primary","Secondary","Tertiary","Danger","Ghost"].map(l =>
+                    <div key={l} className="bvg-col-label">{l}</div>)}
+                </div>
+                {["primary","secondary","tertiary","danger","ghost"].map((_,rowIdx) => (
+                  <div key={rowIdx} className="bvg-row">
+                    {["primary","secondary","tertiary","danger","ghost"].map(h => (
+                      <div key={h} className="bvg-cell">
+                        <Button hierarchy={h} size="small">Button</Button>
+                      </div>
+                    ))}
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* BOTTOM ROW */}
+            <div className="collage-bottom">
+
+              {/* weather widget */}
+              <div className="cc weather" style={{padding:0}}>
+                <div className="weather-top">
+                  <I size={13} d={<><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></>}/>
+                  New York
+                </div>
+                <div className="weather-cloud">
+                  <I size={56} sw={1.2} d={<path d="M18 10h-1.26A8 8 0 1 0 9 20h9a5 5 0 0 0 0-10z"/>}/>
+                </div>
+                <div className="weather-main">
+                  <div className="weather-temp">26°C</div>
+                  <div className="weather-date">Sunday · 12 Oct 2026</div>
+                </div>
+                <div className="weather-foot">
+                  <span>⛅ Activities for your area</span>
+                  <ArrowR/>
+                </div>
+              </div>
+
+              {/* annotated input */}
+              <div className="cc ainput">
+                <span className="stag pad" style={{top:36,left:14}}>padding/extra-small</span>
+                <span className="stag spx" style={{top:36,right:14}}>spacing/extra-extra-small</span>
+                <span className="stag sp"  style={{bottom:54,left:14}}>spacing/extra-extra-small</span>
+                <span className="stag pad" style={{bottom:30,left:60}}>padding/extra-small</span>
+                <span className="stag pad" style={{bottom:30,right:40}}>padding/extra-small</span>
+                <div className="ainput-field">
+                  <div className="ainput-label">Field label</div>
+                  <div className="ainput-box">Enter your text here</div>
+                  <div className="ainput-hint">This is the helper text that goes here</div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* trusted by */}
+          <div className="trusted">
+            <div className="trusted-avatars">
+              {INITIALS.map((init,i) => (
+                <div key={i} className="trusted-avatar" style={{background:AV_COLOURS[i],color:"#374151"}}>
+                  {init}
+                </div>
+              ))}
+            </div>
+            <div className="trusted-divider"/>
+            <p className="trusted-text">Trusted by <strong>300+</strong> Designer and Developers</p>
+          </div>
+        </div>
+      </section>
+
+      {/* START BUILDING TODAY */}
+      <section className="build">
+        <div className="build-inner">
+          <h2 className="build-h">
+            Start
+            <span className="word-pill">
+              <span className="word-track">
+                <span>building</span>
+                <span>designing</span>
+                <span>shipping</span>
+                <span>building</span>
+              </span>
+            </span>
+            today
+          </h2>
+          <div className="build-steps">
+            {[
+              {
+                n:"1", cls:"n1", title:"Design",
+                body:"Enable the Sandhata UI library in Figma. Drag and drop pre-built components into your designs and configure them using variants.",
+              },
+              {
+                n:"2", cls:"n2", title:"Build",
+                body:"Install the npm package in your repository. Import the exact same components you used in Figma straight into your codebase.",
+              },
+              {
+                n:"3", cls:"n3", title:"Ship",
+                body:"Deploy your application with confidence.",
+              },
+            ].map(step => (
+              <div key={step.n} className="bstep">
+                <div className={`bstep-num ${step.cls}`}>{step.n}</div>
+                <div>
+                  <div className="bstep-h">{step.title}</div>
+                  <p className="bstep-p">{step.body}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+          <div className="build-actions">
+            <button className="build-btn-ghost" onClick={()=>location.href="docs/documentation.html"}>
+              Read documentation
+            </button>
+            <button className="build-btn-primary" onClick={()=>location.href="docs/index.html"}>
+              Browse components
+            </button>
+          </div>
+        </div>
+      </section>
+
+      {/* FOOTER */}
+      <footer className="footer">
+        <div className="footer-inner">
+          <div className="footer-top">
+            <div className="footer-brand">
+              <img src="assets/logo/sandhata-logo.svg" alt="Sandhata" style={{height:24,filter:"brightness(0) invert(1)",opacity:.85}}/>
+              <p>Built to ensure clarity and consistency across every interaction.</p>
+              <div className="footer-socials">
+                <div className="footer-social">
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/></svg>
+                </div>
+                <div className="footer-social">
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor"><path d="M19 0h-14c-2.761 0-5 2.239-5 5v14c0 2.761 2.239 5 5 5h14c2.762 0 5-2.239 5-5v-14c0-2.761-2.238-5-5-5zm-11 19h-3v-11h3v11zm-1.5-12.268c-.966 0-1.75-.79-1.75-1.764s.784-1.764 1.75-1.764 1.75.79 1.75 1.764-.783 1.764-1.75 1.764zm13.5 12.268h-3v-5.604c0-3.368-4-3.113-4 0v5.604h-3v-11h3v1.765c1.396-2.586 7-2.777 7 2.476v6.759z"/></svg>
+                </div>
+                <div className="footer-social">
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-4.714-6.231-5.401 6.231H2.744l7.737-8.835L1.254 2.25H8.08l4.259 5.629 5.905-5.629zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>
+                </div>
+              </div>
+            </div>
+            {[
+              { h:"Product", links:[["Features","#"],["Pricing","#"],["Demo","../ui_kits/showcase/index.html"]] },
+              { h:"Support", links:[["Documentation","docs/documentation.html"],["Contact Us","#"]] },
+              { h:"Legal",   links:[["Privacy Policy","#"],["Terms & Condition","#"]] },
+            ].map(col => (
+              <div key={col.h} className="footer-col">
+                <h5>{col.h}</h5>
+                {col.links.map(([l,href]) => <a key={l} href={href}>{l}</a>)}
+              </div>
+            ))}
+          </div>
+          <div className="footer-bottom" style={{justifyContent:"center"}}>
+            <span className="footer-copy">© 2025 voi. All rights reserved by sandhata.design.system</span>
+          </div>
+        </div>
+      </footer>
+
+    </div>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById("app")).render(<App/>);
+</script>
+</body>
+</html>

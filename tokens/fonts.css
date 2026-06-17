@@ -1,0 +1,64 @@
+/* ============================================================
+   Sandhata Design System — Webfonts
+   Akkurat is the brand typeface (Light / Regular / Bold / Mono).
+   Each weight is shipped as its own family name to match the
+   Figma token names exactly (font-family-light / -normal / -bold).
+   ============================================================ */
+
+@font-face {
+  font-family: "Akkurat-Light";
+  src: url("../assets/fonts/Akkurat-Light.ttf") format("truetype");
+  font-weight: 300;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Akkurat";
+  src: url("../assets/fonts/Akkurat.ttf") format("truetype");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+/* Akkurat Pro – alternate regular cut used in some data UI */
+@font-face {
+  font-family: "Akkurat Pro";
+  src: url("../assets/fonts/AkkuratPro-Regular.otf") format("opentype");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Akkurat-Bold";
+  src: url("../assets/fonts/Akkurat-Bold.ttf") format("truetype");
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
+
+/* Convenience: also register the three cuts under one family so
+   font-weight: 300/400/700 resolves naturally on `Akkurat`. */
+@font-face {
+  font-family: "Akkurat";
+  src: url("../assets/fonts/Akkurat-Light.ttf") format("truetype");
+  font-weight: 300;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Akkurat";
+  src: url("../assets/fonts/Akkurat-Bold.ttf") format("truetype");
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Akkurat-Mono";
+  src: url("../assets/fonts/Akkurat-Mono.otf") format("opentype");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}

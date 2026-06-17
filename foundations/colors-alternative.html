@@ -1,0 +1,33 @@
+<!-- @dsCard group="Colors" viewport="700x200" name="Alternative accents" subtitle="Purple · Aqua · Peach · Rose pink — data-viz & highlight" -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<link rel="stylesheet" href="../styles.css" />
+<style>
+  body { margin: 0; padding: 20px; background: var(--surface-page); }
+  #s { display: flex; flex-direction: column; gap: 14px; }
+  .lbl { font: 700 var(--label-size)/1 var(--font-normal); letter-spacing: var(--label-tracking); color: var(--text-subtitle); margin-bottom: 6px; text-transform: uppercase; }
+  .scale { display: flex; gap: 6px; }
+  .sw { flex: 1; }
+  .chip { height: 36px; border-radius: var(--radius-sm); border: 1px solid rgba(0,0,0,0.06); }
+  .name { font: var(--helper-size)/1.4 var(--font-mono); color: var(--text-caption); margin-top: 4px; }
+</style>
+</head>
+<body>
+<div id="s"></div>
+<script>
+  const groups = [
+    ["Purple","alternativepurple",["50","300","400","500","600"]],
+    ["Aqua","alternativeaqua",["50","300","400","500","600"]],
+    ["Peach","alternativepeach",["50","300","400","500","600"]],
+    ["Rose pink","alternativerosepink",["50","300","400","500","600"]],
+  ];
+  document.getElementById("s").innerHTML = groups.map(([label,key,steps]) =>
+    `<div><div class="lbl">${label}</div><div class="scale">${
+      steps.map(k=>`<div class="sw"><div class="chip" style="background:var(--colour-${key}-${k})"></div><div class="name">${k}</div></div>`).join("")
+    }</div></div>`
+  ).join("");
+</script>
+</body>
+</html>

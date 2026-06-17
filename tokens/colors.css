@@ -1,0 +1,252 @@
+/* ============================================================
+   Sandhata Design System — Colour tokens
+   Base palettes (full 50–950 scales) + semantic aliases.
+   Values extracted verbatim from the Sandhata Figma variables.
+   ============================================================ */
+
+:root {
+  /* ---- Brand mark ---------------------------------------- */
+  --brand-cyan: rgb(0, 164, 220);      /* logo twist mark */
+  --brand-orange: rgb(246, 129, 54);   /* logo accent dot */
+  --brand-ink: rgb(72, 72, 79);        /* wordmark grey   */
+
+  /* ---- Neutral ------------------------------------------- */
+  --colour-neutral-0: rgb(255, 255, 255);
+  --colour-neutral-50: rgb(245, 246, 248);
+  --colour-neutral-100: rgb(233, 235, 238);
+  --colour-neutral-200: rgb(213, 219, 222);
+  --colour-neutral-300: rgb(192, 199, 207);
+  --colour-neutral-400: rgb(169, 181, 191);
+  --colour-neutral-500: rgb(152, 163, 173);
+  --colour-neutral-600: rgb(119, 128, 136);
+  --colour-neutral-700: rgb(88, 95, 101);
+  --colour-neutral-800: rgb(60, 64, 68);
+  --colour-neutral-900: rgb(32, 34, 37);
+  --colour-neutral-950: rgb(20, 22, 24);
+  --colour-neutral-1000: rgb(0, 0, 0);
+
+  /* ---- Primary blue (action / brand UI) ------------------ */
+  --colour-primaryblue-50: rgb(232, 233, 255);
+  --colour-primaryblue-100: rgb(213, 215, 255);
+  --colour-primaryblue-200: rgb(167, 173, 255);
+  --colour-primaryblue-300: rgb(122, 133, 255);
+  --colour-primaryblue-400: rgb(68, 92, 255);
+  --colour-primaryblue-500: rgb(0, 54, 221);
+  --colour-primaryblue-600: rgb(1, 43, 182);
+  --colour-primaryblue-700: rgb(0, 32, 143);
+  --colour-primaryblue-800: rgb(0, 20, 106);
+  --colour-primaryblue-900: rgb(0, 12, 75);
+  --colour-primaryblue-950: rgb(0, 5, 49);
+
+  /* ---- Secondary blue (deep navy) ------------------------ */
+  --colour-secondaryblue-50: rgb(229, 231, 245);
+  --colour-secondaryblue-100: rgb(203, 208, 239);
+  --colour-secondaryblue-200: rgb(148, 160, 221);
+  --colour-secondaryblue-300: rgb(96, 116, 202);
+  --colour-secondaryblue-400: rgb(61, 77, 147);
+  --colour-secondaryblue-500: rgb(31, 42, 84);
+  --colour-secondaryblue-600: rgb(26, 35, 73);
+  --colour-secondaryblue-700: rgb(19, 28, 59);
+  --colour-secondaryblue-800: rgb(12, 20, 45);
+  --colour-secondaryblue-900: rgb(8, 13, 33);
+  --colour-secondaryblue-950: rgb(5, 7, 21);
+
+  /* ---- Secondary cyan ------------------------------------ */
+  --colour-secondarycyan-50: rgb(227, 255, 255);
+  --colour-secondarycyan-100: rgb(173, 255, 255);
+  --colour-secondarycyan-200: rgb(0, 255, 255);
+  --colour-secondarycyan-300: rgb(1, 239, 239);
+  --colour-secondarycyan-400: rgb(0, 227, 227);
+  --colour-secondarycyan-500: rgb(0, 212, 212);
+  --colour-secondarycyan-600: rgb(0, 168, 167);
+  --colour-secondarycyan-700: rgb(0, 122, 122);
+  --colour-secondarycyan-800: rgb(0, 82, 82);
+
+  /* ---- Success (green) ----------------------------------- */
+  --colour-success-50: rgb(211, 255, 211);
+  --colour-success-100: rgb(155, 255, 154);
+  --colour-success-200: rgb(0, 241, 0);
+  --colour-success-300: rgb(0, 214, 3);
+  --colour-success-400: rgb(0, 190, 4);
+  --colour-success-500: rgb(0, 163, 0);
+  --colour-success-600: rgb(0, 130, 0);
+  --colour-success-700: rgb(1, 97, 0);
+
+  /* ---- Error (red) --------------------------------------- */
+  --colour-error-50: rgb(255, 233, 231);
+  --colour-error-100: rgb(254, 215, 213);
+  --colour-error-200: rgb(255, 171, 169);
+  --colour-error-300: rgb(255, 123, 119);
+  --colour-error-400: rgb(255, 54, 37);
+  --colour-error-500: rgb(210, 27, 0);
+  --colour-error-600: rgb(170, 20, 0);
+  --colour-error-700: rgb(131, 12, 0);
+
+  /* ---- Alert (amber / warning) --------------------------- */
+  --colour-alert-50: rgb(255, 248, 241);
+  --colour-alert-100: rgb(255, 242, 224);
+  --colour-alert-200: rgb(255, 232, 200);
+  --colour-alert-300: rgb(255, 218, 163);
+  --colour-alert-400: rgb(255, 205, 114);
+  --colour-alert-500: rgb(255, 194, 40);
+  --colour-alert-600: rgb(200, 150, 0);
+  --colour-alert-700: rgb(148, 112, 1);
+
+  /* ---- Info (cool blue) ---------------------------------- */
+  --colour-info-50: rgb(237, 240, 253);
+  --colour-info-100: rgb(219, 226, 250);
+  --colour-info-200: rgb(181, 198, 246);
+  --colour-info-300: rgb(141, 170, 240);
+  --colour-info-400: rgb(96, 143, 236);
+  --colour-info-500: rgb(80, 143, 237);
+  --colour-info-600: rgb(46, 93, 169);
+  --colour-info-700: rgb(33, 70, 129);
+
+  /* ---- Alternative / data-viz accents -------------------- */
+  --colour-alternativepurple-50: rgb(238, 236, 253);
+  --colour-alternativepurple-100: rgb(221, 217, 252);
+  --colour-alternativepurple-200: rgb(186, 176, 249);
+  --colour-alternativepurple-300: rgb(154, 138, 245);
+  --colour-alternativepurple-400: rgb(125, 97, 241);
+  --colour-alternativepurple-500: rgb(96, 45, 234);
+  --colour-alternativepurple-600: rgb(77, 30, 198);
+  --colour-alternativepurple-700: rgb(57, 22, 154);
+
+  --colour-alternativeaqua-50: rgb(241, 255, 252);
+  --colour-alternativeaqua-300: rgb(180, 255, 241);
+  --colour-alternativeaqua-400: rgb(160, 255, 238);
+  --colour-alternativeaqua-500: rgb(110, 255, 233);
+  --colour-alternativeaqua-600: rgb(0, 204, 183);
+
+  --colour-alternativepeach-50: rgb(255, 248, 243);
+  --colour-alternativepeach-300: rgb(255, 213, 180);
+  --colour-alternativepeach-400: rgb(255, 199, 147);
+  --colour-alternativepeach-500: rgb(255, 184, 107);
+  --colour-alternativepeach-600: rgb(213, 139, 3);
+
+  --colour-alternativerosepink-50: rgb(254, 241, 242);
+  --colour-alternativerosepink-300: rgb(255, 161, 175);
+  --colour-alternativerosepink-400: rgb(255, 125, 147);
+  --colour-alternativerosepink-500: rgb(255, 82, 119);
+  --colour-alternativerosepink-600: rgb(226, 0, 81);
+
+  /* ========================================================
+     SEMANTIC ALIASES — light theme (default)
+     Reference these in product UI, not the raw scales above.
+     ======================================================== */
+
+  /* Surfaces & backgrounds */
+  --surface-page: var(--colour-neutral-0);
+  --surface-secondary: var(--colour-neutral-50);
+  --surface-raised: var(--colour-neutral-0);
+  --surface-inverse: var(--colour-neutral-950);
+  --surface-disabled: var(--colour-neutral-100);
+  --surface-modal-scrim: rgba(20, 22, 24, 0.6);
+
+  --background-hover: var(--colour-neutral-50);
+  --background-active: var(--colour-neutral-200);
+  --background-selected: var(--colour-primaryblue-50);
+  --background-action: var(--colour-primaryblue-500);
+  --background-action-hover: var(--colour-primaryblue-700);
+  --background-highlight: var(--colour-alternativepurple-400);
+
+  /* Layers (stacked container fills) */
+  --layer-01: var(--colour-neutral-50);
+  --layer-02: var(--colour-neutral-0);
+  --layer-03: var(--colour-neutral-100);
+  --layer-hover-01: var(--colour-neutral-100);
+
+  /* Text & icon */
+  --text-title: var(--colour-neutral-900);
+  --text-body: var(--colour-neutral-800);
+  --text-subtitle: var(--colour-neutral-700);
+  --text-caption: var(--colour-neutral-600);
+  --text-disabled: var(--colour-neutral-400);
+  --text-inverse: var(--colour-neutral-0);
+  --text-link: var(--colour-primaryblue-500);
+  --text-action: var(--colour-primaryblue-500);
+  --text-error: var(--colour-error-500);
+  --text-success: var(--colour-success-600);
+
+  --icon-primary: var(--colour-neutral-800);
+  --icon-secondary: var(--colour-neutral-600);
+  --icon-action: var(--colour-primaryblue-500);
+  --icon-success: var(--colour-success-500);
+  --icon-warning: var(--colour-alert-500);
+  --icon-error: var(--colour-error-500);
+  --icon-inverse: var(--colour-neutral-0);
+
+  /* Borders & dividers */
+  --border-subtle: var(--colour-neutral-200);
+  --border-default: var(--colour-neutral-300);
+  --border-strong: var(--colour-neutral-500);
+  --border-action: var(--colour-primaryblue-500);
+  --border-action-hover: var(--colour-primaryblue-700);
+  --border-disabled: var(--colour-neutral-300);
+  --border-error: var(--colour-error-400);
+  --border-success: var(--colour-success-500);
+  --border-warning: var(--colour-alert-500);
+  --border-highlight: var(--colour-alternativepurple-400);
+
+  /* Fields (form controls) */
+  --field-01: var(--colour-neutral-100);
+  --field-02: var(--colour-neutral-0);
+
+  /* Status surfaces */
+  --surface-success: var(--colour-success-50);
+  --surface-error: var(--colour-error-50);
+  --surface-warning: var(--colour-alert-50);
+  --surface-information: var(--colour-info-50);
+
+  /* Focus ring */
+  --focus-ring: var(--colour-alternativepurple-500);
+  --focus-ring-inverse: var(--colour-neutral-0);
+
+  /* Data-viz sequence (charts) */
+  --viz-1: var(--colour-alternativepurple-500);
+  --viz-2: var(--colour-primaryblue-400);
+  --viz-3: var(--colour-secondarycyan-500);
+  --viz-4: var(--colour-primaryblue-700);
+  --viz-5: var(--colour-alternativepurple-300);
+  --viz-6: var(--colour-info-400);
+
+  /* Signature brand gradient (magenta → deep blue) */
+  --gradient-brand: linear-gradient(114.77deg, rgb(223, 0, 193) 1.85%, rgb(0, 34, 137) 98.15%); /* @kind other */
+  --gradient-hero: linear-gradient(180deg, rgb(255, 255, 255) 0%, rgb(237, 240, 253) 100%); /* @kind other */
+}
+
+/* ========================================================
+   DARK THEME — apply via [data-theme="dark"] or .dark
+   ======================================================== */
+:root[data-theme="dark"], .dark {
+  --surface-page: var(--colour-neutral-950);
+  --surface-secondary: var(--colour-neutral-900);
+  --surface-raised: var(--colour-neutral-900);
+  --surface-inverse: var(--colour-neutral-0);
+  --surface-disabled: var(--colour-neutral-800);
+
+  --layer-01: var(--colour-neutral-900);
+  --layer-02: var(--colour-neutral-800);
+  --layer-03: var(--colour-neutral-700);
+  --layer-hover-01: var(--colour-neutral-800);
+
+  --text-title: var(--colour-neutral-0);
+  --text-body: var(--colour-neutral-100);
+  --text-subtitle: var(--colour-neutral-300);
+  --text-caption: var(--colour-neutral-400);
+  --text-disabled: var(--colour-neutral-600);
+  --text-inverse: var(--colour-neutral-950);
+
+  --icon-primary: var(--colour-neutral-100);
+  --icon-secondary: var(--colour-neutral-400);
+
+  --border-subtle: var(--colour-neutral-800);
+  --border-default: var(--colour-neutral-700);
+  --border-strong: var(--colour-neutral-500);
+
+  --field-01: var(--colour-neutral-900);
+  --field-02: var(--colour-neutral-800);
+
+  --background-hover: var(--colour-neutral-900);
+  --background-selected: var(--colour-primaryblue-900);
+}

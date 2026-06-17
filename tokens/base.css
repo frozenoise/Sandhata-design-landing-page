@@ -1,0 +1,88 @@
+/* ============================================================
+   Sandhata Design System — Base elements & type utilities
+   Sensible element defaults + reusable typography classes.
+   ============================================================ */
+
+*, *::before, *::after { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  font-family: var(--font-normal);
+  font-size: var(--body-medium-size);
+  line-height: var(--body-medium-line);
+  color: var(--text-body);
+  background: var(--surface-page);
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+/* ---- Typography utility classes -------------------------- */
+.sd-display-lg {
+  font-family: var(--font-bold); font-weight: var(--weight-bold);
+  font-size: var(--display-large-size); line-height: var(--display-large-line);
+  letter-spacing: var(--display-large-tracking); color: var(--text-title);
+}
+.sd-display-md {
+  font-family: var(--font-bold); font-weight: var(--weight-bold);
+  font-size: var(--display-medium-size); line-height: var(--display-medium-line);
+  letter-spacing: var(--display-medium-tracking); color: var(--text-title);
+}
+.sd-display-sm {
+  font-family: var(--font-normal); font-weight: var(--weight-regular);
+  font-size: var(--display-small-size); line-height: var(--display-small-line);
+  letter-spacing: var(--display-small-tracking); color: var(--text-title);
+}
+.sd-h1 {
+  font-family: var(--font-bold); font-weight: var(--weight-bold);
+  font-size: var(--heading-h1-size); line-height: var(--heading-h1-line);
+  letter-spacing: var(--heading-h1-tracking); color: var(--text-title);
+}
+.sd-h2 {
+  font-family: var(--font-bold); font-weight: var(--weight-bold);
+  font-size: var(--heading-h2-size); line-height: var(--heading-h2-line);
+  letter-spacing: var(--heading-h2-tracking); color: var(--text-title);
+}
+.sd-h3 {
+  font-family: var(--font-normal); font-weight: var(--weight-regular);
+  font-size: var(--heading-h3-size); line-height: var(--heading-h3-line);
+  color: var(--text-title);
+}
+.sd-body-lg {
+  font-family: var(--font-normal);
+  font-size: var(--body-large-size); line-height: var(--body-large-line);
+  color: var(--text-body);
+}
+.sd-body {
+  font-family: var(--font-normal);
+  font-size: var(--body-medium-size); line-height: var(--body-medium-line);
+  color: var(--text-body);
+}
+.sd-body-light {
+  font-family: var(--font-light); font-weight: var(--weight-light);
+  font-size: var(--body-medium-size); line-height: var(--body-medium-line);
+  color: var(--text-body);
+}
+.sd-caption {
+  font-family: var(--font-light); font-weight: var(--weight-light);
+  font-size: var(--caption-size); line-height: var(--caption-line);
+  letter-spacing: var(--caption-tracking); color: var(--text-caption);
+}
+.sd-label {
+  font-family: var(--font-normal);
+  font-size: var(--label-size); line-height: var(--label-line);
+  letter-spacing: var(--label-tracking); color: var(--text-subtitle);
+}
+.sd-helper {
+  font-family: var(--font-normal);
+  font-size: var(--helper-size); line-height: var(--helper-line);
+  letter-spacing: var(--helper-tracking); color: var(--text-caption);
+}
+.sd-mono {
+  font-family: var(--font-mono);
+  font-size: var(--code-size); line-height: var(--code-line);
+}
+
+a { color: var(--text-link); text-decoration: none; }
+a:hover { text-decoration: underline; }
+
+::selection { background: var(--colour-primaryblue-100); }

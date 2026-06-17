@@ -1,0 +1,26 @@
+# dependencies
+node_modules
+
+# next.js build output
+.next
+out
+next-env.d.ts
+
+# secrets / env (keep .env.local.example tracked as a template)
+.env
+.env*.local
+
+# local Claude config (may contain machine-specific settings)
+.claude/
+
+# markdown (notes, guides, prompt docs) — but keep the project README
+*.md
+!/readme.md
+
+# os / editor cruft
+.DS_Store
+*.log
+npm-debug.log*
+
+# misc local
+_ds_bundle.js.map

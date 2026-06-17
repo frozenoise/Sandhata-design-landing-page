@@ -1,0 +1,51 @@
+<!-- @dsCard group="Components" viewport="700x300" name="Feedback" subtitle="Alert, Tooltip, Spinner" -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<link rel="stylesheet" href="../../styles.css" />
+<style>
+  .stack { display: flex; flex-direction: column; gap: 10px; }
+  .row { display: flex; gap: 16px; align-items: center; margin-top: 16px; }
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+<script src="../../_ds_bundle.js"></script>
+<script src="../cardshell.js"></script>
+<script type="text/babel">
+  const { Alert, Tooltip, Spinner, Button } = window.SandhataDesignSystem_081a0e;
+  const { CardShell } = window;
+
+  const code = `<span class="t">&lt;Alert</span> <span class="p">tone</span>=<span class="s">"success"</span> <span class="p">title</span>=<span class="s">"Saved"</span><span class="t">&gt;</span>
+  Your changes were saved successfully.<span class="t">&lt;/Alert&gt;</span>
+<span class="t">&lt;Alert</span> <span class="p">tone</span>=<span class="s">"warning"</span> <span class="p">title</span>=<span class="s">"Heads up"</span> <span class="p">onClose</span>={fn}<span class="t">&gt;</span>
+  Your trial ends in 3 days.<span class="t">&lt;/Alert&gt;</span>
+
+<span class="t">&lt;Tooltip</span> <span class="p">label</span>=<span class="s">"This is a tooltip"</span><span class="t">&gt;</span>
+  <span class="t">&lt;Button</span> <span class="p">hierarchy</span>=<span class="s">"tertiary"</span><span class="t">&gt;</span>Hover me<span class="t">&lt;/Button&gt;&lt;/Tooltip&gt;</span>
+<span class="t">&lt;Spinner</span> <span class="p">size</span>={20} /<span class="t">&gt;</span>`;
+
+  function Demo() {
+    return (
+      <CardShell code={code}>
+        <div className="stack">
+          <Alert tone="success" title="Saved">Your changes were saved successfully.</Alert>
+          <Alert tone="warning" title="Heads up" onClose={()=>{}}>Your trial ends in 3 days.</Alert>
+          <Alert tone="error">Something went wrong. Try again.</Alert>
+        </div>
+        <div className="row">
+          <Tooltip label="This is a tooltip"><Button hierarchy="tertiary" size="small">Hover me</Button></Tooltip>
+          <Spinner size={20} />
+          <Spinner size={28} />
+        </div>
+      </CardShell>
+    );
+  }
+  ReactDOM.createRoot(document.getElementById("root")).render(<Demo/>);
+</script>
+</body>
+</html>

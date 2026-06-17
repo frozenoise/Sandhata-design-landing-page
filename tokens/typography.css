@@ -1,0 +1,71 @@
+/* ============================================================
+   Sandhata Design System — Typography tokens
+   Typeface: Akkurat (Light 300 / Regular 400 / Bold 700) + Mono.
+   Scale follows an 8-point rhythm. Values from Figma type tokens.
+   ============================================================ */
+
+:root {
+  /* ---- Families ------------------------------------------ */
+  --font-light:  "Akkurat-Light", "Akkurat", system-ui, sans-serif;
+  --font-normal: "Akkurat", system-ui, sans-serif;
+  --font-bold:   "Akkurat-Bold", "Akkurat", system-ui, sans-serif;
+  --font-mono:   "Akkurat-Mono", ui-monospace, "SF Mono", Menlo, monospace;
+
+  /* ---- Weights ------------------------------------------- */
+  --weight-light: 300;
+  --weight-regular: 400;
+  --weight-bold: 700;
+
+  /* ---- Type scale (font-size / line-height / tracking) ---
+     Display — Akkurat Bold, tight tracking, for hero & marketing. */
+  --display-large-size: 48px;
+  --display-large-line: 64px;
+  --display-large-tracking: -1px;
+
+  --display-medium-size: 40px;
+  --display-medium-line: 48px;
+  --display-medium-tracking: -0.5px;
+
+  --display-small-size: 32px;
+  --display-small-line: 40px;
+  --display-small-tracking: -0.25px;
+
+  /* Headings — section & component titles */
+  --heading-h1-size: 24px;
+  --heading-h1-line: 32px;
+  --heading-h1-tracking: -0.25px;
+
+  --heading-h2-size: 20px;
+  --heading-h2-line: 24px;
+  --heading-h2-tracking: -0.25px;
+
+  --heading-h3-size: 16px;
+  --heading-h3-line: 20px;
+  --heading-h3-tracking: 0;
+
+  /* Body */
+  --body-large-size: 16px;
+  --body-large-line: 24px;
+
+  --body-medium-size: 14px;
+  --body-medium-line: 20px;
+
+  --body-small-size: 12px;
+  --body-small-line: 16px;
+
+  /* Auxiliary */
+  --caption-size: 12px;
+  --caption-line: 16px;
+  --caption-tracking: 0.1px;
+
+  --label-size: 12px;
+  --label-line: 16px;
+  --label-tracking: 0.5px;
+
+  --helper-size: 10px;
+  --helper-line: 14px;
+  --helper-tracking: 0.2px;
+
+  --code-size: 12px;
+  --code-line: 16px;
+}

@@ -1,0 +1,70 @@
+<!-- @dsCard group="Showcase" viewport="1280x760" name="Sandhata UI — component showcase" subtitle="Interactive shadcn-style landing: dashboard, forms, pricing" -->
+<!-- @startingPoint section="Showcase" subtitle="Sandhata UI component showcase landing" viewport="1280x760" -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Sandhata Design System</title>
+<link rel="stylesheet" href="../../styles.css" />
+<style>
+  body { margin: 0; background: var(--surface-secondary); }
+  #app { min-height: 100vh; }
+  .subnav { display: flex; gap: 4px; padding: 8px 32px; background: var(--surface-page); border-bottom: 1px solid var(--border-subtle); overflow-x: auto; }
+  .subnav button { display: inline-flex; align-items: center; gap: 8px; height: 38px; padding: 0 14px; border-radius: var(--radius-md); border: 1px solid transparent; background: transparent; cursor: pointer; font-family: var(--font-normal); font-size: 14px; color: var(--text-caption); white-space: nowrap; }
+  .subnav button.on { color: var(--text-action); border-color: var(--colour-primaryblue-200); background: var(--colour-primaryblue-50); font-family: var(--font-bold); font-weight: 700; }
+  .content { max-width: 1240px; margin: 0 auto; padding: 28px 32px 56px; }
+</style>
+</head>
+<body>
+<div id="app"></div>
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+<script src="../../_ds_bundle.js"></script>
+<script type="text/babel" src="Charts.jsx"></script>
+<script type="text/babel" src="Chrome.jsx"></script>
+<script type="text/babel" src="DataTable.jsx"></script>
+<script type="text/babel" src="DashboardView.jsx"></script>
+<script type="text/babel" src="FormsView.jsx"></script>
+<script type="text/babel" src="ProductCardsView.jsx"></script>
+<script type="text/babel">
+  const SCHEME_VARS = {
+    blue:   {},
+    purple: { "--colour-primaryblue-50": "var(--colour-alternativepurple-50)", "--colour-primaryblue-100": "var(--colour-alternativepurple-100)", "--colour-primaryblue-200": "var(--colour-alternativepurple-200)", "--colour-primaryblue-400": "var(--colour-alternativepurple-400)", "--colour-primaryblue-500": "var(--colour-alternativepurple-500)", "--colour-primaryblue-600": "var(--colour-alternativepurple-600)", "--colour-primaryblue-700": "var(--colour-alternativepurple-700)" },
+    cyan:   { "--colour-primaryblue-50": "var(--colour-secondarycyan-50)", "--colour-primaryblue-100": "var(--colour-secondarycyan-100)", "--colour-primaryblue-200": "var(--colour-secondarycyan-100)", "--colour-primaryblue-400": "var(--colour-secondarycyan-500)", "--colour-primaryblue-500": "var(--colour-secondarycyan-600)", "--colour-primaryblue-600": "var(--colour-secondarycyan-700)", "--colour-primaryblue-700": "var(--colour-secondarycyan-800)" },
+    rose:   { "--colour-primaryblue-50": "var(--colour-alternativerosepink-50)", "--colour-primaryblue-100": "var(--colour-alternativerosepink-100)", "--colour-primaryblue-200": "var(--colour-alternativerosepink-300)", "--colour-primaryblue-400": "var(--colour-alternativerosepink-400)", "--colour-primaryblue-500": "var(--colour-alternativerosepink-500)", "--colour-primaryblue-600": "var(--colour-alternativerosepink-600)", "--colour-primaryblue-700": "var(--colour-alternativerosepink-700)" },
+  };
+  const VIEWS = [
+    { key: "dashboard", label: "Dashboard" },
+    { key: "forms", label: "Forms" },
+    { key: "cards", label: "Product Cards" },
+  ];
+  function Hex() {
+    return <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M12 2 4 6v6c0 5 3.5 8 8 10 4.5-2 8-5 8-10V6l-8-4Z" /></svg>;
+  }
+  function App() {
+    const [scheme, setScheme] = React.useState("blue");
+    const [view, setView] = React.useState("dashboard");
+    return (
+      <div id="app" style={{ ...SCHEME_VARS[scheme] }}>
+        <window.TopBar />
+        <window.Hero />
+        <window.CategoryNav scheme={scheme} setScheme={setScheme} />
+        <div className="subnav">
+          {VIEWS.map((v) => (
+            <button key={v.key} className={view === v.key ? "on" : ""} onClick={() => setView(v.key)}><Hex />{v.label}</button>
+          ))}
+        </div>
+        <div className="content">
+          {view === "dashboard" && <window.DashboardView />}
+          {view === "forms" && <window.FormsView />}
+          {view === "cards" && <window.ProductCardsView />}
+        </div>
+      </div>
+    );
+  }
+  ReactDOM.createRoot(document.getElementById("app")).render(<App />);
+</script>
+</body>
+</html>
