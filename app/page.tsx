@@ -342,14 +342,12 @@ export default function App() {
   // below-fold elements on scroll; an initial pass reveals anything already
   // in view so content is never left hidden.
   React.useEffect(() => {
-    const root = document.documentElement;
-    root.classList.add("reveal-on");
     const els = Array.from(document.querySelectorAll<HTMLElement>("[data-reveal]"));
     const reveal = (el: HTMLElement) => el.classList.add("in");
 
     if (!("IntersectionObserver" in window)) {
       els.forEach(reveal);
-      return () => root.classList.remove("reveal-on");
+      return;
     }
 
     const io = new IntersectionObserver(
@@ -358,18 +356,18 @@ export default function App() {
           if (e.isIntersecting) { reveal(e.target as HTMLElement); io.unobserve(e.target); }
         });
       },
-      { threshold: 0.12, rootMargin: "0px 0px -8% 0px" }
+      { threshold: 0.14, rootMargin: "0px 0px -10% 0px" }
     );
+    els.forEach((el) => io.observe(el));
 
-    // initial pass: reveal whatever is already on screen, observe the rest
-    requestAnimationFrame(() => {
+    // Safety net: reveal any in-viewport element the observer hasn't, after 2s.
+    const fallback = window.setTimeout(() => {
       els.forEach((el) => {
-        if (el.getBoundingClientRect().top < window.innerHeight * 0.92) reveal(el);
-        else io.observe(el);
+        if (!el.classList.contains("in") && el.getBoundingClientRect().top < window.innerHeight) reveal(el);
       });
-    });
+    }, 2000);
 
-    return () => { io.disconnect(); root.classList.remove("reveal-on"); };
+    return () => { clearTimeout(fallback); io.disconnect(); };
   }, []);
 
   return (

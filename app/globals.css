@@ -9,18 +9,18 @@ body { background: #FEFAF7; overflow-x: hidden; font-family: var(--font-normal);
 /* ─── Tokens local ────────────────────────────────────────────── */
 :root { --blue: #0036DD; --blue-50: #EEF3FF; --page: #FEFAF7; }
 
-/* ── Section entrance animation (progressive enhancement) ─────── */
-/* Hidden state only applies once JS marks the document as reveal-ready,
-   so content stays visible if JS is unavailable. */
-.reveal-on [data-reveal] {
-  opacity: 0; transform: translateY(30px);
-  transition: opacity .7s cubic-bezier(.16,1,.3,1), transform .7s cubic-bezier(.16,1,.3,1);
+/* ── Section entrance animation ──────────────────────────────── */
+/* Hidden from first paint (no load flash); the observer adds .in to play
+   the transition. A <noscript> style in the layout reveals all for no-JS. */
+[data-reveal] {
+  opacity: 0; transform: translateY(34px);
+  transition: opacity .75s cubic-bezier(.16,1,.3,1), transform .75s cubic-bezier(.16,1,.3,1);
   will-change: opacity, transform;
 }
-.reveal-on [data-reveal].in { opacity: 1; transform: none; }
+[data-reveal].in { opacity: 1; transform: none; }
 @media (prefers-reduced-motion: reduce) {
   html { scroll-behavior: auto; }
-  .reveal-on [data-reveal] { opacity: 1; transform: none; transition: none; }
+  [data-reveal] { opacity: 1 !important; transform: none !important; transition: none; }
 }
 
 /* ─── Nav ────────────────────────────────────────────────────── */

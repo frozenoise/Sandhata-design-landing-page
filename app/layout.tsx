@@ -14,6 +14,11 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en">
+      <head>
+        <noscript>
+          <style>{`[data-reveal]{opacity:1 !important;transform:none !important;}`}</style>
+        </noscript>
+      </head>
       <body>{children}</body>
     </html>
   );
