@@ -164,48 +164,115 @@ function RadarChart() {
   );
 }
 
-function MiniSparkline() {
-  const raw = [40,28,34,12,22,8,18,5,15,3,10,2];
-  const max = Math.max(...raw);
-  const W = 240, H = 52;
-  const pts = raw.map((v,i) => [i*(W/(raw.length-1)), H - (v/max)*H*0.88 - 4]);
-  const d = "M " + pts.map(p => p.join(",")).join(" L ");
-  const area = `${d} L ${W},${H} L 0,${H} Z`;
+/* ── Chart components — 1:1 from app/page.tsx ───────────────────── */
+function DonutChart() {
+  const MONTHS = ["January","February","March","April","May","June"];
+  const MONTH_DATA: Record<string,[number,number,number]> = {
+    January:[186,62,48], February:[154,78,32], March:[201,55,60],
+    April:[178,42,66], May:[220,85,38], June:[165,71,52],
+  };
+  const COLORS = ["var(--colour-primaryblue-500)","var(--colour-primaryblue-300)","var(--colour-primaryblue-100)"];
+  const LABELS = ["Visitors","Page views","Conversions"];
+  const [month, setMonth] = React.useState("January");
+  const [open,  setOpen]  = React.useState(false);
+  const [hiArc, setHiArc] = React.useState<number|null>(null);
+  const ref = React.useRef<HTMLDivElement>(null);
+  React.useEffect(() => {
+    const h = (e: MouseEvent) => { if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false); };
+    document.addEventListener("mousedown", h); return () => document.removeEventListener("mousedown", h);
+  }, []);
+  const vals = MONTH_DATA[month], total = vals.reduce((a,b) => a+b, 0);
+  const cx=80, cy=80, OR=63, Osw=13, IR=46, Isw=6, TICKS=72;
+  const ir0=IR-Isw/2+0.5, ir1=IR+Isw/2-0.5;
+  const GAP_RAD=(20/360)*Math.PI*2, ARC_RAD=Math.PI*2-GAP_RAD*vals.length;
+  let angle=-Math.PI/2;
+  const arcs = vals.map((v,i) => {
+    const arc=(v/total)*ARC_RAD, sa=angle, ea=angle+arc; angle=ea+GAP_RAD;
+    return { d:`M ${(cx+OR*Math.cos(sa)).toFixed(2)} ${(cy+OR*Math.sin(sa)).toFixed(2)} A ${OR} ${OR} 0 ${arc>Math.PI?1:0} 1 ${(cx+OR*Math.cos(ea)).toFixed(2)} ${(cy+OR*Math.sin(ea)).toFixed(2)}`, color:COLORS[i], label:LABELS[i], value:v };
+  });
   return (
-    <svg viewBox={`0 0 ${W} ${H}`} style={{ width:"100%", height:52, display:"block" }}>
-      <defs>
-        <linearGradient id="spkGrad" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0%" stopColor="var(--colour-primaryblue-500)" stopOpacity="0.18"/>
-          <stop offset="100%" stopColor="var(--colour-primaryblue-500)" stopOpacity="0"/>
-        </linearGradient>
-      </defs>
-      <path d={area} fill="url(#spkGrad)"/>
-      <path d={d} fill="none" stroke="var(--colour-primaryblue-500)" strokeWidth="2"
-        strokeLinecap="round" strokeLinejoin="round"/>
+    <div ref={ref} style={{position:"relative"}}>
+      <div style={{display:"flex",justifyContent:"flex-end",marginBottom:4,position:"relative"}}>
+        <button className="rtu-pill" onClick={()=>setOpen(o=>!o)}>{month} ▾</button>
+        {open && (
+          <div className="rtu-month-menu">
+            {MONTHS.map(m=><button key={m} className={m===month?"on":""} onClick={()=>{setMonth(m);setOpen(false);}}>{m}</button>)}
+          </div>
+        )}
+      </div>
+      <svg viewBox="0 0 160 160" width="100%" style={{display:"block"}}>
+        {Array.from({length:TICKS}).map((_,t)=>{const a=(t/TICKS)*Math.PI*2-Math.PI/2; return <line key={t} x1={(cx+ir0*Math.cos(a)).toFixed(2)} y1={(cy+ir0*Math.sin(a)).toFixed(2)} x2={(cx+ir1*Math.cos(a)).toFixed(2)} y2={(cy+ir1*Math.sin(a)).toFixed(2)} stroke="rgba(0,0,0,0.18)" strokeWidth="0.9"/>;}) }
+        <circle cx={cx} cy={cy} r={OR} fill="none" stroke="rgba(0,0,0,0.07)" strokeWidth={Osw}/>
+        {arcs.map((arc,i)=><path key={`${month}-${i}`} d={arc.d} fill="none" stroke={arc.color} strokeWidth={hiArc===i?Osw+3:Osw} strokeLinecap="round" style={{cursor:"pointer",transition:"stroke-width .15s ease"}} onMouseEnter={()=>setHiArc(i)} onMouseLeave={()=>setHiArc(null)}/>)}
+        <text x={cx} y={cy-10} textAnchor="middle" dominantBaseline="middle" fontSize="22" fontWeight="700" fill="#0a0a14" style={{fontFamily:"var(--font-bold)"}}>{vals[0]}</text>
+        <text x={cx} y={cy+10} textAnchor="middle" dominantBaseline="middle" fontSize="10" fill="#8a8f9b" style={{fontFamily:"var(--font-normal)"}}>Visitors</text>
+      </svg>
+      {hiArc!==null && <div className="rtu-tip" style={{position:"absolute",left:"50%",top:"40%",transform:"translate(-50%,-50%)",pointerEvents:"none"}}>{arcs[hiArc]?.value}<span>{arcs[hiArc]?.label}</span></div>}
+      <div style={{marginTop:10,display:"flex",flexDirection:"column",gap:5}}>
+        {arcs.map(arc=>(
+          <div key={arc.label} style={{display:"flex",alignItems:"center",gap:8}}>
+            <span style={{width:9,height:9,borderRadius:"50%",background:arc.color,flexShrink:0,display:"inline-block"}}/>
+            <span className="rtu-card-sub" style={{margin:0,flex:1}}>{arc.label}</span>
+            <span className="rtu-card-sub" style={{margin:0,color:"#0a0a14",fontWeight:600}}>{arc.value}</span>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function LandingBarChart() {
+  const data=[72,58,85,44,91,67,78,55], labels=["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug"];
+  const W=260, H=110, pad=6, bw=(W-pad*2)/data.length-5, maxV=Math.max(...data);
+  return (
+    <svg viewBox={`0 0 ${W} ${H}`} width="100%" style={{display:"block"}}>
+      {data.map((v,i)=>{const bh=(v/maxV)*(H-pad*2-16),x=pad+i*(bw+5); return(<g key={i}><rect x={x} y={H-pad-16-bh} width={bw} height={bh} fill={i%2===0?"var(--colour-primaryblue-500)":"var(--colour-primaryblue-200)"} rx="3"/><text x={x+bw/2} y={H-4} fontSize="7" fill="#9aa0ac" textAnchor="middle">{labels[i]}</text></g>);})}
     </svg>
   );
 }
 
-function MiniBarChart() {
-  const data = [0.45,0.60,0.50,0.82,0.65,0.90,0.74,1.0,0.76,0.68,0.88,0.93];
-  const labels = ["J","F","M","A","M","J","J","A","S","O","N","D"];
-  const W = 220, H = 52;
-  const bw = W/data.length - 3;
-  return (
-    <svg viewBox={`0 0 ${W} ${H}`} style={{ width:"100%", height:52, display:"block" }}>
-      {data.map((v,i) => {
-        const h = v * (H - 12);
-        const x = i*(W/data.length);
-        return (
-          <g key={i}>
-            <rect x={x+1} y={H-h-4} width={bw} height={h}
-              fill={i===data.length-1 ? "var(--colour-primaryblue-500)" : "var(--colour-primaryblue-100)"}
-              rx={2}/>
-            <text x={x+1+bw/2} y={H-1} textAnchor="middle" fontSize="7" fill="var(--text-caption)">{labels[i]}</text>
-          </g>
-        );
-      })}
-    </svg>
+function MiniLineChart() {
+  const [hi, setHi] = React.useState<number|null>(null);
+  const W=400, H=90, pad=14;
+  const raw=[42,58,51,74,68,85,72,79,65,88], labels=["Aug","Sep","Oct","Nov","Dec","Jan","Feb","Mar","Apr","May"];
+  const maxV=Math.max(...raw), minV=Math.min(...raw);
+  const pts=raw.map((v,i)=>[pad+(i/(raw.length-1))*(W-pad*2), H-pad-((v-minV)/(maxV-minV))*(H-pad*2)]);
+  let d=`M ${pts[0][0]} ${pts[0][1]}`;
+  for(let i=0;i<pts.length-1;i++){const cp=pts[i][0]+(pts[i+1][0]-pts[i][0])*0.5; d+=` C ${cp} ${pts[i][1]}, ${cp} ${pts[i+1][1]}, ${pts[i+1][0]} ${pts[i+1][1]}`;}
+  const area=`${d} L ${W-pad} ${H-pad} L ${pad} ${H-pad} Z`;
+  const ref=React.useRef<HTMLDivElement>(null);
+  const onMove=(e:React.MouseEvent)=>{const r=ref.current!.getBoundingClientRect(); setHi(Math.max(0,Math.min(raw.length-1,Math.round(((e.clientX-r.left)/r.width)*(raw.length-1)))));};
+  return(
+    <div ref={ref} style={{position:"relative"}} onMouseMove={onMove} onMouseLeave={()=>setHi(null)}>
+      <svg viewBox={`0 0 ${W} ${H}`} preserveAspectRatio="none" style={{display:"block",width:"100%",height:H}}>
+        <defs><linearGradient id="mlg" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stopColor="var(--colour-primaryblue-400)" stopOpacity="0.22"/><stop offset="100%" stopColor="var(--colour-primaryblue-400)" stopOpacity="0"/></linearGradient></defs>
+        <path d={area} fill="url(#mlg)"/>
+        <path d={d} fill="none" stroke="var(--colour-primaryblue-500)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+        {hi!==null&&<line x1={pts[hi][0]} y1={pad} x2={pts[hi][0]} y2={H-pad} stroke="var(--colour-primaryblue-300)" strokeWidth="1" strokeDasharray="3 3"/>}
+      </svg>
+      {hi!==null&&(<><div style={{position:"absolute",left:`${(pts[hi][0]/W)*100}%`,top:`${(pts[hi][1]/H)*100}%`,transform:"translate(-50%,-50%)",width:10,height:10,borderRadius:"50%",background:"#fff",border:"2px solid var(--colour-primaryblue-500)",pointerEvents:"none",zIndex:2}}/><div className="rtu-tip" style={{left:`${(pts[hi][0]/W)*100}%`,top:`${(pts[hi][1]/H)*100}%`}}>{raw[hi]}<span>{labels[hi]}</span></div></>)}
+    </div>
+  );
+}
+
+function LineChart() {
+  const [hi, setHi] = React.useState<number|null>(null);
+  const W=980, H=200, n=60; let seed=7;
+  const rnd=()=>{seed=(seed*9301+49297)%233280; return seed/233280;};
+  const ys=Array.from({length:n},()=>40+rnd()*120);
+  const sm=ys.map((y,i)=>(ys[i-1]??y)*0.25+y*0.5+(ys[i+1]??y)*0.25);
+  const pts=sm.map((y,i)=>[i*(W/(n-1)),y] as [number,number]);
+  const d=pts.map(([x,y],i)=>`${i===0?"M":"L"} ${x.toFixed(1)} ${y.toFixed(1)}`).join(" ");
+  const ref=React.useRef<HTMLDivElement>(null);
+  const onMove=(e:React.MouseEvent)=>{const r=ref.current!.getBoundingClientRect(); setHi(Math.max(0,Math.min(n-1,Math.round(((e.clientX-r.left)/r.width)*(n-1)))));};
+  return(
+    <div ref={ref} style={{position:"relative"}} onMouseMove={onMove} onMouseLeave={()=>setHi(null)}>
+      <svg viewBox={`0 0 ${W} ${H}`} width="100%" preserveAspectRatio="none" style={{display:"block",height:H}}>
+        <path d={d} fill="none" stroke="#8b8ff5" strokeWidth="2" strokeLinejoin="round"/>
+        {hi!==null&&<line x1={pts[hi][0]} y1={0} x2={pts[hi][0]} y2={H} stroke="rgba(139,143,245,0.3)" strokeWidth="1" strokeDasharray="4 4"/>}
+      </svg>
+      {hi!==null&&(<><div style={{position:"absolute",left:`${(pts[hi][0]/W)*100}%`,top:`${(pts[hi][1]/H)*100}%`,transform:"translate(-50%,-50%)",width:10,height:10,borderRadius:"50%",background:"#fff",border:"2px solid #8b8ff5",pointerEvents:"none"}}/><div className="rtu-tip" style={{left:`${(pts[hi][0]/W)*100}%`,top:`${(pts[hi][1]/H)*100}%`}}>{Math.round(24000+sm[hi]*40).toLocaleString()}<span>visitors</span></div></>)}
+    </div>
   );
 }
 
@@ -400,38 +467,64 @@ export default function ShowcasePage() {
     <section style={{ padding:"44px 48px", background:"var(--surface-secondary, #f5f6f8)" }}>
       <BandTag>Data visualisation</BandTag>
 
-      <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr 1fr 200px", gap:16, marginBottom:16 }}>
-        <StatCard label="Revenue" value="£2.4M" trend="+12% vs last quarter" trendDirection="up"/>
-        <StatCard label="Active Users" value="48,291" trend="+5.3% this week" trendDirection="up"/>
-        <StatCard label="Customer Satisfaction" value="4.8 / 5" trend="+0.3pt this month" trendDirection="up"/>
-        <div style={{ background:"var(--surface-raised, #fff)", border:"1px solid var(--border-subtle)",
-          borderRadius:"var(--radius-lg)", padding:"14px 16px" }}>
-          <p style={{ fontFamily:"var(--font-normal)", fontSize:10, fontWeight:700, letterSpacing:"0.08em",
-            textTransform:"uppercase", color:"var(--text-caption)", margin:"0 0 4px" }}>Visitors · Radar</p>
+      {/* Row 1: 3 StatCards */}
+      <div style={{ display:"grid", gridTemplateColumns:"repeat(3,1fr)", gap:16, marginBottom:20 }}>
+        <div><StatCard label="Revenue" value="£2.4M" trend="+12% vs last quarter" trendDirection="up"/></div>
+        <div><StatCard label="Active Users" value="48,291" trend="+5.3% this week" trendDirection="up"/></div>
+        <div><StatCard label="Customer Satisfaction" value="4.8 / 5" trend="+0.3pt this month" trendDirection="up"/></div>
+      </div>
+
+      {/* Row 2: exact landing page rtu-charts grid */}
+      <div className="rtu-charts">
+        <div className="cc rtu-card">
+          <div className="rtu-card-tag">◎ Radar Chart</div>
+          <div className="rtu-card-h">Radar Chart</div>
+          <div className="rtu-card-sub">Total visitors by month</div>
           <RadarChart/>
+          <div className="rtu-card-foot">Trending up by 5.2% this month ↗</div>
+          <div className="rtu-card-sub" style={{textAlign:"center"}}>January - June 2026</div>
+        </div>
+
+        <div className="cc rtu-card">
+          <div className="rtu-card-tag">◷ Pie Chart</div>
+          <div className="rtu-card-h">Pie Chart - Interactive</div>
+          <div className="rtu-card-sub">January - June 2026</div>
+          <DonutChart/>
+        </div>
+
+        <div className="rtu-right-col">
+          <div className="cc rtu-card">
+            <div className="rtu-card-tag">▪ Bar Chart</div>
+            <div className="rtu-card-h">Bar Chart - Monthly</div>
+            <div className="rtu-card-sub">Sessions by month, Jan–Aug 2024</div>
+            <div style={{marginTop:10}}><LandingBarChart/></div>
+            <div className="rtu-card-foot">Peak in May · 91 sessions ↑</div>
+          </div>
+          <div className="cc rtu-card">
+            <div className="rtu-card-tag">— Line Chart</div>
+            <div className="rtu-card-h">Trend Line</div>
+            <div className="rtu-card-sub">Monthly sessions, Aug 2023–May 2024</div>
+            <div style={{marginTop:8}}><MiniLineChart/></div>
+          </div>
         </div>
       </div>
 
-      <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:16 }}>
-        <div style={{ background:"var(--surface-raised, #fff)", border:"1px solid var(--border-subtle)",
-          borderRadius:"var(--radius-lg)", padding:"20px 20px 14px" }}>
-          <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:12 }}>
-            <p style={{ fontFamily:"var(--font-bold)", fontWeight:700, fontSize:14, color:"var(--text-title)", margin:0 }}>Revenue trend</p>
-            <Badge tone="success" dot>Live</Badge>
+      {/* Row 3: full-width interactive line chart */}
+      <div className="cc rtu-line" style={{marginTop:20}}>
+        <div className="rtu-line-head">
+          <div>
+            <div className="rtu-card-h">Line Chart - Interactive</div>
+            <div className="rtu-card-sub">Showing total visitors for the last 3 months</div>
           </div>
-          <MiniSparkline/>
-          <div style={{ display:"flex", justifyContent:"space-between", marginTop:6 }}>
-            <span style={{ fontFamily:"var(--font-normal)", fontSize:11, color:"var(--text-caption)" }}>Jan 2026</span>
-            <span style={{ fontFamily:"var(--font-normal)", fontSize:11, color:"var(--text-caption)" }}>Dec 2026</span>
+          <div className="rtu-line-stats">
+            <div className="rtu-stat on"><span>Desktop</span><strong>24,828</strong></div>
+            <div className="rtu-stat"><span>Mobile</span><strong>25,010</strong></div>
           </div>
         </div>
-        <div style={{ background:"var(--surface-raised, #fff)", border:"1px solid var(--border-subtle)",
-          borderRadius:"var(--radius-lg)", padding:"20px 20px 14px" }}>
-          <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:12 }}>
-            <p style={{ fontFamily:"var(--font-bold)", fontWeight:700, fontSize:14, color:"var(--text-title)", margin:0 }}>Component usage</p>
-            <span style={{ fontFamily:"var(--font-normal)", fontSize:11, color:"var(--text-caption)" }}>Last 12 months</span>
-          </div>
-          <MiniBarChart/>
+        <LineChart/>
+        <div className="rtu-axis">
+          {["Apr 5","Apr 10","Apr 15","Apr 20","Apr 25","Apr 30","May 5","May 10","May 15","May 20","May 25","May 30","Jun 4","Jun 9","Jun 14","Jun 19","Jun 24","Jun 30"].map(l =>
+            <span key={l}>{l}</span>)}
         </div>
       </div>
     </section>
