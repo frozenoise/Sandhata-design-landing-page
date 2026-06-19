@@ -145,7 +145,12 @@ function SdSidebar({ groups, current, setCurrent, topItem, searchPlaceholder }: 
           <div key={g.label} className="doc-group">
             <div className="doc-group-label">{g.label}</div>
             {items.map((it) => (
-              <a key={it.id} className={"doc-nav-item" + (current === it.id ? " on" : "")} onClick={() => setCurrent(it.id)}>{it.name}</a>
+              <a key={it.id} className={"doc-nav-item" + (current === it.id ? " on" : "")} onClick={() => setCurrent(it.id)}>
+                {it.name}
+                {(it as any).sections?.[0]?.id === "coming-soon" && (
+                  <span className="cs-badge">Soon</span>
+                )}
+              </a>
             ))}
           </div>
         );

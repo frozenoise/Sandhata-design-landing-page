@@ -31,6 +31,13 @@ body { margin: 0; background: var(--doc-bg); }
 .doc-group-label { font: 700 11px/1 var(--font-bold); letter-spacing: 0.4px; color: var(--text-caption); text-transform: none; padding: 0 12px 8px; }
 .doc-nav-item { display: block; padding: 7px 12px; border-radius: var(--radius-sm); font: 14px/1.3 var(--font-normal); color: var(--text-subtitle); cursor: pointer; }
 .doc-nav-item:hover, .doc-nav-all:hover { background: rgba(20,22,24,0.04); }
+.cs-badge {
+  display: inline-block; margin-left: 6px;
+  padding: 1px 5px; border-radius: 3px;
+  font: 700 9px/1.5 var(--font-bold); letter-spacing: 0.2px;
+  background: rgba(0,54,221,0.08); color: var(--colour-primaryblue-500);
+  vertical-align: 1px;
+}
 
 /* Scroll area + page layout */
 .doc-scroll { flex: 1; overflow-y: auto; padding: 36px 48px 80px; }

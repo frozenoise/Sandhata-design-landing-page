@@ -37,62 +37,267 @@ const ZapIco   = () => <I size={18} d={<polygon points="13 2 3 14 12 14 11 22 21
 
 /* ── Showcase charts (Ready-to-use section) ───────────────────── */
 function RadarChart() {
+  const [hi, setHi] = React.useState<number|null>(null);
   const cx = 90, cy = 92, R = 66;
-  const ring = (f) => [0,1,2,3,4,5].map(i => {
-    const a = -Math.PI/2 + i*Math.PI/3;
+  const data   = [0.82, 0.55, 0.72, 0.88, 0.50, 0.66];
+  const values = [820,  550,  720,  880,  500,  660];
+  const labels = ["January","February","March","April","May","June"];
+  const ang = (i: number) => -Math.PI/2 + i*Math.PI/3;
+  const ring = (f: number) => [0,1,2,3,4,5].map(i => {
+    const a = ang(i);
     return `${cx + R*f*Math.cos(a)},${cy + R*f*Math.sin(a)}`;
   }).join(" ");
-  const data = [0.82,0.55,0.72,0.88,0.5,0.66];
-  const dpts = data.map((v,i) => {
-    const a = -Math.PI/2 + i*Math.PI/3;
-    return `${cx + R*v*Math.cos(a)},${cy + R*v*Math.sin(a)}`;
-  }).join(" ");
-  const labels = ["January","February","March","April","May","June"];
+  const pts = data.map((v,i) => [cx + R*v*Math.cos(ang(i)), cy + R*v*Math.sin(ang(i))]);
+  const dpts = pts.map(p => p.join(",")).join(" ");
   return (
-    <svg viewBox="0 0 180 184" width="100%" style={{display:"block"}}>
-      {[0.34,0.67,1].map((f,i) => (
-        <polygon key={i} points={ring(f)} fill="none" stroke="rgba(10,10,20,0.10)" />
-      ))}
-      {ring(1).split(" ").map((p,i) => {
-        const [x,y] = p.split(",");
-        return <line key={i} x1={cx} y1={cy} x2={x} y2={y} stroke="rgba(10,10,20,0.07)" />;
-      })}
-      <polygon points={dpts} fill="rgba(0,54,221,0.16)" stroke="var(--colour-primaryblue-500)" strokeWidth="1.6" />
-      {labels.map((l,i) => {
-        const a = -Math.PI/2 + i*Math.PI/3;
-        const lx = cx + (R+12)*Math.cos(a), ly = cy + (R+12)*Math.sin(a);
-        return <text key={l} x={lx} y={ly} fontSize="8" fill="#8a8f9b" textAnchor="middle" dominantBaseline="middle">{l}</text>;
-      })}
-    </svg>
+    <div style={{position:"relative"}}>
+      <svg viewBox="0 0 180 184" width="100%" style={{display:"block"}}>
+        {[0.34,0.67,1].map((f,i) => (
+          <polygon key={i} points={ring(f)} fill="none" stroke="rgba(10,10,20,0.10)" />
+        ))}
+        {[0,1,2,3,4,5].map(i => {
+          const a = ang(i), ex = cx + R*Math.cos(a), ey = cy + R*Math.sin(a);
+          return <line key={i} x1={cx} y1={cy} x2={ex} y2={ey} stroke="rgba(10,10,20,0.07)" />;
+        })}
+        <polygon points={dpts} fill="rgba(0,54,221,0.14)" stroke="var(--colour-primaryblue-500)" strokeWidth="1.6" />
+        {pts.map((p,i) => (
+          <circle key={i} cx={p[0]} cy={p[1]}
+            r={hi===i ? 5.5 : 3.5}
+            fill={hi===i ? "var(--colour-primaryblue-500)" : "#fff"}
+            stroke="var(--colour-primaryblue-500)" strokeWidth="1.6"
+            style={{cursor:"pointer", transition:"r .15s ease"}}
+            onMouseEnter={() => setHi(i)} onMouseLeave={() => setHi(null)}
+          />
+        ))}
+        {labels.map((l,i) => {
+          const a = ang(i);
+          const lx = cx + (R+13)*Math.cos(a), ly = cy + (R+13)*Math.sin(a);
+          return <text key={l} x={lx} y={ly} fontSize="8" fill={hi===i?"var(--colour-primaryblue-500)":"#8a8f9b"} textAnchor="middle" dominantBaseline="middle" style={{transition:"fill .15s"}}>{l}</text>;
+        })}
+      </svg>
+      {hi !== null && (
+        <div className="rtu-tip" style={{left:`${(pts[hi][0]/180)*100}%`, top:`${(pts[hi][1]/184)*100}%`}}>
+          {values[hi].toLocaleString()}<span>{labels[hi]}</span>
+        </div>
+      )}
+    </div>
   );
 }
+
 function DonutChart() {
-  const C = 2 * Math.PI * 58;
+  const MONTHS = ["January","February","March","April","May","June"];
+  const MONTH_DATA: Record<string,[number,number,number]> = {
+    January: [186, 62, 48], February:[154, 78, 32], March:[201, 55, 60],
+    April:   [178, 42, 66], May:     [220, 85, 38], June: [165, 71, 52],
+  };
+  const COLORS = ["var(--colour-primaryblue-500)", "var(--colour-primaryblue-300)", "var(--colour-primaryblue-100)"];
+  const LABELS = ["Visitors","Page views","Conversions"];
+
+  const [month, setMonth] = React.useState("January");
+  const [open,  setOpen ] = React.useState(false);
+  const [hiArc, setHiArc] = React.useState<number|null>(null);
+  const ref = React.useRef<HTMLDivElement>(null);
+  React.useEffect(() => {
+    const h = (e: MouseEvent) => { if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false); };
+    document.addEventListener("mousedown", h);
+    return () => document.removeEventListener("mousedown", h);
+  }, []);
+
+  const vals  = MONTH_DATA[month];
+  const total = vals.reduce((a, b) => a + b, 0);
+  const cx = 80, cy = 80;
+
+  // Outer ring — wider, larger radius — coloured arc segments
+  const OR = 63, Osw = 13;
+
+  // Inner ring — narrower, smaller radius — sits inside with a clear gap, shows dial ticks
+  // Inner ring outer edge: IR+Isw/2=46+3=49  |  Outer ring inner edge: OR-Osw/2=63-6.5=56.5  →  7.5px gap
+  const IR = 46, Isw = 6;
+  const TICKS = 72;
+  const ir0 = IR - Isw / 2 + 0.5, ir1 = IR + Isw / 2 - 0.5;
+
+  const GAP_RAD = (20 / 360) * Math.PI * 2;
+  const ARC_RAD = Math.PI * 2 - GAP_RAD * vals.length;
+  let angle = -Math.PI / 2;
+  const arcs = vals.map((v, i) => {
+    const arc = (v / total) * ARC_RAD;
+    const sa = angle, ea = angle + arc;
+    angle = ea + GAP_RAD;
+    const x1 = cx + OR * Math.cos(sa), y1 = cy + OR * Math.sin(sa);
+    const x2 = cx + OR * Math.cos(ea), y2 = cy + OR * Math.sin(ea);
+    return {
+      d: `M ${x1.toFixed(2)} ${y1.toFixed(2)} A ${OR} ${OR} 0 ${arc > Math.PI ? 1 : 0} 1 ${x2.toFixed(2)} ${y2.toFixed(2)}`,
+      color: COLORS[i], label: LABELS[i], value: v,
+    };
+  });
+
   return (
-    <svg viewBox="0 0 160 160" width="100%" style={{display:"block"}}>
-      <g transform="rotate(-90 80 80)">
-        <circle cx="80" cy="80" r="58" fill="none" stroke="var(--colour-primaryblue-500)" strokeWidth="26" strokeDasharray={`${C*0.62} ${C}`} />
-        <circle cx="80" cy="80" r="58" fill="none" stroke="#6f8ff0" strokeWidth="26" strokeDasharray={`${C*0.16} ${C}`} strokeDashoffset={`${-C*0.64}`} />
-        <circle cx="80" cy="80" r="58" fill="none" stroke="#c7d4ff" strokeWidth="26" strokeDasharray={`${C*0.20} ${C}`} strokeDashoffset={`${-C*0.81}`} />
-      </g>
-      <text x="80" y="76" fontSize="26" fontWeight="700" fill="#0a0a14" textAnchor="middle" style={{fontFamily:"var(--font-bold)"}}>186</text>
-      <text x="80" y="94" fontSize="10" fill="#8a8f9b" textAnchor="middle">Visitors</text>
-    </svg>
+    <div ref={ref} style={{position:"relative"}}>
+      <div style={{display:"flex",justifyContent:"flex-end",marginBottom:4,position:"relative"}}>
+        <button className="rtu-pill" onClick={()=>setOpen(o=>!o)}>{month} ▾</button>
+        {open && (
+          <div className="rtu-month-menu">
+            {MONTHS.map(m => (
+              <button key={m} className={m===month?"on":""} onClick={()=>{setMonth(m);setOpen(false);}}>{m}</button>
+            ))}
+          </div>
+        )}
+      </div>
+      <svg viewBox="0 0 160 160" width="100%" style={{display:"block"}}>
+        {/* ── Inner ring: no background — grey dial tick marks only ── */}
+        {Array.from({length: TICKS}).map((_, t) => {
+          const a = (t / TICKS) * Math.PI * 2 - Math.PI / 2;
+          return (
+            <line key={t}
+              x1={(cx + ir0 * Math.cos(a)).toFixed(2)} y1={(cy + ir0 * Math.sin(a)).toFixed(2)}
+              x2={(cx + ir1 * Math.cos(a)).toFixed(2)} y2={(cy + ir1 * Math.sin(a)).toFixed(2)}
+              stroke="rgba(0,0,0,0.18)" strokeWidth="0.9"
+            />
+          );
+        })}
+        {/* ── Outer ring: grey track + coloured arc segments ── */}
+        <circle cx={cx} cy={cy} r={OR} fill="none" stroke="rgba(0,0,0,0.07)" strokeWidth={Osw} />
+        {arcs.map((arc, i) => (
+          <path key={`${month}-${i}`} d={arc.d} fill="none"
+            stroke={arc.color} strokeWidth={hiArc === i ? Osw + 3 : Osw} strokeLinecap="round"
+            style={{cursor:"pointer", transition:"stroke-width .15s ease"}}
+            onMouseEnter={() => setHiArc(i)} onMouseLeave={() => setHiArc(null)}
+          />
+        ))}
+        {/* ── Centre — both lines share a group centred exactly at cy ── */}
+        <text x={cx} y={cy - 10} textAnchor="middle" dominantBaseline="middle"
+          fontSize="22" fontWeight="700" fill="#0a0a14" style={{fontFamily:"var(--font-bold)"}}>{vals[0]}</text>
+        <text x={cx} y={cy + 10} textAnchor="middle" dominantBaseline="middle"
+          fontSize="10" fill="#8a8f9b" style={{fontFamily:"var(--font-normal)"}}>Visitors</text>
+      </svg>
+      {/* ── Tooltip ── */}
+      {hiArc !== null && (
+        <div className="rtu-tip" style={{
+          position:"absolute", left:"50%", top:"40%",
+          transform:"translate(-50%,-50%)", pointerEvents:"none",
+        }}>
+          {arcs[hiArc]?.value}<span>{arcs[hiArc]?.label}</span>
+        </div>
+      )}
+      {/* ── Legend in HTML — uses rtu-card-sub for design-system typography ── */}
+      <div style={{marginTop:10,display:"flex",flexDirection:"column",gap:5}}>
+        {arcs.map((arc) => (
+          <div key={arc.label} style={{display:"flex",alignItems:"center",gap:8}}>
+            <span style={{width:9,height:9,borderRadius:"50%",background:arc.color,flexShrink:0,display:"inline-block"}}/>
+            <span className="rtu-card-sub" style={{margin:0,flex:1}}>{arc.label}</span>
+            <span className="rtu-card-sub" style={{margin:0,color:"#0a0a14",fontWeight:600}}>{arc.value}</span>
+          </div>
+        ))}
+      </div>
+    </div>
   );
 }
+
+function MiniLineChart() {
+  const [hi, setHi] = React.useState<number|null>(null);
+  const W = 400, H = 90, pad = 14;
+  const raw = [42, 58, 51, 74, 68, 85, 72, 79, 65, 88];
+  const labels = ["Aug","Sep","Oct","Nov","Dec","Jan","Feb","Mar","Apr","May"];
+  const maxV = Math.max(...raw), minV = Math.min(...raw);
+  const pts = raw.map((v,i) => [
+    pad + (i/(raw.length-1))*(W-pad*2),
+    H-pad - ((v-minV)/(maxV-minV))*(H-pad*2)
+  ]);
+  // Bezier smooth
+  let d = `M ${pts[0][0]} ${pts[0][1]}`;
+  for (let i=0; i<pts.length-1; i++) {
+    const cp1x = pts[i][0]+(pts[i+1][0]-pts[i][0])*0.5;
+    const cp2x = pts[i][0]+(pts[i+1][0]-pts[i][0])*0.5;
+    d += ` C ${cp1x} ${pts[i][1]}, ${cp2x} ${pts[i+1][1]}, ${pts[i+1][0]} ${pts[i+1][1]}`;
+  }
+  const area = `${d} L ${W-pad} ${H-pad} L ${pad} ${H-pad} Z`;
+  const ref = React.useRef<HTMLDivElement>(null);
+  const onMove = (e: React.MouseEvent) => {
+    const r = ref.current!.getBoundingClientRect();
+    const i = Math.round(((e.clientX-r.left)/r.width)*(raw.length-1));
+    setHi(Math.max(0, Math.min(raw.length-1, i)));
+  };
+  return (
+    <div ref={ref} style={{position:"relative"}} onMouseMove={onMove} onMouseLeave={()=>setHi(null)}>
+      <svg viewBox={`0 0 ${W} ${H}`} preserveAspectRatio="none" style={{display:"block",width:"100%",height:H}}>
+        <defs>
+          <linearGradient id="mlg" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stopColor="var(--colour-primaryblue-400)" stopOpacity="0.22"/>
+            <stop offset="100%" stopColor="var(--colour-primaryblue-400)" stopOpacity="0"/>
+          </linearGradient>
+        </defs>
+        <path d={area} fill="url(#mlg)"/>
+        <path d={d} fill="none" stroke="var(--colour-primaryblue-500)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+        {hi !== null && (
+          <line x1={pts[hi][0]} y1={pad} x2={pts[hi][0]} y2={H-pad}
+            stroke="var(--colour-primaryblue-300)" strokeWidth="1" strokeDasharray="3 3"/>
+        )}
+      </svg>
+      {hi !== null && (
+        <>
+          <div style={{position:"absolute",left:`${(pts[hi][0]/W)*100}%`,top:`${(pts[hi][1]/H)*100}%`,transform:"translate(-50%,-50%)",width:10,height:10,borderRadius:"50%",background:"#fff",border:"2px solid var(--colour-primaryblue-500)",pointerEvents:"none",zIndex:2}}/>
+          <div className="rtu-tip" style={{left:`${(pts[hi][0]/W)*100}%`,top:`${(pts[hi][1]/H)*100}%`}}>
+            {raw[hi]}<span>{labels[hi]}</span>
+          </div>
+        </>
+      )}
+    </div>
+  );
+}
+
 function LineChart() {
-  // smooth pseudo-random waveform
+  const [hi, setHi] = React.useState<number|null>(null);
   const W = 980, H = 200, n = 60;
   let seed = 7;
   const rnd = () => { seed = (seed*9301 + 49297) % 233280; return seed/233280; };
   const ys = Array.from({length:n}, () => 40 + rnd()*120);
-  // simple smoothing
   const sm = ys.map((y,i) => (ys[i-1] ?? y)*0.25 + y*0.5 + (ys[i+1] ?? y)*0.25);
   const step = W/(n-1);
-  const d = sm.map((y,i) => `${i===0?"M":"L"} ${(i*step).toFixed(1)} ${y.toFixed(1)}`).join(" ");
+  const pts = sm.map((y,i) => [i*step, y] as [number,number]);
+  const d = pts.map(([x,y],i) => `${i===0?"M":"L"} ${x.toFixed(1)} ${y.toFixed(1)}`).join(" ");
+  const ref = React.useRef<HTMLDivElement>(null);
+  const onMove = (e: React.MouseEvent) => {
+    const r = ref.current!.getBoundingClientRect();
+    setHi(Math.max(0, Math.min(n-1, Math.round(((e.clientX-r.left)/r.width)*(n-1)))));
+  };
   return (
-    <svg viewBox={`0 0 ${W} ${H}`} width="100%" preserveAspectRatio="none" style={{display:"block", height:200}}>
-      <path d={d} fill="none" stroke="#8b8ff5" strokeWidth="2" strokeLinejoin="round" />
+    <div ref={ref} style={{position:"relative"}} onMouseMove={onMove} onMouseLeave={()=>setHi(null)}>
+      <svg viewBox={`0 0 ${W} ${H}`} width="100%" preserveAspectRatio="none" style={{display:"block",height:H}}>
+        <path d={d} fill="none" stroke="#8b8ff5" strokeWidth="2" strokeLinejoin="round"/>
+        {hi !== null && <line x1={pts[hi][0]} y1={0} x2={pts[hi][0]} y2={H} stroke="rgba(139,143,245,0.3)" strokeWidth="1" strokeDasharray="4 4"/>}
+      </svg>
+      {hi !== null && (
+        <>
+          <div style={{position:"absolute",left:`${(pts[hi][0]/W)*100}%`,top:`${(pts[hi][1]/H)*100}%`,transform:"translate(-50%,-50%)",width:10,height:10,borderRadius:"50%",background:"#fff",border:"2px solid #8b8ff5",pointerEvents:"none"}}/>
+          <div className="rtu-tip" style={{left:`${(pts[hi][0]/W)*100}%`,top:`${(pts[hi][1]/H)*100}%`}}>
+            {Math.round(24000+sm[hi]*40).toLocaleString()}<span>visitors</span>
+          </div>
+        </>
+      )}
+    </div>
+  );
+}
+
+function BarChart() {
+  const data = [72, 58, 85, 44, 91, 67, 78, 55];
+  const labels = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug"];
+  const W = 260, H = 110, pad = 6;
+  const bw = (W - pad * 2) / data.length - 5;
+  const maxV = Math.max(...data);
+  return (
+    <svg viewBox={`0 0 ${W} ${H}`} width="100%" style={{display:"block"}}>
+      {data.map((v,i) => {
+        const bh = ((v / maxV) * (H - pad * 2 - 16));
+        const x = pad + i * (bw + 5);
+        return (
+          <g key={i}>
+            <rect x={x} y={H - pad - 16 - bh} width={bw} height={bh}
+              fill={i % 2 === 0 ? "var(--colour-primaryblue-500)" : "var(--colour-primaryblue-200)"}
+              rx="3" />
+            <text x={x + bw/2} y={H - 4} fontSize="7" fill="#9aa0ac" textAnchor="middle">{labels[i]}</text>
+          </g>
+        );
+      })}
     </svg>
   );
 }
@@ -483,30 +688,37 @@ export default function App() {
           </div>
 
           <div className="rtu">
-            {/* row 1 — three chart cards */}
+            {/* row 1 — Radar | Donut | [Bar + MiniLine stacked] */}
             <div className="rtu-charts" data-reveal>
-              {[0,1,2].map(i => (
-                i === 1 ? (
-                  <div key={i} className="cc rtu-card">
-                    <div className="rtu-card-tag">◷ Pie Chart</div>
-                    <div className="rtu-card-h">Pie Chart - Interactive</div>
-                    <div className="rtu-card-sub">January - June 2024</div>
-                    <div style={{display:"flex",justifyContent:"flex-end",margin:"6px 0 4px"}}>
-                      <span className="rtu-pill">January ▾</span>
-                    </div>
-                    <DonutChart/>
-                  </div>
-                ) : (
-                  <div key={i} className="cc rtu-card">
-                    <div className="rtu-card-tag">◎ Radar Chart</div>
-                    <div className="rtu-card-h">Radar Chart</div>
-                    <div className="rtu-card-sub">Showing total visitors for the last 6 months</div>
-                    <RadarChart/>
-                    <div className="rtu-card-foot">Trending up by 5.2% this month ↗</div>
-                    <div className="rtu-card-sub" style={{textAlign:"center"}}>January - June 2024</div>
-                  </div>
-                )
-              ))}
+              <div className="cc rtu-card">
+                <div className="rtu-card-tag">◎ Radar Chart</div>
+                <div className="rtu-card-h">Radar Chart</div>
+                <div className="rtu-card-sub">Total visitors by month</div>
+                <RadarChart/>
+                <div className="rtu-card-foot">Trending up by 5.2% this month ↗</div>
+                <div className="rtu-card-sub" style={{textAlign:"center"}}>January - June 2024</div>
+              </div>
+              <div className="cc rtu-card">
+                <div className="rtu-card-tag">◷ Pie Chart</div>
+                <div className="rtu-card-h">Pie Chart - Interactive</div>
+                <div className="rtu-card-sub">January - June 2024</div>
+                <DonutChart/>
+              </div>
+              <div className="rtu-right-col">
+                <div className="cc rtu-card">
+                  <div className="rtu-card-tag">▪ Bar Chart</div>
+                  <div className="rtu-card-h">Bar Chart - Monthly</div>
+                  <div className="rtu-card-sub">Sessions by month, Jan–Aug 2024</div>
+                  <div style={{marginTop:10}}><BarChart/></div>
+                  <div className="rtu-card-foot">Peak in May · 91 sessions ↑</div>
+                </div>
+                <div className="cc rtu-card">
+                  <div className="rtu-card-tag">— Line Chart</div>
+                  <div className="rtu-card-h">Trend Line</div>
+                  <div className="rtu-card-sub">Monthly sessions, Aug 2023–May 2024</div>
+                  <div style={{marginTop:8}}><MiniLineChart/></div>
+                </div>
+              </div>
             </div>
 
             {/* row 2 — line chart card */}
@@ -532,31 +744,33 @@ export default function App() {
             <div className="cc rtu-table" data-reveal>
               <div className="rtu-table-head">
                 <div>
-                  <div className="rtu-card-sub">Optional Label</div>
-                  <div className="rtu-card-h" style={{fontSize:18}}>Progress Modal Title</div>
-                  <div className="rtu-card-sub">Stepper component needs to be added here</div>
+                  <div className="rtu-card-sub">Component Library</div>
+                  <div className="rtu-card-h" style={{fontSize:18}}>Component Directory</div>
+                  <div className="rtu-card-sub">Showing 7 of 120 components</div>
                 </div>
                 <button className="rtu-x" aria-label="Close">✕</button>
               </div>
               <div className="rtu-search">
-                <input placeholder="Search" />
-                <span className="rtu-filter">⚲</span>
+                <input placeholder="Search components" />
+                <button className="rtu-filter" aria-label="Search">
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+                </button>
               </div>
               <table className="rtu-tbl">
                 <thead>
-                  <tr><th style={{width:32}}><input type="checkbox" defaultChecked/></th><th>Name</th><th>Party</th><th>↑ Year</th></tr>
+                  <tr><th style={{width:32}}><input type="checkbox" defaultChecked/></th><th>Component</th><th>Category</th><th>↑ Status</th></tr>
                 </thead>
                 <tbody>
                   {[
-                    ["John Adams","None, Federalist","1789-1797"],
-                    ["Thomas Jefferson","Democratic-Republican","1801-1809"],
-                    ["James Madison","Democratic-Republican","1809-1817"],
-                    ["James Monroe","Democratic-Republican","1817-1825"],
-                    ["John Quincy Adams","Democratic-Republican","1825-1829"],
-                    ["Andrew Jackson","Democrat","1829-1837"],
-                    ["Martin van Buren","Democrat","1837-1841"],
-                  ].map(([n,p,y]) => (
-                    <tr key={n}><td><input type="checkbox"/></td><td>{n}</td><td>{p}</td><td>{y}</td></tr>
+                    ["Button","Input & Controls","Stable"],
+                    ["Badge","Data Display","Stable"],
+                    ["Input","Input & Controls","Stable"],
+                    ["Select","Input & Controls","Stable"],
+                    ["Alert","Feedback","Stable"],
+                    ["Card","Data Display","Stable"],
+                    ["Tabs","Navigation","Stable"],
+                  ].map(([name,cat,status]) => (
+                    <tr key={name}><td><input type="checkbox"/></td><td>{name}</td><td>{cat}</td><td>{status}</td></tr>
                   ))}
                 </tbody>
               </table>
@@ -642,19 +856,19 @@ export default function App() {
               <img src="/assets/logo/sandhata-logo.svg" alt="Sandhata" style={{height:24,filter:"brightness(0) invert(1)",opacity:.85}}/>
               <p>Built to ensure clarity and consistency across every interaction.</p>
               <div className="footer-socials">
-                <div className="footer-social">
+                <a className="footer-social" href="https://www.facebook.com/sandhata" target="_blank" rel="noopener noreferrer" aria-label="Sandhata on Facebook">
                   <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/></svg>
-                </div>
-                <div className="footer-social">
+                </a>
+                <a className="footer-social" href="https://www.linkedin.com/company/sandhata" target="_blank" rel="noopener noreferrer" aria-label="Sandhata on LinkedIn">
                   <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor"><path d="M19 0h-14c-2.761 0-5 2.239-5 5v14c0 2.761 2.239 5 5 5h14c2.762 0 5-2.239 5-5v-14c0-2.761-2.238-5-5-5zm-11 19h-3v-11h3v11zm-1.5-12.268c-.966 0-1.75-.79-1.75-1.764s.784-1.764 1.75-1.764 1.75.79 1.75 1.764-.783 1.764-1.75 1.764zm13.5 12.268h-3v-5.604c0-3.368-4-3.113-4 0v5.604h-3v-11h3v1.765c1.396-2.586 7-2.777 7 2.476v6.759z"/></svg>
-                </div>
-                <div className="footer-social">
+                </a>
+                <a className="footer-social" href="https://x.com/sandhata" target="_blank" rel="noopener noreferrer" aria-label="Sandhata on X">
                   <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-4.714-6.231-5.401 6.231H2.744l7.737-8.835L1.254 2.25H8.08l4.259 5.629 5.905-5.629zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>
-                </div>
+                </a>
               </div>
             </div>
             {[
-              { h:"Product", links:[["Features","#"],["Pricing","#"],["Demo","/demo"]] },
+              { h:"Product", links:[["Features","#"],["Pricing","/pricing"],["Demo","/demo"]] },
               { h:"Support", links:[["Documentation","/documentation"],["Contact Us","#"]] },
               { h:"Legal",   links:[["Privacy Policy","#"],["Terms & Condition","#"]] },
             ].map(col => (

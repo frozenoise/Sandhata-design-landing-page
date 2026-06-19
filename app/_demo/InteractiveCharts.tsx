@@ -66,12 +66,23 @@ export function LineChartInteractive({ axis, active = "desktop" }) {
           <path d={line} fill="none" stroke={`url(#l${uid})`} strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round" />
         </g>
         {hi != null && (
-          <>
-            <line x1={pts[hi][0]} y1={pad} x2={pts[hi][0]} y2={H - pad} stroke="var(--colour-primaryblue-300)" strokeWidth="1" strokeDasharray="4 4" />
-            <circle cx={pts[hi][0]} cy={pts[hi][1]} r="5.5" fill="#fff" stroke="var(--colour-primaryblue-500)" strokeWidth="2.5" />
-          </>
+          <line x1={pts[hi][0]} y1={pad} x2={pts[hi][0]} y2={H - pad} stroke="var(--colour-primaryblue-300)" strokeWidth="1" strokeDasharray="4 4" />
         )}
       </svg>
+      {/* Circle drawn as a div so it stays perfectly round despite preserveAspectRatio="none" */}
+      {hi != null && (
+        <div style={{
+          position: "absolute",
+          left: `${(pts[hi][0] / W) * 100}%`,
+          top: `${(pts[hi][1] / H) * 100}%`,
+          transform: "translate(-50%, -50%)",
+          width: 13, height: 13, borderRadius: "50%",
+          background: "#fff",
+          border: "2.5px solid var(--colour-primaryblue-500)",
+          pointerEvents: "none",
+          zIndex: 2,
+        }} />
+      )}
       {hi != null && (
         <div className="ch-tip" style={{ left: `${(pts[hi][0] / W) * 100}%`, top: `${(pts[hi][1] / H) * 100}%` }}>
           <strong>{values[hi].toLocaleString()}</strong>
