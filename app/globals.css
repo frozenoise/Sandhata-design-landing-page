@@ -204,7 +204,7 @@ body { background: #FEFAF7; overflow-x: hidden; font-family: var(--font-normal);
 }
 
 /* ─── What you can expect ────────────────────────────────────── */
-.expect { padding: 80px 40px; background: #000921; }
+.expect { padding: 80px 40px; background: #000921; display: flex; flex-direction: column; align-items: center; }
 .expect-card {
   max-width: 1120px; margin: 0 auto;
   background: #fff;
@@ -217,7 +217,7 @@ body { background: #FEFAF7; overflow-x: hidden; font-family: var(--font-normal);
 
 .expect-h {
   font: 900 46px/1.1 var(--font-bold); color: #0a0a14;
-  letter-spacing: -1.5px; margin-bottom: 40px; max-width: 360px;
+  letter-spacing: -1.5px; margin-bottom: 40px; max-width: 100%; text-align: center; white-space: nowrap;
 }
 .expect-body {
   display: grid; grid-template-columns: 42% 1fr; gap: 48px; align-items: start;

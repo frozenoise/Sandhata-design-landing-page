@@ -646,7 +646,7 @@ export default function App() {
       {/* WHAT YOU CAN EXPECT */}
       <section className="expect">
         <div className="expect-card" data-reveal>
-          <h2 className="expect-h">What you can<br/>expect</h2>
+          <h2 className="expect-h">What you can expect</h2>
           <div className="expect-body">
             {/* Accordion */}
             <div>
