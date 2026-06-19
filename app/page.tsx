@@ -588,6 +588,7 @@ export default function App() {
           <a className="nl" href="/documentation">Documentation</a>
           <a className="nl" href="/builder">Builder</a>
           <a className="nl" href="/demo">Demo</a>
+          <a className="nl" href="/showcase">Showcase</a>
         </nav>
       </header>
 
