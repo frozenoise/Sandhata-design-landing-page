@@ -1,688 +1,678 @@
 "use client";
 import React from "react";
 import "../globals.css";
+import {
+  Button, Badge, Alert, Input, Select, Textarea,
+  Switch, Checkbox, Radio, StatCard, Tooltip,
+} from "@/components";
 
-/* ── Theme config ───────────────────────────────────────────────── */
+/* ── Token ramp helper (mirrors demo/page.tsx) ───────────────────── */
+const ramp = (base: string): React.CSSProperties => ({
+  "--colour-primaryblue-50":  `var(--colour-${base}-50)`,
+  "--colour-primaryblue-100": `var(--colour-${base}-100)`,
+  "--colour-primaryblue-200": `var(--colour-${base}-200)`,
+  "--colour-primaryblue-300": `var(--colour-${base}-300)`,
+  "--colour-primaryblue-400": `var(--colour-${base}-400)`,
+  "--colour-primaryblue-500": `var(--colour-${base}-500)`,
+  "--colour-primaryblue-600": `var(--colour-${base}-600)`,
+  "--colour-primaryblue-700": `var(--colour-${base}-700)`,
+} as React.CSSProperties);
+
+/* ── Config constants ────────────────────────────────────────────── */
 const ACCENTS = [
-  { name:"Sandhata", hex:"#0036DD" },
-  { name:"Indigo",   hex:"#4F46E5" },
-  { name:"Violet",   hex:"#7C3AED" },
-  { name:"Teal",     hex:"#0D9488" },
-  { name:"Amber",    hex:"#D97706" },
+  { name:"Sandhata Blue", token:"--colour-primaryblue-500", hex:"#0036DD", vars: ramp("primaryblue") },
+  { name:"Purple",        token:"--colour-alternativepurple-500", hex:"#602DEA", vars: ramp("alternativepurple") },
+  { name:"Cyan",          token:"--colour-secondarycyan-500", hex:"#00D4D4", vars: ramp("secondarycyan") },
+  { name:"Amber",         token:"--colour-alert-500",         hex:"#FFC228", vars: {
+    "--colour-primaryblue-50":"var(--colour-alert-50)",
+    "--colour-primaryblue-100":"var(--colour-alert-100)",
+    "--colour-primaryblue-300":"var(--colour-alert-300)",
+    "--colour-primaryblue-500":"var(--colour-alert-500)",
+    "--colour-primaryblue-600":"var(--colour-alert-600)",
+    "--colour-primaryblue-700":"var(--colour-alert-700)",
+  } as React.CSSProperties },
+  { name:"Crimson",       token:"--colour-error-500",         hex:"#D21B00", vars: {
+    "--colour-primaryblue-50":"var(--colour-error-50)",
+    "--colour-primaryblue-100":"var(--colour-error-100)",
+    "--colour-primaryblue-300":"var(--colour-error-300)",
+    "--colour-primaryblue-500":"var(--colour-error-500)",
+    "--colour-primaryblue-600":"var(--colour-error-600)",
+    "--colour-primaryblue-700":"var(--colour-error-700)",
+  } as React.CSSProperties },
 ];
-const RADII = [{ l:"None",v:"0" },{ l:"SM",v:"4" },{ l:"MD",v:"8" },{ l:"LG",v:"14" }];
 
+const SURFACES = {
+  white: { label:"Pure White", bg:"#ffffff", tokens:{} as React.CSSProperties },
+  warm:  { label:"Warm",       bg:"#fdf5f0", tokens:{} as React.CSSProperties },
+  dark:  { label:"Ink Dark",   bg:"#0d0d1a", tokens:{
+    "--surface-raised":    "#1a1a2e",
+    "--surface-secondary": "#16162a",
+    "--surface-disabled":  "rgba(255,255,255,0.08)",
+    "--text-title":        "rgba(255,255,255,0.95)",
+    "--text-body":         "rgba(255,255,255,0.78)",
+    "--text-subtitle":     "rgba(255,255,255,0.60)",
+    "--text-caption":      "rgba(255,255,255,0.38)",
+    "--text-disabled":     "rgba(255,255,255,0.25)",
+    "--border-subtle":     "rgba(255,255,255,0.07)",
+    "--border-default":    "rgba(255,255,255,0.12)",
+    "--field-02":          "rgba(255,255,255,0.06)",
+  } as React.CSSProperties },
+};
+
+const RADII = [
+  { label:"None", px:"0px",  vars:{ "--radius-xs":"0","--radius-sm":"0","--radius-md":"0","--radius-lg":"0","--radius-xl":"0","--radius-pill":"999px" } as React.CSSProperties },
+  { label:"SM",   px:"4px",  vars:{ "--radius-xs":"2px","--radius-sm":"4px","--radius-md":"4px","--radius-lg":"6px","--radius-xl":"8px","--radius-pill":"999px" } as React.CSSProperties },
+  { label:"MD",   px:"6px",  vars:{} as React.CSSProperties },
+  { label:"LG",   px:"10px", vars:{ "--radius-xs":"4px","--radius-sm":"6px","--radius-md":"10px","--radius-lg":"14px","--radius-xl":"20px","--radius-pill":"999px" } as React.CSSProperties },
+];
+
+const LIGHT_RESETS: React.CSSProperties = {
+  "--surface-raised":  "#ffffff",
+  "--surface-page":    "#ffffff",
+  "--text-title":      "#202225",
+  "--text-body":       "#3c4044",
+  "--text-subtitle":   "#585f65",
+  "--text-caption":    "#777880",
+  "--border-subtle":   "rgba(20,22,24,0.08)",
+  "--border-default":  "rgba(20,22,24,0.14)",
+  "--field-02":        "#ffffff",
+} as React.CSSProperties;
+
+const CLIENT_THEMES = [
+  {
+    name:"TechNip Energies", sector:"Energy sector · enterprise analytics",
+    brandColor:"#00D4C8", vars: ramp("secondarycyan"),
+  },
+  {
+    name:"Aviva Insurance",  sector:"Financial services · policy management",
+    brandColor:"#12347e",
+    vars: {
+      "--colour-primaryblue-50":"#e8ecf5",
+      "--colour-primaryblue-100":"#c8d1e8",
+      "--colour-primaryblue-300":"#7a92c9",
+      "--colour-primaryblue-500":"#12347e",
+      "--colour-primaryblue-600":"#0c2b66",
+      "--colour-primaryblue-700":"#081f4e",
+    } as React.CSSProperties,
+  },
+  {
+    name:"Sandhata Default", sector:"Design system · reference implementation",
+    brandColor:"#0036DD", vars: ramp("primaryblue"),
+  },
+];
+
+/* ── Shared helpers ──────────────────────────────────────────────── */
+function GradientRule() {
+  return <div style={{ height:3, background:"linear-gradient(90deg,#f68136 0%,#ff0083 50%,#5636f6 100%)" }}/>;
+}
+function BandTag({ children }: { children:React.ReactNode }) {
+  return (
+    <p style={{ fontSize:11, fontWeight:700, letterSpacing:"0.10em", textTransform:"uppercase",
+      color:"var(--text-caption)", fontFamily:"var(--font-normal)", margin:"0 0 18px" }}>
+      {children}
+    </p>
+  );
+}
+
+/* ── Inline RadarChart (copied from app/page.tsx, uses .rtu-tip) ─── */
+function RadarChart() {
+  const [hi, setHi] = React.useState<number|null>(null);
+  const cx = 90, cy = 92, R = 66;
+  const data   = [0.82, 0.55, 0.72, 0.88, 0.50, 0.66];
+  const values = [820,  550,  720,  880,  500,  660];
+  const labels = ["January","February","March","April","May","June"];
+  const ang = (i: number) => -Math.PI/2 + i*Math.PI/3;
+  const ring = (f: number) => [0,1,2,3,4,5].map(i => {
+    const a = ang(i);
+    return `${cx + R*f*Math.cos(a)},${cy + R*f*Math.sin(a)}`;
+  }).join(" ");
+  const pts = data.map((v,i) => [cx + R*v*Math.cos(ang(i)), cy + R*v*Math.sin(ang(i))]);
+  const dpts = pts.map(p => p.join(",")).join(" ");
+  return (
+    <div style={{ position:"relative" }}>
+      <svg viewBox="0 0 180 184" width="100%" style={{ display:"block" }}>
+        {[0.34,0.67,1].map((f,i) => (
+          <polygon key={i} points={ring(f)} fill="none" stroke="rgba(10,10,20,0.10)"/>
+        ))}
+        {[0,1,2,3,4,5].map(i => {
+          const a = ang(i), ex = cx + R*Math.cos(a), ey = cy + R*Math.sin(a);
+          return <line key={i} x1={cx} y1={cy} x2={ex} y2={ey} stroke="rgba(10,10,20,0.07)"/>;
+        })}
+        <polygon points={dpts} fill="rgba(0,54,221,0.14)" stroke="var(--colour-primaryblue-500)" strokeWidth="1.6"/>
+        {pts.map((p,i) => (
+          <circle key={i} cx={p[0]} cy={p[1]} r={hi===i ? 5.5 : 3.5}
+            fill={hi===i ? "var(--colour-primaryblue-500)" : "#fff"}
+            stroke="var(--colour-primaryblue-500)" strokeWidth="1.6"
+            style={{ cursor:"pointer", transition:"r .15s ease" }}
+            onMouseEnter={() => setHi(i)} onMouseLeave={() => setHi(null)}
+          />
+        ))}
+        {labels.map((l,i) => {
+          const a = ang(i), lx = cx + (R+13)*Math.cos(a), ly = cy + (R+13)*Math.sin(a);
+          return <text key={l} x={lx} y={ly} fontSize="8"
+            fill={hi===i?"var(--colour-primaryblue-500)":"#8a8f9b"}
+            textAnchor="middle" dominantBaseline="middle"
+            style={{ transition:"fill .15s" }}>{l}</text>;
+        })}
+      </svg>
+      {hi !== null && (
+        <div className="rtu-tip" style={{ left:`${(pts[hi][0]/180)*100}%`, top:`${(pts[hi][1]/184)*100}%` }}>
+          {values[hi].toLocaleString()}<span>{labels[hi]}</span>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function MiniSparkline() {
+  const raw = [40,28,34,12,22,8,18,5,15,3,10,2];
+  const max = Math.max(...raw);
+  const W = 240, H = 52;
+  const pts = raw.map((v,i) => [i*(W/(raw.length-1)), H - (v/max)*H*0.88 - 4]);
+  const d = "M " + pts.map(p => p.join(",")).join(" L ");
+  const area = `${d} L ${W},${H} L 0,${H} Z`;
+  return (
+    <svg viewBox={`0 0 ${W} ${H}`} style={{ width:"100%", height:52, display:"block" }}>
+      <defs>
+        <linearGradient id="spkGrad" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stopColor="var(--colour-primaryblue-500)" stopOpacity="0.18"/>
+          <stop offset="100%" stopColor="var(--colour-primaryblue-500)" stopOpacity="0"/>
+        </linearGradient>
+      </defs>
+      <path d={area} fill="url(#spkGrad)"/>
+      <path d={d} fill="none" stroke="var(--colour-primaryblue-500)" strokeWidth="2"
+        strokeLinecap="round" strokeLinejoin="round"/>
+    </svg>
+  );
+}
+
+function MiniBarChart() {
+  const data = [0.45,0.60,0.50,0.82,0.65,0.90,0.74,1.0,0.76,0.68,0.88,0.93];
+  const labels = ["J","F","M","A","M","J","J","A","S","O","N","D"];
+  const W = 220, H = 52;
+  const bw = W/data.length - 3;
+  return (
+    <svg viewBox={`0 0 ${W} ${H}`} style={{ width:"100%", height:52, display:"block" }}>
+      {data.map((v,i) => {
+        const h = v * (H - 12);
+        const x = i*(W/data.length);
+        return (
+          <g key={i}>
+            <rect x={x+1} y={H-h-4} width={bw} height={h}
+              fill={i===data.length-1 ? "var(--colour-primaryblue-500)" : "var(--colour-primaryblue-100)"}
+              rx={2}/>
+            <text x={x+1+bw/2} y={H-1} textAnchor="middle" fontSize="7" fill="var(--text-caption)">{labels[i]}</text>
+          </g>
+        );
+      })}
+    </svg>
+  );
+}
+
+/* ══════════════════════════════════════════════════════════════════ */
 export default function ShowcasePage() {
-  const [accent, setAccent] = React.useState("#0036DD");
-  const [dark,   setDark  ] = React.useState(false);
-  const [radius, setRadius] = React.useState("8");
+  const [accentIdx,  setAccentIdx ] = React.useState(0);
+  const [surface,    setSurface   ] = React.useState<"white"|"warm"|"dark">("white");
+  const [radiusIdx,  setRadiusIdx ] = React.useState(2);
+  const [showTokens, setShowTokens] = React.useState(false);
 
-  const vars: React.CSSProperties = {
-    "--acc":    accent,
-    "--r":      `${radius}px`,
-    "--bg":     dark ? "#0d0d1a" : "#f0f1f5",
-    "--card":   dark ? "#16162a" : "#ffffff",
-    "--border": dark ? "rgba(255,255,255,0.07)" : "rgba(0,0,0,0.07)",
-    "--text":   dark ? "#e8e8f4" : "#0a0a14",
-    "--text2":  dark ? "#7878a0" : "#6b7280",
-    "--muted":  dark ? "rgba(255,255,255,0.04)" : "rgba(0,0,0,0.04)",
+  const [sw,  setSw ] = React.useState(true);
+  const [ck,  setCk ] = React.useState([true, false, false]);
+  const [rv,  setRv ] = React.useState("opt1");
+
+  const accent    = ACCENTS[accentIdx];
+  const surfCfg   = SURFACES[surface];
+  const radiusCfg = RADII[radiusIdx];
+
+  const mainVars: React.CSSProperties = {
+    ...accent.vars,
+    ...surfCfg.tokens,
+    ...radiusCfg.vars,
   } as React.CSSProperties;
 
+  function ShowToken({ token, children, side="top" }: { token:string; children:React.ReactElement; side?:"top"|"bottom"|"left"|"right" }) {
+    if (!showTokens) return children;
+    return <Tooltip label={token} side={side}>{children}</Tooltip>;
+  }
+
+  /* ─ Hero ──────────────────────────────────────────────────────── */
+  const HeroBand = () => (
+    <section style={{ position:"relative", overflow:"hidden", padding:"64px 48px 52px", background:"#fdf5f0" }}>
+      <div className="hero-aurora"/>
+      <div style={{ position:"relative", zIndex:1, textAlign:"center" }}>
+        <p style={{ fontFamily:"var(--font-normal)", fontSize:11, fontWeight:700, letterSpacing:"0.10em",
+          textTransform:"uppercase", color:"rgba(0,0,0,0.35)", margin:"0 0 16px" }}>
+          SANDHATA DESIGN SYSTEM
+        </p>
+        <h1 style={{ fontFamily:"var(--font-bold)", fontSize:48, fontWeight:700, lineHeight:1.1,
+          letterSpacing:"-1.5px", color:"#0a0a14", margin:"0 0 16px" }}>
+          The design system,{" "}
+          <em style={{ fontStyle:"normal", color:"#d58b03" }}>alive.</em>
+        </h1>
+        <p style={{ fontFamily:"var(--font-normal)", fontSize:16, color:"#585f65",
+          maxWidth:460, margin:"0 auto 32px", lineHeight:1.6 }}>
+          120+ components, 1.2k tokens, WCAG AA. Built for enterprise teams that ship.
+        </p>
+        <div style={{ display:"flex", gap:12, justifyContent:"center", flexWrap:"wrap" }}>
+          {[["120+","Components"],["1.2k","Design Tokens"],["WCAG","AA Compliant"],["v1.0","Stable"]].map(([val,label]) => (
+            <div key={label} style={{ display:"inline-flex", alignItems:"center", gap:8,
+              padding:"8px 18px", background:"rgba(255,255,255,0.70)", backdropFilter:"blur(8px)",
+              WebkitBackdropFilter:"blur(8px)", border:"1px solid rgba(20,22,24,0.08)",
+              borderRadius:"var(--radius-pill)" }}>
+              <span style={{ fontFamily:"var(--font-bold)", fontWeight:700, fontSize:14, color:"#0a0a14" }}>{val}</span>
+              <span style={{ fontFamily:"var(--font-normal)", fontSize:13, color:"#585f65" }}>{label}</span>
+            </div>
+          ))}
+        </div>
+      </div>
+    </section>
+  );
+
+  /* ─ Atoms ─────────────────────────────────────────────────────── */
+  const AtomsBand = () => (
+    <section style={{ padding:"44px 48px", background:"var(--surface-raised, #fff)" }}>
+      <div style={{ display:"grid", gridTemplateColumns:"repeat(4,1fr)", gap:40 }}>
+
+        {/* Buttons */}
+        <div>
+          <BandTag>Button · 6 hierarchies</BandTag>
+          <div style={{ display:"flex", flexDirection:"column", gap:10 }}>
+            {(["primary","secondary","tertiary","ghost","inverse","danger"] as const).map(h => (
+              <div key={h} style={{ display:"flex", alignItems:"center", gap:10 }}>
+                <ShowToken token={`hierarchy="${h}"`}>
+                  <Button hierarchy={h} size="small">{h.charAt(0).toUpperCase()+h.slice(1)}</Button>
+                </ShowToken>
+                <span style={{ fontFamily:"var(--font-mono)", fontSize:10, color:"var(--text-caption)" }}>{h}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Badges */}
+        <div>
+          <BandTag>Badge · 7 semantic tones</BandTag>
+          <div style={{ display:"flex", flexDirection:"column", gap:10 }}>
+            {(["neutral","info","success","warning","error","action","highlight"] as const).map(t => (
+              <div key={t} style={{ display:"flex", alignItems:"center", gap:10 }}>
+                <ShowToken token={`tone="${t}"`} side="right">
+                  <Badge tone={t} dot>{t}</Badge>
+                </ShowToken>
+                <span style={{ fontFamily:"var(--font-mono)", fontSize:10, color:"var(--text-caption)" }}>{t}</span>
+              </div>
+            ))}
+          </div>
+          <div style={{ marginTop:14, display:"flex", gap:6 }}>
+            <Badge tone="action" variant="solid">Solid</Badge>
+            <Badge tone="highlight" variant="solid">Solid</Badge>
+          </div>
+        </div>
+
+        {/* Input states */}
+        <div>
+          <BandTag>Input · 4 states</BandTag>
+          <div style={{ display:"flex", flexDirection:"column", gap:14 }}>
+
+            <div>
+              <p style={{ fontFamily:"var(--font-normal)", fontSize:10, fontWeight:700,
+                color:"var(--text-caption)", letterSpacing:"0.06em", textTransform:"uppercase", marginBottom:6 }}>
+                Default
+              </p>
+              <Input label="Project name" placeholder="Enter project name"/>
+            </div>
+
+            <div>
+              <p style={{ fontFamily:"var(--font-normal)", fontSize:10, fontWeight:700,
+                color:"var(--text-caption)", letterSpacing:"0.06em", textTransform:"uppercase", marginBottom:6 }}>
+                Focus (active)
+              </p>
+              <div style={{ display:"flex", flexDirection:"column", gap:4 }}>
+                <label style={{ fontFamily:"var(--font-bold)", fontWeight:700,
+                  fontSize:"var(--label-size, 12px)", color:"var(--text-subtitle)",
+                  letterSpacing:"var(--label-tracking, 0.01em)" }}>Search</label>
+                <div style={{ height:40, padding:"0 12px", display:"flex", alignItems:"center",
+                  border:"1.5px solid var(--colour-primaryblue-500)", borderRadius:"var(--radius-sm)",
+                  background:"var(--field-02, #fff)", boxShadow:"0 0 0 3px rgba(0,54,221,0.18)",
+                  fontFamily:"var(--font-normal)", fontSize:"var(--body-medium-size, 14px)",
+                  color:"var(--text-body)" }}>design system</div>
+              </div>
+            </div>
+
+            <div>
+              <p style={{ fontFamily:"var(--font-normal)", fontSize:10, fontWeight:700,
+                color:"var(--text-caption)", letterSpacing:"0.06em", textTransform:"uppercase", marginBottom:6 }}>
+                Error
+              </p>
+              <Input label="Email address" error="Please enter a valid email" defaultValue="not-an-email"/>
+            </div>
+
+            <div>
+              <p style={{ fontFamily:"var(--font-normal)", fontSize:10, fontWeight:700,
+                color:"var(--text-caption)", letterSpacing:"0.06em", textTransform:"uppercase", marginBottom:6 }}>
+                Disabled
+              </p>
+              <Input label="API Key" disabled defaultValue="sk-••••••••••••••••"/>
+            </div>
+          </div>
+        </div>
+
+        {/* Selection controls */}
+        <div>
+          <BandTag>Selection controls</BandTag>
+          <div style={{ display:"flex", flexDirection:"column", gap:18 }}>
+            <Switch checked={sw} onChange={setSw} label={sw ? "Notifications on" : "Notifications off"}/>
+            <div>
+              <p style={{ fontFamily:"var(--font-normal)", fontSize:10, fontWeight:700,
+                color:"var(--text-caption)", letterSpacing:"0.06em", textTransform:"uppercase", marginBottom:8 }}>
+                Checkbox
+              </p>
+              <div style={{ display:"flex", flexDirection:"column", gap:8 }}>
+                {["Export as PNG","Export as SVG","Export as PDF"].map((l,i) => (
+                  <Checkbox key={l} label={l} checked={ck[i]}
+                    onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+                      setCk(c => c.map((x: boolean,j: number) => j===i ? e.target.checked : x))}/>
+                ))}
+              </div>
+            </div>
+            <div>
+              <p style={{ fontFamily:"var(--font-normal)", fontSize:10, fontWeight:700,
+                color:"var(--text-caption)", letterSpacing:"0.06em", textTransform:"uppercase", marginBottom:8 }}>
+                Radio
+              </p>
+              <div style={{ display:"flex", flexDirection:"column", gap:8 }}>
+                {["Light mode","Dark mode","System"].map((l,i) => {
+                  const val = `opt${i+1}`;
+                  return <Radio key={l} name="sc-display" value={val} label={l}
+                    checked={rv===val} onChange={() => setRv(val)}/>;
+                })}
+              </div>
+            </div>
+            <Select label="Environment"
+              options={["Development","Staging","Production"]}
+              placeholder="Select environment"/>
+          </div>
+        </div>
+      </div>
+    </section>
+  );
+
+  /* ─ Data ──────────────────────────────────────────────────────── */
+  const DataBand = () => (
+    <section style={{ padding:"44px 48px", background:"var(--surface-secondary, #f5f6f8)" }}>
+      <BandTag>Data visualisation</BandTag>
+
+      <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr 1fr 200px", gap:16, marginBottom:16 }}>
+        <StatCard label="Revenue" value="£2.4M" trend="+12% vs last quarter" trendDirection="up"/>
+        <StatCard label="Active Users" value="48,291" trend="+5.3% this week" trendDirection="up"/>
+        <StatCard label="Customer Satisfaction" value="4.8 / 5" trend="+0.3pt this month" trendDirection="up"/>
+        <div style={{ background:"var(--surface-raised, #fff)", border:"1px solid var(--border-subtle)",
+          borderRadius:"var(--radius-lg)", padding:"14px 16px" }}>
+          <p style={{ fontFamily:"var(--font-normal)", fontSize:10, fontWeight:700, letterSpacing:"0.08em",
+            textTransform:"uppercase", color:"var(--text-caption)", margin:"0 0 4px" }}>Visitors · Radar</p>
+          <RadarChart/>
+        </div>
+      </div>
+
+      <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:16 }}>
+        <div style={{ background:"var(--surface-raised, #fff)", border:"1px solid var(--border-subtle)",
+          borderRadius:"var(--radius-lg)", padding:"20px 20px 14px" }}>
+          <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:12 }}>
+            <p style={{ fontFamily:"var(--font-bold)", fontWeight:700, fontSize:14, color:"var(--text-title)", margin:0 }}>Revenue trend</p>
+            <Badge tone="success" dot>Live</Badge>
+          </div>
+          <MiniSparkline/>
+          <div style={{ display:"flex", justifyContent:"space-between", marginTop:6 }}>
+            <span style={{ fontFamily:"var(--font-normal)", fontSize:11, color:"var(--text-caption)" }}>Jan 2026</span>
+            <span style={{ fontFamily:"var(--font-normal)", fontSize:11, color:"var(--text-caption)" }}>Dec 2026</span>
+          </div>
+        </div>
+        <div style={{ background:"var(--surface-raised, #fff)", border:"1px solid var(--border-subtle)",
+          borderRadius:"var(--radius-lg)", padding:"20px 20px 14px" }}>
+          <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:12 }}>
+            <p style={{ fontFamily:"var(--font-bold)", fontWeight:700, fontSize:14, color:"var(--text-title)", margin:0 }}>Component usage</p>
+            <span style={{ fontFamily:"var(--font-normal)", fontSize:11, color:"var(--text-caption)" }}>Last 12 months</span>
+          </div>
+          <MiniBarChart/>
+        </div>
+      </div>
+    </section>
+  );
+
+  /* ─ Themes ────────────────────────────────────────────────────── */
+  const ThemesBand = () => (
+    <section style={{ padding:"56px 48px", background:"#000921" }}>
+      <div style={{ textAlign:"center", marginBottom:44 }}>
+        <p style={{ fontFamily:"var(--font-normal)", fontSize:11, fontWeight:700, letterSpacing:"0.10em",
+          textTransform:"uppercase", color:"rgba(255,255,255,0.28)", margin:"0 0 14px" }}>Multi-tenant Theming</p>
+        <h2 style={{ fontFamily:"var(--font-bold)", fontSize:38, fontWeight:700, color:"#fff",
+          letterSpacing:"-1px", margin:"0 0 14px" }}>
+          One system.{" "}<span style={{ color:"#f68136" }}>Any brand.</span>
+        </h2>
+        <p style={{ fontFamily:"var(--font-normal)", fontSize:15, color:"rgba(255,255,255,0.40)",
+          maxWidth:460, margin:"0 auto", lineHeight:1.6 }}>
+          The same components, tokens, and structure — skinned to any client brand in minutes.
+          Change one CSS variable; the whole product re-colours.
+        </p>
+      </div>
+
+      <div style={{ display:"grid", gridTemplateColumns:"repeat(3,1fr)", gap:20 }}>
+        {CLIENT_THEMES.map(t => (
+          <div key={t.name} style={{
+            ...t.vars, ...LIGHT_RESETS,
+            borderRadius:"var(--radius-xl)", background:"#ffffff",
+            overflow:"hidden", border:"1px solid rgba(255,255,255,0.06)",
+          } as React.CSSProperties}>
+            <div style={{ height:4, background:t.brandColor }}/>
+            <div style={{ padding:24 }}>
+              <p style={{ fontFamily:"var(--font-bold)", fontWeight:700, fontSize:14, color:"#202225", margin:"0 0 2px" }}>{t.name}</p>
+              <p style={{ fontFamily:"var(--font-normal)", fontSize:12, color:"#585f65", margin:"0 0 16px" }}>{t.sector}</p>
+              <div style={{ marginBottom:12 }}>
+                <StatCard label="Projects" value="142" trend="+12% this month" trendDirection="up"/>
+              </div>
+              <div style={{ display:"flex", gap:8, marginBottom:12 }}>
+                <Button hierarchy="primary" style={{ flex:1 }}>Create Report</Button>
+                <Button hierarchy="tertiary">Filter</Button>
+              </div>
+              <div style={{ display:"flex", gap:6, flexWrap:"wrap" }}>
+                <Badge tone="action">Active</Badge>
+                <Badge tone="success">Synced</Badge>
+                <Badge tone="neutral">14 members</Badge>
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
+    </section>
+  );
+
+  /* ─ System ────────────────────────────────────────────────────── */
+  const SystemBand = () => (
+    <section style={{ padding:"44px 48px", background:"var(--surface-raised, #fff)" }}>
+      <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr 1fr", gap:40, marginBottom:40 }}>
+
+        {/* Alerts */}
+        <div>
+          <BandTag>Alert · 4 tones</BandTag>
+          <div style={{ display:"flex", flexDirection:"column", gap:10 }}>
+            <Alert tone="info"    title="System update">Maintenance scheduled for Sunday 2–4 AM UTC.</Alert>
+            <Alert tone="success" title="Deployed!">v2.4.1 is live on production.</Alert>
+            <Alert tone="warning" title="Token drift">3 tokens have diverged from the Figma source.</Alert>
+            <Alert tone="error"   title="Build failed">TypeScript errors in Button.d.ts — see CI log.</Alert>
+          </div>
+        </div>
+
+        {/* Form anatomy */}
+        <div>
+          <BandTag>Form anatomy</BandTag>
+          <div style={{ display:"flex", flexDirection:"column", gap:12 }}>
+            <Input label="Full name" required placeholder="Jane Smith" helper="As shown on your passport"/>
+            <Select label="Country" options={["United Kingdom","Ireland","France","Germany"]} placeholder="Select country"/>
+            <Textarea label="Notes" rows={3} placeholder="Any additional context…"/>
+            <div style={{ display:"flex", gap:8, justifyContent:"flex-end" }}>
+              <Button hierarchy="tertiary">Cancel</Button>
+              <Button hierarchy="primary">Submit</Button>
+            </div>
+          </div>
+        </div>
+
+        {/* Typography */}
+        <div>
+          <BandTag>IBM Plex Sans · type scale</BandTag>
+          <div style={{ display:"flex", flexDirection:"column" }}>
+            {[
+              { label:"Display · 48px",    s:{ fontFamily:"var(--font-bold)", fontWeight:700, fontSize:"var(--display-large-size, 48px)", lineHeight:1.1, letterSpacing:"-1.5px", color:"var(--text-title)" } },
+              { label:"Heading 1 · 24px",  s:{ fontFamily:"var(--font-bold)", fontWeight:700, fontSize:"var(--heading-h1-size, 24px)", lineHeight:1.25, letterSpacing:"-0.25px", color:"var(--text-title)" } },
+              { label:"Heading 2 · 20px",  s:{ fontFamily:"var(--font-bold)", fontWeight:700, fontSize:"var(--heading-h2-size, 20px)", lineHeight:1.3, color:"var(--text-title)" } },
+              { label:"Body large · 16px", s:{ fontFamily:"var(--font-normal)", fontSize:"var(--body-large-size, 16px)", lineHeight:1.5, color:"var(--text-body)" } },
+              { label:"Body · 14px",       s:{ fontFamily:"var(--font-normal)", fontSize:"var(--body-medium-size, 14px)", lineHeight:1.5, color:"var(--text-body)" } },
+              { label:"Caption · 12px",    s:{ fontFamily:"var(--font-normal)", fontSize:"var(--caption-size, 12px)", letterSpacing:"0.04em", color:"var(--text-caption)" } },
+              { label:"Mono · 12px",       s:{ fontFamily:"var(--font-mono)", fontSize:"var(--code-size, 12px)", lineHeight:1.5, color:"var(--text-caption)" } },
+            ].map(({ label, s }) => (
+              <div key={label} style={{ padding:"10px 0", borderBottom:"1px solid var(--border-subtle)" }}>
+                <p style={{ ...s, margin:0 }}>{label}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      {/* Colour token grid */}
+      <div style={{ paddingTop:32, borderTop:"1px solid var(--border-subtle)" }}>
+        <BandTag>Data-viz palette · 6 tokens</BandTag>
+        <div style={{ display:"grid", gridTemplateColumns:"repeat(6,1fr)", gap:10 }}>
+          {[
+            { name:"viz-1", label:"Purple",   color:"var(--viz-1, #602DEA)", hex:"#602DEA" },
+            { name:"viz-2", label:"Blue",     color:"var(--viz-2, #445CFF)", hex:"#445CFF" },
+            { name:"viz-3", label:"Cyan",     color:"var(--viz-3, #00D4D4)", hex:"#00D4D4" },
+            { name:"viz-4", label:"Navy",     color:"var(--viz-4, #00208F)", hex:"#00208F" },
+            { name:"viz-5", label:"Lavender", color:"var(--viz-5, #9A8AF5)", hex:"#9A8AF5" },
+            { name:"viz-6", label:"Steel",    color:"var(--viz-6, #608FEC)", hex:"#608FEC" },
+          ].map(t => (
+            <div key={t.name}>
+              <div style={{ height:40, borderRadius:"var(--radius-md)", background:t.color, marginBottom:6 }}/>
+              <p style={{ fontFamily:"var(--font-mono)", fontSize:9, color:"var(--text-caption)", margin:"0 0 2px" }}>
+                {t.name} · {t.label}
+              </p>
+              <p style={{ fontFamily:"var(--font-mono)", fontSize:9, color:"var(--text-disabled, rgba(0,0,0,0.25))", margin:0 }}>
+                {t.hex}
+              </p>
+            </div>
+          ))}
+        </div>
+      </div>
+    </section>
+  );
+
+  /* ── Assembly ────────────────────────────────────────────────── */
   return (
     <div style={{ display:"flex", height:"100vh", overflow:"hidden", fontFamily:"var(--font-normal)" }}>
 
-      {/* ── Config panel ─────────────────────────────────────── */}
-      <aside style={{
-        width:240, flexShrink:0, background:"#0c0c1e",
-        display:"flex", flexDirection:"column", padding:"24px 16px",
-        gap:28, overflowY:"auto",
-      }}>
+      {/* Sidebar */}
+      <aside style={{ width:240, flexShrink:0, background:"#0c0c1e", display:"flex",
+        flexDirection:"column", padding:"24px 16px", gap:24, overflowY:"auto" }}>
+
         <img src="/assets/logo/sandhata-logo.svg" alt="Sandhata" style={{ height:28 }}/>
 
-        <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", padding:"8px 10px", background:"rgba(255,255,255,0.05)", borderRadius:"var(--r, 8px)" }}>
-          <span style={{ fontSize:13, color:"rgba(255,255,255,0.7)", fontWeight:500 }}>Menu</span>
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.4)" strokeWidth="2" strokeLinecap="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+        <div>
+          <p style={{ fontSize:10, fontWeight:700, letterSpacing:"0.1em", textTransform:"uppercase",
+            color:"rgba(255,255,255,0.28)", margin:"0 0 3px" }}>Design System</p>
+          <p style={{ fontSize:11, color:"rgba(255,255,255,0.38)", fontFamily:"var(--font-mono)", margin:0 }}>v1.0-stable</p>
         </div>
 
-        {[
-          { label:"Style", value:"Sandhata" },
-          { label:"Font",  value:"IBM Plex Sans" },
-          { label:"Icons", value:"Lucide" },
-        ].map(r => (
-          <div key={r.label} style={{ display:"flex", justifyContent:"space-between", alignItems:"center", padding:"0 2px" }}>
-            <span style={{ fontSize:11, color:"rgba(255,255,255,0.35)", textTransform:"uppercase", letterSpacing:"0.08em", fontWeight:700 }}>{r.label}</span>
-            <span style={{ fontSize:13, color:"rgba(255,255,255,0.65)" }}>{r.value}</span>
-          </div>
-        ))}
-
+        {/* Accent */}
         <div>
-          <p style={{ fontSize:11, color:"rgba(255,255,255,0.35)", textTransform:"uppercase", letterSpacing:"0.08em", fontWeight:700, marginBottom:12 }}>Colour</p>
+          <p style={{ fontSize:10, fontWeight:700, letterSpacing:"0.1em", textTransform:"uppercase",
+            color:"rgba(255,255,255,0.28)", margin:"0 0 10px" }}>Accent colour</p>
           <div style={{ display:"flex", gap:8, flexWrap:"wrap" }}>
-            {ACCENTS.map(a => (
-              <button key={a.hex} title={a.name} onClick={() => setAccent(a.hex)} style={{
+            {ACCENTS.map((a,i) => (
+              <button key={a.hex} title={`${a.name} — ${a.token}`} onClick={() => setAccentIdx(i)} style={{
                 width:26, height:26, borderRadius:"50%", background:a.hex, border:"none", cursor:"pointer",
-                outline: accent===a.hex ? "2px solid #fff" : "2px solid transparent",
+                outline: accentIdx===i ? "2px solid #fff" : "2px solid transparent",
                 outlineOffset:2, transition:"outline .15s",
               }}/>
             ))}
           </div>
+          <p style={{ fontFamily:"var(--font-mono)", fontSize:9, color:"rgba(255,255,255,0.22)",
+            marginTop:8, wordBreak:"break-all" }}>{accent.token}</p>
         </div>
 
+        {/* Surface */}
         <div>
-          <p style={{ fontSize:11, color:"rgba(255,255,255,0.35)", textTransform:"uppercase", letterSpacing:"0.08em", fontWeight:700, marginBottom:12 }}>Mode</p>
-          <div style={{ display:"inline-flex", background:"rgba(255,255,255,0.07)", borderRadius:8, padding:3 }}>
-            {["Light","Dark"].map(m => {
-              const on = dark ? m==="Dark" : m==="Light";
-              return <button key={m} onClick={() => setDark(m==="Dark")} style={{ padding:"5px 16px", borderRadius:6, border:"none", cursor:"pointer", fontSize:13, fontFamily:"var(--font-normal)", background:on?"#fff":"transparent", color:on?"#0a0a14":"rgba(255,255,255,0.5)", transition:"background .15s,color .15s" }}>{m}</button>;
-            })}
-          </div>
-        </div>
-
-        <div>
-          <p style={{ fontSize:11, color:"rgba(255,255,255,0.35)", textTransform:"uppercase", letterSpacing:"0.08em", fontWeight:700, marginBottom:12 }}>Radius</p>
-          <div style={{ display:"flex", gap:5 }}>
-            {RADII.map(r => (
-              <button key={r.v} onClick={() => setRadius(r.v)} style={{ flex:1, padding:"5px 0", borderRadius:6, cursor:"pointer", fontSize:12, fontFamily:"var(--font-normal)", border:`1px solid ${radius===r.v?accent:"rgba(255,255,255,0.1)"}`, background:radius===r.v?accent:"transparent", color:radius===r.v?"#fff":"rgba(255,255,255,0.45)", transition:"all .15s" }}>{r.l}</button>
+          <p style={{ fontSize:10, fontWeight:700, letterSpacing:"0.1em", textTransform:"uppercase",
+            color:"rgba(255,255,255,0.28)", margin:"0 0 10px" }}>Surface</p>
+          <div style={{ display:"flex", flexDirection:"column", gap:4 }}>
+            {(["white","warm","dark"] as const).map(s => (
+              <button key={s} onClick={() => setSurface(s)} style={{
+                padding:"6px 10px", borderRadius:6, border:"none", cursor:"pointer",
+                fontFamily:"var(--font-normal)", fontSize:13,
+                background: surface===s ? "rgba(255,255,255,0.12)" : "transparent",
+                color: surface===s ? "#fff" : "rgba(255,255,255,0.42)",
+                textAlign:"left", transition:"background .15s,color .15s",
+              }}>{SURFACES[s].label}</button>
             ))}
           </div>
+        </div>
+
+        {/* Radius */}
+        <div>
+          <p style={{ fontSize:10, fontWeight:700, letterSpacing:"0.1em", textTransform:"uppercase",
+            color:"rgba(255,255,255,0.28)", margin:"0 0 10px" }}>Radius</p>
+          <div style={{ display:"flex", gap:4 }}>
+            {RADII.map((r,i) => (
+              <button key={r.label} onClick={() => setRadiusIdx(i)} style={{
+                flex:1, padding:"5px 0", borderRadius:5, cursor:"pointer",
+                fontFamily:"var(--font-normal)", fontSize:11, fontWeight:600,
+                border:`1px solid ${radiusIdx===i?"rgba(255,255,255,0.50)":"rgba(255,255,255,0.10)"}`,
+                background: radiusIdx===i ? "rgba(255,255,255,0.12)" : "transparent",
+                color: radiusIdx===i ? "#fff" : "rgba(255,255,255,0.36)",
+                transition:"all .15s",
+              }}>{r.label}</button>
+            ))}
+          </div>
+          <p style={{ fontFamily:"var(--font-mono)", fontSize:9, color:"rgba(255,255,255,0.20)", marginTop:6 }}>
+            --radius-md: {RADII[radiusIdx].px}
+          </p>
+        </div>
+
+        {/* Token Inspector */}
+        <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between",
+          padding:"8px 0", borderTop:"1px solid rgba(255,255,255,0.06)",
+          borderBottom:"1px solid rgba(255,255,255,0.06)" }}>
+          <span style={{ fontSize:12, color:"rgba(255,255,255,0.55)" }}>Token Inspector</span>
+          <Switch checked={showTokens} onChange={setShowTokens} label=""/>
         </div>
 
         <div style={{ flex:1 }}/>
+
         <div style={{ display:"flex", flexDirection:"column", gap:8 }}>
-          <button style={{ padding:"8px", borderRadius:6, border:"1px solid rgba(255,255,255,0.12)", background:"transparent", color:"rgba(255,255,255,0.6)", fontSize:13, cursor:"pointer", fontFamily:"var(--font-normal)" }}>Shuffle</button>
-          <button style={{ padding:"8px", borderRadius:6, border:"none", background:accent, color:"#fff", fontSize:13, fontWeight:600, cursor:"pointer", fontFamily:"var(--font-normal)" }}>Get Code</button>
+          <a href="/components" style={{ display:"block", padding:"8px 14px", borderRadius:6,
+            border:"1px solid rgba(255,255,255,0.12)", color:"rgba(255,255,255,0.60)",
+            fontSize:13, textDecoration:"none", textAlign:"center", fontFamily:"var(--font-normal)" }}>
+            Open Docs
+          </a>
+          <button style={{ padding:"9px", borderRadius:6, border:"none",
+            background:"var(--colour-primaryblue-500, #0036DD)", color:"#fff",
+            fontSize:13, fontWeight:700, cursor:"pointer", fontFamily:"var(--font-normal)" }}>
+            Get Code
+          </button>
         </div>
-        <a href="/" style={{ fontSize:11, color:"rgba(255,255,255,0.2)", textDecoration:"none" }}>← Back to home</a>
+
+        <a href="/" style={{ fontSize:11, color:"rgba(255,255,255,0.18)", textDecoration:"none" }}>
+          ← Back to home
+        </a>
       </aside>
 
-      {/* ── Card grid ────────────────────────────────────────── */}
-      <div style={{ flex:1, overflowY:"auto", background:"var(--bg)", ...vars, padding:"20px" }}>
-        <div style={{ columns:5, columnGap:14 }}>
-          <UsageHistory accent={accent}/>
-          <CreateRelease accent={accent}/>
-          <QRCard/>
-
-          <PublishSettings accent={accent} dark={dark}/>
-          <AvailableCredits accent={accent}/>
-          <Preferences dark={dark}/>
-
-          <DesignGoals accent={accent}/>
-          <RecentActivity/>
-          <NavTabs accent={accent}/>
-
-          <DeployCard accent={accent} dark={dark}/>
-          <MiniStats accent={accent}/>
-          <TransferCard accent={accent} dark={dark}/>
-
-          <AccountAccess accent={accent} dark={dark}/>
-          <ComponentShowcase accent={accent}/>
-          <PlatformShare accent={accent}/>
-          <InviteTeam accent={accent} dark={dark}/>
-          <Typography accent={accent}/>
-          <ReportBug accent={accent} dark={dark}/>
-        </div>
-      </div>
+      {/* Main */}
+      <main style={{ flex:1, overflowY:"auto", background:surfCfg.bg, ...mainVars }}>
+        <HeroBand/>
+        <GradientRule/>
+        <AtomsBand/>
+        <GradientRule/>
+        <DataBand/>
+        <GradientRule/>
+        <ThemesBand/>
+        <GradientRule/>
+        <SystemBand/>
+      </main>
     </div>
-  );
-}
-
-/* ── Card shell ─────────────────────────────────────────────────── */
-function Card({ children, style }: { children: React.ReactNode; style?: React.CSSProperties }) {
-  return (
-    <div style={{ breakInside:"avoid", marginBottom:14, background:"var(--card)", border:"1px solid var(--border)", borderRadius:"var(--r)", overflow:"hidden", ...style }}>
-      {children}
-    </div>
-  );
-}
-function CardBody({ children, style }: { children:React.ReactNode; style?:React.CSSProperties }) {
-  return <div style={{ padding:"18px 20px", ...style }}>{children}</div>;
-}
-function CardTitle({ children }: { children:React.ReactNode }) {
-  return <p style={{ fontSize:14, fontWeight:600, color:"var(--text)", margin:"0 0 3px" }}>{children}</p>;
-}
-function CardSub({ children }: { children:React.ReactNode }) {
-  return <p style={{ fontSize:12, color:"var(--text2)", margin:"0 0 14px" }}>{children}</p>;
-}
-function Inp({ placeholder, type="text", value, style }: { placeholder:string; type?:string; value?:string; style?:React.CSSProperties }) {
-  return <input type={type} placeholder={placeholder} defaultValue={value} style={{ width:"100%", padding:"8px 11px", fontSize:13, borderRadius:"var(--r)", border:"1px solid var(--border)", background:"var(--muted)", color:"var(--text)", outline:"none", boxSizing:"border-box", fontFamily:"var(--font-normal)", ...style }}/>;
-}
-function Btn({ children, accent, secondary, style }: { children:React.ReactNode; accent?:string; secondary?:boolean; style?:React.CSSProperties }) {
-  return (
-    <button style={{ padding:"8px 16px", borderRadius:"var(--r)", border: secondary?"1px solid var(--border)":"none", background: secondary?"transparent":accent||"var(--text)", color: secondary?"var(--text)":"#fff", fontSize:13, fontWeight:600, cursor:"pointer", fontFamily:"var(--font-normal)", ...style }}>
-      {children}
-    </button>
-  );
-}
-
-/* ── Cards ──────────────────────────────────────────────────────── */
-
-function UsageHistory({ accent }: { accent:string }) {
-  const data = [58,72,45,88,64,95];
-  const labels = ["Dec","Jan","Feb","Mar","Apr","May"];
-  const max = Math.max(...data);
-  return (
-    <Card>
-      <CardBody>
-        <CardTitle>Usage History</CardTitle>
-        <CardSub>Last 6 months of activity</CardSub>
-        <div style={{ display:"flex", alignItems:"flex-end", gap:6, height:90, marginBottom:8 }}>
-          {data.map((v,i) => (
-            <div key={i} style={{ flex:1, display:"flex", flexDirection:"column", alignItems:"center", gap:4, height:"100%" }}>
-              <div style={{ flex:1, width:"100%", display:"flex", alignItems:"flex-end" }}>
-                <div style={{ width:"100%", borderRadius:"var(--r) var(--r) 0 0", background: i===data.length-1?accent:"rgba(0,0,0,0.12)", height:`${(v/max)*100}%`, transition:"height .3s ease" }}/>
-              </div>
-              <span style={{ fontSize:9, color:"var(--text2)" }}>{labels[i]}</span>
-            </div>
-          ))}
-        </div>
-        <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:12, marginTop:14, paddingTop:14, borderTop:"1px solid var(--border)" }}>
-          <div>
-            <p style={{ fontSize:10, fontWeight:700, letterSpacing:"0.06em", color:"var(--text2)", textTransform:"uppercase", margin:"0 0 4px" }}>UPCOMING</p>
-            <p style={{ fontSize:14, fontWeight:700, color:"var(--text)", margin:"0 0 2px" }}>May 25, 2024</p>
-            <p style={{ fontSize:11, color:"var(--text2)", margin:0 }}>$1,000 scheduled</p>
-          </div>
-          <div>
-            <p style={{ fontSize:10, fontWeight:700, letterSpacing:"0.06em", color:"var(--text2)", textTransform:"uppercase", margin:"0 0 4px" }}>AUTO-SAVE PLAN</p>
-            <p style={{ fontSize:14, fontWeight:700, color:"var(--text)", margin:"0 0 2px" }}>Accelerated</p>
-            <p style={{ fontSize:11, color:"var(--text2)", margin:0 }}>Recurring weekly</p>
-          </div>
-        </div>
-        <Btn accent={accent} style={{ width:"100%", marginTop:14, textAlign:"center" }}>View Full Report</Btn>
-      </CardBody>
-    </Card>
-  );
-}
-
-function CreateRelease({ accent }: { accent:string }) {
-  return (
-    <Card>
-      <CardBody style={{ textAlign:"center", padding:"32px 20px" }}>
-        <div style={{ width:36, height:36, borderRadius:"50%", border:"1.5px solid var(--border)", display:"flex", alignItems:"center", justifyContent:"center", margin:"0 auto 14px", color:"var(--text2)", fontSize:20 }}>+</div>
-        <p style={{ fontSize:14, fontWeight:600, color:"var(--text)", margin:"0 0 6px" }}>Create Component</p>
-        <p style={{ fontSize:12, color:"var(--text2)", margin:"0 0 16px" }}>Add your first component to start building your design system.</p>
-        <Btn accent={accent} style={{ width:"100%" }}>Create Component</Btn>
-      </CardBody>
-    </Card>
-  );
-}
-
-function QRCard() {
-  return (
-    <Card>
-      <CardBody>
-        <CardTitle>Scan to Connect</CardTitle>
-        <CardSub>Open on your mobile device</CardSub>
-        <div style={{ background:"#fff", borderRadius:"var(--r)", padding:12, display:"flex", alignItems:"center", justifyContent:"center" }}>
-          <svg width="80" height="80" viewBox="0 0 80 80">
-            {/* Simple QR-like pattern */}
-            {[0,1,2,3,4,5,6].map(r => [0,1,2,3,4,5,6].map(c => {
-              const border = (r<3&&c<3)||(r<3&&c>3)||(r>3&&c<3);
-              const inner = (r>=1&&r<=1&&c>=1&&c<=1)||(r>=1&&r<=1&&c>=5&&c<=5)||(r>=5&&r<=5&&c>=1&&c<=1);
-              const fill = border || inner || (Math.sin(r*3+c*7)>0.3);
-              return fill ? <rect key={`${r}${c}`} x={c*10+5} y={r*10+5} width={9} height={9} fill="#0a0a14" rx={1}/> : null;
-            }))}
-            <rect x={5} y={5} width={29} height={29} fill="none" stroke="#0a0a14" strokeWidth={3}/>
-            <rect x={46} y={5} width={29} height={29} fill="none" stroke="#0a0a14" strokeWidth={3}/>
-            <rect x={5} y={46} width={29} height={29} fill="none" stroke="#0a0a14" strokeWidth={3}/>
-            <rect x={13} y={13} width={13} height={13} fill="#0a0a14"/>
-            <rect x={54} y={13} width={13} height={13} fill="#0a0a14"/>
-            <rect x={13} y={54} width={13} height={13} fill="#0a0a14"/>
-          </svg>
-        </div>
-      </CardBody>
-    </Card>
-  );
-}
-
-function PublishSettings({ accent, dark }: { accent:string; dark:boolean }) {
-  return (
-    <Card>
-      <CardBody style={{ display:"flex", justifyContent:"space-between", alignItems:"flex-start" }}>
-        <CardTitle>Publish Settings</CardTitle>
-        <button style={{ background:"none", border:"none", cursor:"pointer", color:"var(--text2)", fontSize:16, padding:0 }}>×</button>
-      </CardBody>
-      <div style={{ height:1, background:"var(--border)" }}/>
-      <CardBody>
-        <p style={{ fontSize:12, color:"var(--text2)", margin:"0 0 14px" }}>Configure how your components are published.</p>
-        <div style={{ marginBottom:12 }}>
-          <label style={{ fontSize:12, fontWeight:500, color:"var(--text)", display:"block", marginBottom:6 }}>Target Environment</label>
-          <select style={{ width:"100%", padding:"8px 11px", fontSize:13, borderRadius:"var(--r)", border:"1px solid var(--border)", background:dark?"rgba(255,255,255,0.04)":"#fff", color:"var(--text)", fontFamily:"var(--font-normal)", outline:"none" }}>
-            <option>Production</option><option>Staging</option><option>Development</option>
-          </select>
-        </div>
-        <div style={{ marginBottom:16 }}>
-          <div style={{ display:"flex", justifyContent:"space-between", marginBottom:6 }}>
-            <span style={{ fontSize:12, fontWeight:500, color:"var(--text)" }}>Max Bundle Size</span>
-            <span style={{ fontSize:13, fontWeight:700, color:"var(--text)" }}>250kb</span>
-          </div>
-          <div style={{ height:4, borderRadius:2, background:"var(--border)", overflow:"hidden" }}>
-            <div style={{ width:"62%", height:"100%", background:accent, borderRadius:2 }}/>
-          </div>
-          <div style={{ display:"flex", justifyContent:"space-between", marginTop:4 }}>
-            <span style={{ fontSize:10, color:"var(--text2)" }}>50kb (MIN)</span>
-            <span style={{ fontSize:10, color:"var(--text2)" }}>500kb (MAX)</span>
-          </div>
-        </div>
-        <div style={{ marginBottom:16 }}>
-          <label style={{ fontSize:12, fontWeight:500, color:"var(--text)", display:"block", marginBottom:6 }}>Notes</label>
-          <textarea placeholder="Add any notes for this release..." rows={3} style={{ width:"100%", padding:"8px 11px", fontSize:13, borderRadius:"var(--r)", border:"1px solid var(--border)", background:"var(--muted)", color:"var(--text)", resize:"none", outline:"none", boxSizing:"border-box", fontFamily:"var(--font-normal)" }}/>
-        </div>
-        <Btn accent={accent} style={{ width:"100%", textAlign:"center" }}>Save Settings</Btn>
-      </CardBody>
-    </Card>
-  );
-}
-
-function AvailableCredits({ accent }: { accent:string }) {
-  return (
-    <Card>
-      <CardBody>
-        <p style={{ fontSize:12, color:"var(--text2)", margin:"0 0 4px" }}>Available Credits</p>
-        <p style={{ fontSize:32, fontWeight:700, color:"var(--text)", margin:"0 0 6px", letterSpacing:"-1px" }}>$0.00</p>
-        <span style={{ display:"inline-flex", alignItems:"center", gap:5, fontSize:11, fontWeight:600, color:"#f59e0b", marginBottom:16 }}>
-          <span style={{ width:6, height:6, borderRadius:"50%", background:"#f59e0b" }}/> Pending Setup
-        </span>
-        {[
-          { l:"Net Earnings",     v:"$0.00" },
-          { l:"Processing Fee",   v:"-$0.00" },
-          { l:"Ready to Claim",   v:"$0.00 USD" },
-        ].map(r => (
-          <div key={r.l} style={{ display:"flex", justifyContent:"space-between", padding:"8px 0", borderBottom:"1px solid var(--border)" }}>
-            <span style={{ fontSize:13, color:"var(--text2)" }}>{r.l}</span>
-            <span style={{ fontSize:13, fontWeight:600, color:"var(--text)" }}>{r.v}</span>
-          </div>
-        ))}
-        <p style={{ fontSize:11, color:"var(--text2)", marginTop:12, lineHeight:1.5 }}>Once your bank is connected, balances over $10.00 are automatically eligible for monthly distribution.</p>
-      </CardBody>
-    </Card>
-  );
-}
-
-function Preferences({ dark }: { dark:boolean }) {
-  return (
-    <Card>
-      <CardBody style={{ display:"flex", justifyContent:"space-between", alignItems:"center" }}>
-        <div><CardTitle>Preferences</CardTitle><p style={{ fontSize:12, color:"var(--text2)", margin:0 }}>Manage your account settings.</p></div>
-        <button style={{ background:"none", border:"none", cursor:"pointer", color:"var(--text2)", fontSize:16 }}>×</button>
-      </CardBody>
-      <div style={{ height:1, background:"var(--border)" }}/>
-      <CardBody>
-        {["Default Currency","Notifications","Language"].map(f => (
-          <div key={f} style={{ marginBottom:12 }}>
-            <label style={{ fontSize:12, fontWeight:500, color:"var(--text)", display:"block", marginBottom:6 }}>{f}</label>
-            <select style={{ width:"100%", padding:"7px 11px", fontSize:13, borderRadius:"var(--r)", border:"1px solid var(--border)", background:dark?"rgba(255,255,255,0.04)":"#fff", color:"var(--text2)", fontFamily:"var(--font-normal)", outline:"none" }}>
-              <option>{f==="Default Currency"?"USD — United States Dollar":f==="Language"?"English (UK)":"All Notifications"}</option>
-            </select>
-          </div>
-        ))}
-      </CardBody>
-    </Card>
-  );
-}
-
-function DesignGoals({ accent }: { accent:string }) {
-  const goals = [
-    { label:"ACCESSIBILITY", value:"$420,000", pct:65, achieved:"$273,000" },
-    { label:"COMPONENTS",    value:"$85,000",  pct:32, achieved:"$27,200"  },
-  ];
-  return (
-    <Card>
-      <CardBody style={{ display:"flex", justifyContent:"space-between", alignItems:"flex-start" }}>
-        <div><CardTitle>Design Goals</CardTitle><p style={{ fontSize:12, color:"var(--text2)", margin:0 }}>Active milestones for 2024</p></div>
-        <button style={{ padding:"5px 12px", borderRadius:"var(--r)", border:"1px solid var(--border)", background:"transparent", fontSize:12, color:"var(--text)", cursor:"pointer", fontFamily:"var(--font-normal)" }}>New Goal</button>
-      </CardBody>
-      <div style={{ height:1, background:"var(--border)" }}/>
-      {goals.map((g,i) => (
-        <CardBody key={g.label} style={{ borderBottom: i<goals.length-1?"1px solid var(--border)":"none" }}>
-          <p style={{ fontSize:10, fontWeight:700, letterSpacing:"0.08em", color:"var(--text2)", margin:"0 0 6px" }}>{g.label}</p>
-          <p style={{ fontSize:24, fontWeight:700, color:"var(--text)", margin:"0 0 10px", letterSpacing:"-0.5px" }}>{g.value}</p>
-          <div style={{ height:4, borderRadius:2, background:"var(--border)", marginBottom:6 }}>
-            <div style={{ width:`${g.pct}%`, height:"100%", background:accent, borderRadius:2 }}/>
-          </div>
-          <div style={{ display:"flex", justifyContent:"space-between" }}>
-            <span style={{ fontSize:12, color:"var(--text2)" }}>{g.pct}% achieved</span>
-            <span style={{ fontSize:12, color:"var(--text2)" }}>{g.achieved}</span>
-          </div>
-        </CardBody>
-      ))}
-      <CardBody><p style={{ fontSize:12, color:"var(--text2)", margin:0 }}>You have not met your targets for this year.</p></CardBody>
-    </Card>
-  );
-}
-
-function RecentActivity() {
-  const items = [
-    { icon:"🛒", name:"Blue Bottle Coffee",    cat:"Food & Drink",   date:"Today, 10:24 AM", amt:"-$6.50",    pos:false },
-    { icon:"🛒", name:"Whole Foods Market",     cat:"Groceries",      date:"Yesterday",        amt:"-$142.30",  pos:false },
-    { icon:"💳", name:"Stripe Payout",          cat:"Income",         date:"Oct 12",           amt:"+$4,200.00",pos:true  },
-    { icon:"🚗", name:"Uber Technologies",      cat:"Transport",      date:"Oct 11",           amt:"-$24.10",   pos:false },
-    { icon:"📺", name:"Netflix Subscription",   cat:"Entertainment",  date:"Oct 10",           amt:"-$19.99",   pos:false },
-  ];
-  return (
-    <Card>
-      <CardBody style={{ display:"flex", justifyContent:"space-between", alignItems:"center" }}>
-        <div><CardTitle>Recent Activity</CardTitle><p style={{ fontSize:12, color:"var(--text2)", margin:0 }}>Your latest account activity.</p></div>
-        <a href="#" style={{ fontSize:12, color:"var(--text2)", textDecoration:"none" }}>View All</a>
-      </CardBody>
-      <div style={{ height:1, background:"var(--border)" }}/>
-      {items.map(it => (
-        <div key={it.name} style={{ display:"flex", alignItems:"center", padding:"10px 20px", borderBottom:"1px solid var(--border)", gap:12 }}>
-          <div style={{ width:34, height:34, borderRadius:"50%", background:"var(--muted)", border:"1px solid var(--border)", display:"flex", alignItems:"center", justifyContent:"center", fontSize:15, flexShrink:0 }}>{it.icon}</div>
-          <div style={{ flex:1, minWidth:0 }}>
-            <p style={{ fontSize:13, fontWeight:500, color:"var(--text)", margin:0, whiteSpace:"nowrap", overflow:"hidden", textOverflow:"ellipsis" }}>{it.name}</p>
-            <p style={{ fontSize:11, color:"var(--text2)", margin:0 }}>{it.cat}</p>
-          </div>
-          <div style={{ textAlign:"right", flexShrink:0 }}>
-            <p style={{ fontSize:13, fontWeight:600, color:it.pos?"#10b981":"var(--text)", margin:0 }}>{it.amt}</p>
-            <p style={{ fontSize:11, color:"var(--text2)", margin:0 }}>{it.date}</p>
-          </div>
-        </div>
-      ))}
-    </Card>
-  );
-}
-
-function NavTabs({ accent }: { accent:string }) {
-  const [tab, setTab] = React.useState("Overview");
-  return (
-    <Card>
-      <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", borderBottom:"1px solid var(--border)" }}>
-        {["Overview","Account"].map(t => (
-          <button key={t} onClick={() => setTab(t)} style={{ padding:"12px", border:"none", background:"transparent", cursor:"pointer", fontSize:13, fontFamily:"var(--font-normal)", color: tab===t?"var(--text)":"var(--text2)", fontWeight: tab===t?600:400, borderBottom: tab===t?`2px solid ${accent}`:"2px solid transparent", transition:"all .15s" }}>{t}</button>
-        ))}
-      </div>
-      <CardBody>
-        {tab==="Overview"
-          ? ["Dashboard","Transactions","Investments","Accounts"].map(i => (
-              <div key={i} style={{ display:"flex", alignItems:"center", gap:10, padding:"7px 0", borderBottom:"1px solid var(--border)" }}>
-                <div style={{ width:16, height:16, borderRadius:3, background:"var(--muted)", border:"1px solid var(--border)" }}/>
-                <span style={{ fontSize:13, color:"var(--text)" }}>{i}</span>
-              </div>
-            ))
-          : ["Profile","Billing","Notifications","Security"].map(i => (
-              <div key={i} style={{ display:"flex", alignItems:"center", gap:10, padding:"7px 0", borderBottom:"1px solid var(--border)" }}>
-                <div style={{ width:16, height:16, borderRadius:3, background:"var(--muted)", border:"1px solid var(--border)" }}/>
-                <span style={{ fontSize:13, color:"var(--text)" }}>{i}</span>
-              </div>
-            ))
-        }
-      </CardBody>
-    </Card>
-  );
-}
-
-function DeployCard({ accent, dark }: { accent:string; dark:boolean }) {
-  return (
-    <Card>
-      <CardBody>
-        <CardTitle>Deploy Component</CardTitle>
-        <CardSub>Push to your registry</CardSub>
-        <div style={{ position:"relative", marginBottom:12 }}>
-          <span style={{ position:"absolute", left:11, top:"50%", transform:"translateY(-50%)", fontSize:13, color:"var(--text2)" }}>v</span>
-          <Inp placeholder="1.0.0" style={{ paddingLeft:28 }}/>
-        </div>
-        <select style={{ width:"100%", padding:"8px 11px", fontSize:13, borderRadius:"var(--r)", border:"1px solid var(--border)", background:dark?"rgba(255,255,255,0.04)":"#fff", color:"var(--text)", fontFamily:"var(--font-normal)", outline:"none", marginBottom:12 }}>
-          <option>Release Type — Minor</option><option>Major</option><option>Patch</option>
-        </select>
-        <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:10, marginBottom:14, padding:"12px 0", borderTop:"1px solid var(--border)", borderBottom:"1px solid var(--border)" }}>
-          {[["Affected Components","12"],["Bundle Delta","+4.2kb"]].map(([l,v]) => (
-            <div key={l}><p style={{ fontSize:11, color:"var(--text2)", margin:"0 0 2px" }}>{l}</p><p style={{ fontSize:16, fontWeight:700, color:"var(--text)", margin:0 }}>{v}</p></div>
-          ))}
-        </div>
-        <Btn accent={accent} style={{ width:"100%", textAlign:"center" }}>Review Release</Btn>
-        <p style={{ fontSize:11, color:"var(--text2)", textAlign:"center", marginTop:8 }}>Components publish within seconds of release.</p>
-      </CardBody>
-    </Card>
-  );
-}
-
-function MiniStats({ accent }: { accent:string }) {
-  const data = [3,5,4,7,5,6,4,8,7,9,6,8];
-  const months = ["J","F","M","A","M","J","J","A","S","O","N","D"];
-  const max = Math.max(...data);
-  return (
-    <>
-      <Card>
-        <CardBody style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:0 }}>
-          <div style={{ paddingRight:16, borderRight:"1px solid var(--border)" }}>
-            <p style={{ fontSize:11, color:"var(--text2)", margin:"0 0 4px" }}>Token Balance</p>
-            <p style={{ fontSize:18, fontWeight:700, color:"var(--text)", margin:0, letterSpacing:"-0.5px" }}>US$12.94</p>
-            <p style={{ fontSize:11, color:"var(--text2)", margin:"4px 0 0" }}>US$11,337.06 Available</p>
-          </div>
-          <div style={{ paddingLeft:16 }}>
-            <p style={{ fontSize:11, color:"var(--text2)", margin:"0 0 4px" }}>Due Date</p>
-            <p style={{ fontSize:18, fontWeight:700, color:"var(--text)", margin:0 }}>1 Apr</p>
-            <a href="#" style={{ fontSize:11, color:accent, textDecoration:"none" }}>Pay Early</a>
-          </div>
-        </CardBody>
-      </Card>
-      <Card>
-        <CardBody>
-          <div style={{ display:"flex", justifyContent:"space-between", alignItems:"flex-start", marginBottom:10 }}>
-            <p style={{ fontSize:13, fontWeight:600, color:"var(--text)", margin:0 }}>Yearly Activity</p>
-            <span style={{ fontSize:11, fontWeight:600, color:"#10b981" }}>+$0.25 Daily</span>
-          </div>
-          <div style={{ display:"flex", alignItems:"flex-end", gap:3, height:44 }}>
-            {data.map((v,i) => (
-              <div key={i} style={{ flex:1, display:"flex", flexDirection:"column", alignItems:"center", gap:3 }}>
-                <div style={{ width:"100%", background: i===data.length-1?accent:"rgba(0,0,0,0.1)", borderRadius:"2px 2px 0 0", height:`${(v/max)*100}%` }}/>
-                <span style={{ fontSize:8, color:"var(--text2)" }}>{months[i]}</span>
-              </div>
-            ))}
-          </div>
-        </CardBody>
-      </Card>
-    </>
-  );
-}
-
-function TransferCard({ accent, dark }: { accent:string; dark:boolean }) {
-  const sel: React.CSSProperties = { width:"100%", padding:"8px 11px", fontSize:13, borderRadius:"var(--r)", border:"1px solid var(--border)", background:dark?"rgba(255,255,255,0.04)":"#fff", color:"var(--text)", fontFamily:"var(--font-normal)", outline:"none" };
-  return (
-    <Card>
-      <CardBody style={{ display:"flex", justifyContent:"space-between", alignItems:"center" }}>
-        <div><CardTitle>Transfer Tokens</CardTitle><p style={{ fontSize:12, color:"var(--text2)", margin:0 }}>Move between your connected accounts</p></div>
-        <button style={{ background:"none", border:"none", cursor:"pointer", color:"var(--text2)", fontSize:16 }}>×</button>
-      </CardBody>
-      <div style={{ height:1, background:"var(--border)" }}/>
-      <CardBody style={{ display:"flex", flexDirection:"column", gap:12 }}>
-        <div><label style={{ fontSize:12, fontWeight:500, color:"var(--text)", display:"block", marginBottom:6 }}>Amount to Transfer</label><Inp placeholder="$ 1,200.00"/></div>
-        <div><label style={{ fontSize:12, fontWeight:500, color:"var(--text)", display:"block", marginBottom:6 }}>From Account</label><select style={sel}><option>Main Account (–8402) — $12,450.00</option></select></div>
-        <div><label style={{ fontSize:12, fontWeight:500, color:"var(--text)", display:"block", marginBottom:6 }}>To Account</label><select style={sel}><option>Savings (–1192) — $42,100.00</option></select></div>
-        <Btn accent={accent} style={{ width:"100%", textAlign:"center", marginTop:4 }}>Transfer Now</Btn>
-      </CardBody>
-    </Card>
-  );
-}
-
-function AccountAccess({ accent, dark }: { accent:string; dark:boolean }) {
-  return (
-    <Card>
-      <CardBody>
-        <CardTitle>Account Access</CardTitle>
-        <CardSub>Update your credentials or re-authenticate.</CardSub>
-        <div style={{ display:"flex", flexDirection:"column", gap:12 }}>
-          <div>
-            <label style={{ fontSize:12, fontWeight:500, color:"var(--text)", display:"block", marginBottom:6 }}>Email Address</label>
-            <Inp placeholder="Email" value="designer@sandhata.com"/>
-          </div>
-          <div>
-            <div style={{ display:"flex", justifyContent:"space-between", marginBottom:6 }}>
-              <label style={{ fontSize:12, fontWeight:500, color:"var(--text)" }}>Current Password</label>
-              <a href="#" style={{ fontSize:12, color:"var(--text2)", textDecoration:"none" }}>FORGOT?</a>
-            </div>
-            <Inp placeholder="••••••••••" type="password"/>
-          </div>
-          <Btn accent={accent} style={{ width:"100%", textAlign:"center" }}>🔒 Update Security</Btn>
-          <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", padding:"10px 0 0", borderTop:"1px solid var(--border)" }}>
-            <div style={{ display:"flex", alignItems:"center", gap:8 }}>
-              <span style={{ color:"#ef4444", fontSize:14 }}>⊘</span>
-              <div>
-                <p style={{ fontSize:13, fontWeight:500, color:"#ef4444", margin:0 }}>Danger Zone</p>
-                <p style={{ fontSize:11, color:"var(--text2)", margin:0 }}>Archive account and remove...</p>
-              </div>
-            </div>
-            <span style={{ color:"var(--text2)" }}>→</span>
-          </div>
-        </div>
-      </CardBody>
-    </Card>
-  );
-}
-
-function ComponentShowcase({ accent }: { accent:string }) {
-  const [tog, setTog] = React.useState(false);
-  return (
-    <Card>
-      <CardBody>
-        <CardTitle>Component Variants</CardTitle>
-        <CardSub>Sandhata DS component preview</CardSub>
-        <div style={{ display:"flex", gap:6, flexWrap:"wrap", marginBottom:12 }}>
-          {[["Primary",true],["Secondary",false],["Outline",false],["Ghost",false]].map(([l,p]) => (
-            <button key={l as string} style={{ padding:"6px 14px", borderRadius:"var(--r)", fontSize:12, fontWeight:600, cursor:"pointer", fontFamily:"var(--font-normal)", background:p?accent:"transparent", color:p?"#fff":"var(--text)", border:p?"none":`1px solid ${l==="Outline"?"var(--border)":"transparent"}` }}>{l}</button>
-          ))}
-        </div>
-        <div style={{ padding:"10px 12px", border:"1px solid var(--border)", borderRadius:"var(--r)", marginBottom:10 }}>
-          <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center" }}>
-            <div>
-              <p style={{ fontSize:13, fontWeight:500, color:"var(--text)", margin:"0 0 2px" }}>Two-factor authentication</p>
-              <p style={{ fontSize:12, color:"var(--text2)", margin:0 }}>Verify via email or phone number.</p>
-            </div>
-            <button style={{ padding:"5px 12px", borderRadius:"var(--r)", border:`1px solid ${accent}`, background:"transparent", color:accent, fontSize:12, cursor:"pointer", fontFamily:"var(--font-normal)" }}>Enable</button>
-          </div>
-        </div>
-        <div style={{ position:"relative", marginBottom:10 }}>
-          <Inp placeholder="Search components..."/>
-          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" style={{ position:"absolute", right:11, top:"50%", transform:"translateY(-50%)", color:"var(--text2)", pointerEvents:"none" }}><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-        </div>
-        <div style={{ display:"flex", gap:6, flexWrap:"wrap", marginBottom:12 }}>
-          {[["Badge",true],["Secondary",false],["Outline",false]].map(([l,p]) => (
-            <span key={l as string} style={{ padding:"3px 10px", borderRadius:100, fontSize:11, fontWeight:600, background:p?accent:"transparent", color:p?"#fff":"var(--text)", border:p?"none":`1px solid var(--border)` }}>{l}</span>
-          ))}
-          <div style={{ marginLeft:"auto", display:"flex", alignItems:"center", gap:8 }}>
-            <span style={{ fontSize:12, color:"var(--text2)" }}>Toggle</span>
-            <div onClick={() => setTog(!tog)} style={{ width:36, height:20, borderRadius:10, background:tog?accent:"rgba(0,0,0,0.15)", cursor:"pointer", position:"relative", transition:"background .2s" }}>
-              <div style={{ position:"absolute", top:2, left:tog?18:2, width:16, height:16, borderRadius:"50%", background:"#fff", transition:"left .2s" }}/>
-            </div>
-          </div>
-        </div>
-      </CardBody>
-    </Card>
-  );
-}
-
-function PlatformShare({ accent }: { accent:string }) {
-  const segs = [
-    { l:"Chrome",  p:0.52, c:accent },
-    { l:"Firefox", p:0.19, c:accent+"99" },
-    { l:"Safari",  p:0.18, c:accent+"55" },
-    { l:"Edge",    p:0.11, c:accent+"33" },
-  ];
-  const cx=55,cy=55,R=40,sw=10;
-  const GAP=(18/360)*Math.PI*2;
-  const ARC=Math.PI*2-GAP*segs.length;
-  let a=-Math.PI/2;
-  const arcs = segs.map(s => {
-    const arc=s.p*ARC,sa=a,ea=a+arc; a=ea+GAP;
-    return { d:`M ${(cx+R*Math.cos(sa)).toFixed(1)} ${(cy+R*Math.sin(sa)).toFixed(1)} A ${R} ${R} 0 ${arc>Math.PI?1:0} 1 ${(cx+R*Math.cos(ea)).toFixed(1)} ${(cy+R*Math.sin(ea)).toFixed(1)}`, ...s };
-  });
-  return (
-    <Card>
-      <CardBody>
-        <div style={{ display:"flex", justifyContent:"space-between", alignItems:"flex-start", marginBottom:4 }}>
-          <CardTitle>Browser Share</CardTitle>
-          <span style={{ fontSize:13, fontWeight:600, color:"var(--text)" }}>Firefox</span>
-        </div>
-        <CardSub>January - June 2026</CardSub>
-        <div style={{ display:"flex", alignItems:"center", gap:16, marginBottom:12 }}>
-          <svg viewBox="0 0 110 110" style={{ width:90, flexShrink:0 }}>
-            <circle cx={cx} cy={cy} r={R} fill="none" stroke="rgba(0,0,0,0.06)" strokeWidth={sw}/>
-            {arcs.map((a,i) => <path key={i} d={a.d} fill="none" stroke={a.c} strokeWidth={sw} strokeLinecap="round"/>)}
-            <text x={cx} y={cy-5} textAnchor="middle" dominantBaseline="middle" fontSize="16" fontWeight="700" fill="var(--text)">935</text>
-            <text x={cx} y={cy+10} textAnchor="middle" dominantBaseline="middle" fontSize="8" fill="var(--text2)">Visitors</text>
-          </svg>
-          <div style={{ display:"flex", flexDirection:"column", gap:7 }}>
-            {segs.map(s => (
-              <div key={s.l} style={{ display:"flex", alignItems:"center", gap:7 }}>
-                <span style={{ width:7, height:7, borderRadius:"50%", background:s.c, flexShrink:0 }}/>
-                <span style={{ fontSize:12, color:"var(--text2)", flex:1 }}>{s.l}</span>
-                <span style={{ fontSize:12, fontWeight:600, color:"var(--text)" }}>{Math.round(s.p*100)}%</span>
-              </div>
-            ))}
-          </div>
-        </div>
-        <div>
-          <div style={{ display:"flex", justifyContent:"space-between", marginBottom:5 }}>
-            <span style={{ fontSize:12, color:"var(--text2)" }}>Firefox</span>
-            <span style={{ fontSize:12, fontWeight:600, color:"var(--text)" }}>19%</span>
-          </div>
-          <div style={{ height:4, borderRadius:2, background:"var(--border)" }}>
-            <div style={{ width:"19%", height:"100%", borderRadius:2, background:accent+"99" }}/>
-          </div>
-        </div>
-      </CardBody>
-    </Card>
-  );
-}
-
-function InviteTeam({ accent, dark }: { accent:string; dark:boolean }) {
-  return (
-    <Card>
-      <CardBody>
-        <CardTitle>Invite Team</CardTitle>
-        <CardSub>Add members to your workspace</CardSub>
-        {["alex@example.com","sam@example.com"].map((e,i) => (
-          <div key={e} style={{ display:"flex", gap:8, marginBottom:8 }}>
-            <Inp placeholder="Email" value={e} style={{ flex:1 }}/>
-            <select style={{ padding:"8px 10px", fontSize:12, borderRadius:"var(--r)", border:"1px solid var(--border)", background:dark?"rgba(255,255,255,0.04)":"#fff", color:"var(--text)", fontFamily:"var(--font-normal)", outline:"none" }}>
-              <option>{i===0?"Editor":"Viewer"}</option><option>Editor</option><option>Admin</option>
-            </select>
-          </div>
-        ))}
-        <a href="#" style={{ fontSize:13, color:accent, textDecoration:"none", display:"block", marginBottom:14 }}>+ Add another</a>
-        <div style={{ padding:"12px", border:"1px solid var(--border)", borderRadius:"var(--r)", display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:12 }}>
-          <span style={{ fontSize:12, color:"var(--text2)" }}>https://sandhata.design/invite/x8f2k</span>
-          <button style={{ background:"none", border:"none", cursor:"pointer", fontSize:14, color:"var(--text2)" }}>⎘</button>
-        </div>
-        <Btn accent={accent} style={{ width:"100%", textAlign:"center" }}>Send Invites</Btn>
-      </CardBody>
-    </Card>
-  );
-}
-
-function Typography({ accent }: { accent:string }) {
-  return (
-    <Card>
-      <CardBody>
-        <p style={{ fontSize:10, fontWeight:700, letterSpacing:"0.1em", color:"var(--text2)", textTransform:"uppercase", marginBottom:8 }}>IBM PLEX SANS</p>
-        <h2 style={{ fontSize:22, fontWeight:700, color:"var(--text)", margin:"0 0 12px", lineHeight:1.2 }}>Designing with rhythm and hierarchy.</h2>
-        <p style={{ fontSize:13, color:"var(--text2)", lineHeight:1.6, marginBottom:16 }}>A strong body style keeps long-form content readable and balances the visual weight of headings. Thoughtful spacing helps paragraphs scan quickly without feeling dense.</p>
-        <Btn accent={accent} style={{ width:"100%", textAlign:"center" }}>Share Feedback</Btn>
-      </CardBody>
-    </Card>
-  );
-}
-
-function ReportBug({ accent, dark }: { accent:string; dark:boolean }) {
-  const sel: React.CSSProperties = { padding:"7px 11px", fontSize:13, borderRadius:"var(--r)", border:"1px solid var(--border)", background:dark?"rgba(255,255,255,0.04)":"#fff", color:"var(--text)", fontFamily:"var(--font-normal)", outline:"none", flex:1 };
-  return (
-    <Card>
-      <CardBody>
-        <CardTitle>Report Bug</CardTitle>
-        <CardSub>Help us fix issues faster.</CardSub>
-        <div style={{ display:"flex", flexDirection:"column", gap:10 }}>
-          <div><label style={{ fontSize:12, fontWeight:500, color:"var(--text)", display:"block", marginBottom:5 }}>Title</label><Inp placeholder="Brief description of the issue"/></div>
-          <div style={{ display:"flex", gap:8 }}>
-            <div style={{ flex:1 }}><label style={{ fontSize:12, fontWeight:500, color:"var(--text)", display:"block", marginBottom:5 }}>Severity</label><select style={sel}><option>Medium</option><option>Low</option><option>High</option><option>Critical</option></select></div>
-            <div style={{ flex:1 }}><label style={{ fontSize:12, fontWeight:500, color:"var(--text)", display:"block", marginBottom:5 }}>Component</label><select style={sel}><option>Button</option><option>Input</option><option>Table</option></select></div>
-          </div>
-          <div><label style={{ fontSize:12, fontWeight:500, color:"var(--text)", display:"block", marginBottom:5 }}>Steps to reproduce</label><textarea placeholder="1. Go to 2. Click on 3. Observe..." rows={3} style={{ width:"100%", padding:"8px 11px", fontSize:13, borderRadius:"var(--r)", border:"1px solid var(--border)", background:"var(--muted)", color:"var(--text)", resize:"none", outline:"none", boxSizing:"border-box", fontFamily:"var(--font-normal)" }}/></div>
-          <div style={{ display:"flex", gap:8 }}>
-            <Btn secondary style={{ flex:1, textAlign:"center" }}>Attach File</Btn>
-            <Btn accent={accent} style={{ flex:1, textAlign:"center" }}>Submit Bug</Btn>
-          </div>
-        </div>
-      </CardBody>
-    </Card>
   );
 }
