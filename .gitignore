@@ -13,9 +13,10 @@ next-env.d.ts
 # local Claude config (may contain machine-specific settings)
 .claude/
 
-# markdown (notes, guides, prompt docs) — but keep the project README
+# markdown (notes, guides, prompt docs) — but keep the project README + handoff
 *.md
 !/readme.md
+!/HANDOFF.md
 
 # os / editor cruft
 .DS_Store
