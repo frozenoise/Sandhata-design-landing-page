@@ -737,10 +737,7 @@ button, a[href], input, .acc-btn, .nl { transition: background .2s ease, color .
    ============================================================ */
 .sc-shell {
   position: relative; min-height: 100vh;
-  background:
-    radial-gradient(120% 90% at -5% -5%, #20254a 0%, rgba(32,37,74,0) 42%),
-    radial-gradient(90% 70% at 105% 5%, #2a1140 0%, rgba(42,17,64,0) 40%),
-    linear-gradient(160deg, #0c0c1a 0%, #07070f 100%);
+  background: var(--page, #FEFAF7);
 }
 .sc-sidebar {
   position: fixed; top: 16px; left: 16px; bottom: 16px; z-index: 60;
