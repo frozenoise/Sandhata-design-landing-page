@@ -166,6 +166,7 @@ function SdTopNav({ active }: any) {
     ["Documentation", "/documentation"],
     ["Builder", "/builder"],
     ["Demo", "/demo"],
+    ["Showcase", "/showcase"],
   ];
   return (
     <header className="doc-topbar">

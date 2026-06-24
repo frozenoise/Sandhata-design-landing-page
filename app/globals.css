@@ -61,28 +61,26 @@ body { background: #FEFAF7; overflow-x: hidden; font-family: var(--font-normal);
   padding: 101px 40px 0; text-align: center;
   background: #fdf5f0; /* cream base behind the animated aurora */
 }
-/* animated aurora layer — sunrise: rises from below while spreading outward */
+/* aurora — wide sunrise arc rising from just below the hero bottom */
 .hero-aurora {
   position: absolute; inset: 0; z-index: 0; pointer-events: none;
   background:
-    radial-gradient(135% 82% at 50% 118%,
-      #ff9b00 0%,
-      #ffab29 12%,
-      #ffbb52 19%,
-      #fecb7c 26%,
-      #fedba5 36%,
-      rgba(243,174,202,0.5) 47%,
-      rgba(231,128,240,0.26) 57%,
-      rgba(183,212,248,0.16) 73%,
-      #fdf5f0 87%
+    radial-gradient(300% 55% at 50% 115%,
+      rgba(255,148,0,0.90)  0%,
+      rgba(255,182,56,0.68) 10%,
+      rgba(255,206,128,0.44) 27%,
+      rgba(252,190,168,0.24) 45%,
+      rgba(248,170,210,0.10) 60%,
+      rgba(220,158,240,0.04) 74%,
+      transparent 84%
     );
   transform-origin: 50% 100%;
-  animation: auroraSunrise 12s ease-in-out infinite alternate;
+  animation: auroraSunrise 18s ease-in-out infinite alternate;
 }
 @keyframes auroraSunrise {
-  0%   { transform: translateY(28%) scaleX(1);   opacity: 0.45; }
-  40%  { transform: translateY(12%) scaleX(1.3); opacity: 0.80; }
-  100% { transform: translateY(0)   scaleX(1.9) scaleY(1.42); opacity: 1; }
+  0%   { opacity: 0.55; transform: scaleX(0.90); }
+  50%  { opacity: 0.85; transform: scaleX(1.05); }
+  100% { opacity: 0.68; transform: scaleX(1.18); }
 }
 /* faint concentric-arc texture from the bottom corners */
 .hero::before {
@@ -731,9 +729,10 @@ button, a[href], input, .acc-btn, .nl { transition: background .2s ease, color .
 }
 
 /* ============================================================
-   Showcase — floating liquid-glass sidebar
-   (technique: backdrop blur+saturate, edge highlight, sheen;
-    refraction nod to aave.com/design/building-glass-for-the-web)
+   Showcase — liquid-glass sidebar
+   Technique: SVG feTurbulence displacement on the blur layer for
+   organic refraction; chromatic rim via RGB-offset inset shadows;
+   multi-point radial specular; animated prismatic border shift.
    ============================================================ */
 .sc-shell {
   position: relative; min-height: 100vh;
@@ -743,57 +742,86 @@ button, a[href], input, .acc-btn, .nl { transition: background .2s ease, color .
   position: fixed; top: 16px; left: 16px; bottom: 16px; z-index: 60;
   display: flex; flex-direction: column;
   border-radius: 22px; overflow: hidden;
-  background: rgba(18, 18, 36, 0.42);
-  -webkit-backdrop-filter: blur(26px) saturate(170%);
-  backdrop-filter: blur(26px) saturate(170%);
-  border: 1px solid rgba(255, 255, 255, 0.10);
-  box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.22),
-    inset 0 -1px 0 rgba(255, 255, 255, 0.05),
-    inset 0 0 0 1px rgba(255, 255, 255, 0.04),
-    0 30px 80px rgba(0, 0, 0, 0.55);
-  transition: width .34s cubic-bezier(.16, 1, .3, 1);
+  box-shadow: 0 20px 60px rgba(0,0,0,0.16), 0 0 0 0.75px rgba(20,22,24,0.10);
+  transition: width .34s cubic-bezier(.16,1,.3,1);
+  isolation: isolate;
 }
-.sc-sidebar::before {
-  content: ''; position: absolute; inset: 0; pointer-events: none; border-radius: 22px;
+/* Layer 0: light frosted backdrop — lets section colours bleed through */
+.sc-glass-blur {
+  position: absolute; inset: 0; z-index: 0; border-radius: 22px;
+  background: rgba(255, 255, 255, 0.68);
+  -webkit-backdrop-filter: blur(40px) saturate(180%) brightness(1.04);
+  backdrop-filter: blur(40px) saturate(180%) brightness(1.04);
+  filter: url(#lg-distort);
+}
+/* Layer 1: specular rim — light glass edition */
+.sc-glass-spec {
+  position: absolute; inset: 0; z-index: 1; border-radius: 22px; pointer-events: none;
   background:
-    linear-gradient(155deg, rgba(255,255,255,0.16) 0%, rgba(255,255,255,0) 32%),
-    radial-gradient(90% 36% at 50% -8%, rgba(255,255,255,0.14), transparent 72%);
+    radial-gradient(56% 28% at 48% -3%, rgba(255,255,255,0.70) 0%, transparent 100%),
+    radial-gradient(28% 16% at 94% 3%,  rgba(255,255,255,0.40) 0%, transparent 100%);
+  box-shadow:
+    inset 0 0 0 0.75px rgba(255,255,255,0.90),
+    inset 0  1px 0   rgba(255,255,255,0.95),
+    inset 0 -1px 0   rgba(20,22,24,0.05),
+    inset  1.5px  1.5px 0 rgba(255,140,80,0.10),
+    inset -1.5px -1.5px 0 rgba(80,120,255,0.10);
+  animation: lgSpecShift 9s ease-in-out infinite alternate;
 }
-.sc-sidebar::after {
-  content: ''; position: absolute; left: 0; right: 0; top: 0; height: 55%; pointer-events: none;
-  background: linear-gradient(180deg, rgba(255,255,255,0.06), transparent 90%);
-  animation: scSheen 9s ease-in-out infinite alternate;
+@keyframes lgSpecShift {
+  0% {
+    box-shadow:
+      inset 0 0 0 0.75px rgba(255,255,255,0.90),
+      inset 0  1px 0   rgba(255,255,255,0.95),
+      inset 0 -1px 0   rgba(20,22,24,0.05),
+      inset  1.5px  1.5px 0 rgba(255,140,80,0.10),
+      inset -1.5px -1.5px 0 rgba(80,120,255,0.10);
+  }
+  50% {
+    box-shadow:
+      inset 0 0 0 0.75px rgba(255,255,255,0.95),
+      inset 0  1px 0   rgba(255,255,255,1.00),
+      inset 0 -1px 0   rgba(20,22,24,0.04),
+      inset  1.5px  1.5px 0 rgba(80,200,255,0.09),
+      inset -1.5px -1.5px 0 rgba(255,80,200,0.09);
+  }
+  100% {
+    box-shadow:
+      inset 0 0 0 0.75px rgba(255,255,255,0.85),
+      inset 0  1px 0   rgba(255,255,255,0.90),
+      inset 0 -1px 0   rgba(20,22,24,0.06),
+      inset  1.5px  1.5px 0 rgba(140,80,255,0.09),
+      inset -1.5px -1.5px 0 rgba(80,255,140,0.08);
+  }
 }
-@keyframes scSheen { 0% { opacity: .45; } 100% { opacity: .9; } }
-.sc-scroll { position: relative; z-index: 1; flex: 1; overflow-y: auto; overflow-x: hidden; padding: 16px 14px 18px; }
+.sc-scroll { position: relative; z-index: 2; flex: 1; overflow-y: auto; overflow-x: hidden; padding: 16px 14px 18px; }
 .sc-scroll::-webkit-scrollbar { width: 0; height: 0; }
 .sc-scroll { scrollbar-width: none; }
-.sc-cap { font: 700 10px/1 var(--font-normal); letter-spacing: .12em; text-transform: uppercase; color: rgba(255,255,255,0.30); margin: 0 0 10px; }
+.sc-cap { font: 700 10px/1 var(--font-normal); letter-spacing: .12em; text-transform: uppercase; color: rgba(20,22,24,0.38); margin: 0 0 10px; }
 .sc-nav-item {
   display: flex; align-items: center; gap: 12px; width: 100%; padding: 9px 11px;
   border: none; background: transparent; cursor: pointer; border-radius: 11px; text-align: left;
-  color: rgba(255,255,255,0.60); font: 500 13px/1 var(--font-normal); white-space: nowrap;
+  color: rgba(20,22,24,0.52); font: 500 13px/1 var(--font-normal); white-space: nowrap;
   transition: background .15s, color .15s;
 }
-.sc-nav-item:hover { background: rgba(255,255,255,0.08); color: #fff; }
-.sc-nav-item.on { background: rgba(255,255,255,0.13); color: #fff; }
+.sc-nav-item:hover { background: rgba(20,22,24,0.06); color: rgba(20,22,24,0.90); }
+.sc-nav-item.on { background: rgba(20,22,24,0.08); color: rgba(20,22,24,0.95); font-weight: 600; }
 .sc-nav-item svg { flex-shrink: 0; }
 .sc-rail-icon { justify-content: center; padding: 11px 0; }
-.sc-divider { height: 1px; background: rgba(255,255,255,0.08); margin: 16px 2px; }
+.sc-divider { height: 1px; background: rgba(20,22,24,0.08); margin: 16px 2px; }
 .sc-homebtn {
   display: flex; align-items: center; gap: 8px; padding: 9px 12px; border-radius: 11px;
-  border: 1px solid rgba(255,255,255,0.14); background: rgba(255,255,255,0.05);
-  color: rgba(255,255,255,0.86); font: 600 13px/1 var(--font-normal); cursor: pointer;
+  border: 1px solid rgba(20,22,24,0.12); background: rgba(20,22,24,0.04);
+  color: rgba(20,22,24,0.72); font: 600 13px/1 var(--font-normal); cursor: pointer;
   text-decoration: none; transition: background .15s, border-color .15s;
 }
-.sc-homebtn:hover { background: rgba(255,255,255,0.12); border-color: rgba(255,255,255,0.24); }
+.sc-homebtn:hover { background: rgba(20,22,24,0.08); border-color: rgba(20,22,24,0.20); }
 .sc-iconbtn {
   display: flex; align-items: center; justify-content: center; width: 34px; height: 34px;
-  border-radius: 10px; border: 1px solid rgba(255,255,255,0.12); background: rgba(255,255,255,0.05);
-  color: rgba(255,255,255,0.7); cursor: pointer; flex-shrink: 0; transition: background .15s;
+  border-radius: 10px; border: 1px solid rgba(20,22,24,0.10); background: rgba(20,22,24,0.04);
+  color: rgba(20,22,24,0.55); cursor: pointer; flex-shrink: 0; transition: background .15s, color .15s;
 }
-.sc-iconbtn:hover { background: rgba(255,255,255,0.14); color: #fff; }
+.sc-iconbtn:hover { background: rgba(20,22,24,0.08); color: rgba(20,22,24,0.90); }
 .sc-cta {
   width: 100%; padding: 11px; border-radius: 11px; border: none; cursor: pointer;
   background: linear-gradient(135deg, #f68136 0%, #ff0083 52%, #5636f6 100%);
@@ -801,4 +829,92 @@ button, a[href], input, .acc-btn, .nl { transition: background .2s ease, color .
   box-shadow: 0 8px 24px rgba(255,0,131,0.28); transition: transform .15s, box-shadow .15s;
 }
 .sc-cta:hover { transform: translateY(-1px); box-shadow: 0 12px 30px rgba(255,0,131,0.38); }
-@media (prefers-reduced-motion: reduce) { .sc-sidebar::after { animation: none; } }
+@media (prefers-reduced-motion: reduce) { .sc-glass-spec { animation: none; } }
+
+/* ── Showcase toast ── */
+.sc-toast {
+  position: fixed; top: 24px; left: 50%; transform: translateX(-50%);
+  z-index: 200; display: flex; align-items: center; gap: 10px;
+  padding: 13px 20px; border-radius: 14px;
+  background: #1a2035; color: #fff;
+  font: 500 13px/1 var(--font-normal);
+  box-shadow: 0 8px 32px rgba(0,0,0,0.32), 0 0 0 1px rgba(255,255,255,0.08);
+  pointer-events: none; white-space: nowrap;
+}
+
+/* ── Mobile nav pill (Instagram-style) ── */
+.sc-mobile-nav {
+  display: none;
+  position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%);
+  z-index: 70; align-items: center; gap: 2px;
+  background: rgba(14,14,28,0.80);
+  backdrop-filter: blur(22px) saturate(180%);
+  -webkit-backdrop-filter: blur(22px) saturate(180%);
+  border: 1px solid rgba(255,255,255,0.16);
+  border-radius: 999px; padding: 6px;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.48), inset 0 1px 0 rgba(255,255,255,0.22);
+}
+.sc-mob-btn {
+  display: flex; align-items: center; justify-content: center;
+  width: 50px; height: 42px; border-radius: 999px; border: none;
+  background: transparent; cursor: pointer;
+  color: rgba(255,255,255,0.50); transition: background .15s, color .15s;
+}
+.sc-mob-btn:hover { background: rgba(255,255,255,0.10); color: #fff; }
+.sc-mob-btn.on { background: rgba(255,255,255,0.18); color: #fff; }
+@media (max-width: 768px) {
+  .sc-sidebar { display: none !important; }
+  .sc-mobile-nav { display: flex; }
+  .sc-band-content { padding-left: 20px !important; padding-right: 20px !important; transition: none !important; }
+  .sc-main-wrap { padding-bottom: 88px; }
+}
+
+/* ── Brand dashboard tab content ── */
+.sc-brand-header {
+  padding: 16px 22px; display: flex; align-items: center; justify-content: space-between;
+}
+.sc-brand-kpis { display: grid; grid-template-columns: repeat(3,1fr); gap: 16px; padding: 20px 22px 0; }
+.sc-brand-body { display: grid; grid-template-columns: 1fr 260px; gap: 20px; padding: 20px 22px 22px; align-items: start; }
+.sc-brand-chart-wrap { background: var(--surface-secondary,#f5f6f8); border-radius: var(--radius-md); padding: 16px; }
+.sc-brand-feed { display: flex; flex-direction: column; gap: 8px; }
+.sc-brand-feed-item {
+  display: flex; align-items: center; gap: 10px; padding: 10px 12px;
+  border-radius: var(--radius-md); background: var(--surface-secondary,#f5f6f8);
+}
+@media (max-width: 900px) { .sc-brand-body { grid-template-columns: 1fr; } }
+
+/* ── Atomic design section ── */
+.sc-atomic-tier { margin-bottom: 36px; }
+.sc-atomic-label {
+  display: flex; align-items: center; gap: 12px;
+  font: 700 10px/1 var(--font-normal); letter-spacing: .12em; text-transform: uppercase;
+  color: var(--colour-primaryblue-500); margin: 0 0 18px;
+}
+.sc-atomic-label::after { content:''; flex:1; height:1px; background:var(--colour-primaryblue-100); }
+.sc-atomic-grid { display: flex; gap: 12px; flex-wrap: wrap; align-items: flex-start; }
+.sc-atom-box {
+  display: flex; flex-direction: column; align-items: center; gap: 8px;
+  padding: 14px 16px; border-radius: var(--radius-md);
+  background: var(--surface-secondary,#f5f6f8);
+  border: 1px solid var(--border-subtle);
+  font: 11px/1.3 var(--font-normal); color: var(--text-caption); text-align: center;
+  min-width: 80px;
+}
+.sc-molecule-box {
+  padding: 14px 16px; border-radius: var(--radius-md);
+  background: var(--surface-raised,#fff);
+  border: 1px solid var(--border-default);
+  box-shadow: var(--shadow-sm); flex: 1; min-width: 200px;
+}
+.sc-organism-box {
+  padding: 18px 20px; border-radius: var(--radius-lg);
+  background: var(--surface-raised,#fff);
+  border: 1px solid var(--border-default);
+  box-shadow: var(--shadow-md); flex: 1; min-width: 280px;
+}
+.sc-tier-arrow {
+  display: flex; align-items: center; justify-content: center;
+  height: 28px; color: var(--colour-primaryblue-300); font-size: 18px;
+  margin-bottom: 18px; gap: 8px;
+  font: 11px/1 var(--font-normal); color: var(--text-caption); letter-spacing: .06em;
+}
