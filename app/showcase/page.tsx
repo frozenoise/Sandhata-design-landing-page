@@ -499,86 +499,101 @@ function ShowcaseSelect({ label, options, value: vProp, onChange, placeholder }:
 }
 
 /* ── Interactive pipeline line chart (TechNip dashboard) ─────── */
+/* Uses ResizeObserver so viewBox always equals rendered pixel size — no
+   squashing or letterboxing at any viewport width. */
 function PipelineChart({ data, labels, color="#0036DD" }: {
   data: number[]; labels: string[]; color?: string;
 }) {
   const [hover, setHover] = React.useState<number|null>(null);
-  const W=400, H=130, pL=30, pR=10, pT=12, pB=28;
+  const wrapRef = React.useRef<HTMLDivElement>(null);
+  const [W, setW] = React.useState(600);
+
+  React.useEffect(() => {
+    const el = wrapRef.current;
+    if (!el) return;
+    const obs = new ResizeObserver(entries => setW(Math.round(entries[0].contentRect.width)));
+    obs.observe(el);
+    return () => obs.disconnect();
+  }, []);
+
+  /* H is proportional to W, capped so it never exceeds 200px */
+  const H  = Math.min(Math.round(W * 0.30), 200);
+  const pL = 34, pR = 10, pT = 12, pB = 26;
   const cW = W - pL - pR;
   const cH = H - pT - pB;
-  const n = data.length;
+  const n  = data.length;
   const maxV = Math.max(...data);
   const minV = Math.min(...data);
-  const rng = maxV - minV || 1;
-  const xS = cW / (n - 1);
-  const pts = data.map((v,i) => [pL + i*xS, pT + (1-(v-minV)/rng)*cH] as [number,number]);
+  const rng  = maxV - minV || 1;
+  const xS   = cW / (n - 1);
+  const pts  = data.map((v,i) => [pL + i*xS, pT + (1-(v-minV)/rng)*cH] as [number,number]);
+
   let line = `M ${pts[0][0].toFixed(1)} ${pts[0][1].toFixed(1)}`;
   for (let i=0; i<n-1; i++) {
     const mx = (pts[i][0]+pts[i+1][0])/2;
     line += ` C ${mx.toFixed(1)} ${pts[i][1].toFixed(1)} ${mx.toFixed(1)} ${pts[i+1][1].toFixed(1)} ${pts[i+1][0].toFixed(1)} ${pts[i+1][1].toFixed(1)}`;
   }
   const area = `${line} L ${pts[n-1][0].toFixed(1)} ${pT+cH} L ${pts[0][0].toFixed(1)} ${pT+cH} Z`;
+
   const hex = (color.startsWith("#") && color.length===7) ? color : "#0036DD";
-  const r=parseInt(hex.slice(1,3),16), g=parseInt(hex.slice(3,5),16), b=parseInt(hex.slice(5,7),16);
-  const fillTop=`rgba(${r},${g},${b},0.16)`, fillBot=`rgba(${r},${g},${b},0.01)`;
+  const rr=parseInt(hex.slice(1,3),16), gg=parseInt(hex.slice(3,5),16), bb=parseInt(hex.slice(5,7),16);
+  const fillTop=`rgba(${rr},${gg},${bb},0.16)`, fillBot=`rgba(${rr},${gg},${bb},0.01)`;
   const yTicks = [maxV, Math.round((maxV+minV)/2), minV];
 
+  /* Mouse coords are already in CSS pixels = viewBox units (scale=1) */
   const onMove = (e: React.MouseEvent<SVGSVGElement>) => {
     const rect = e.currentTarget.getBoundingClientRect();
-    const sx = (e.clientX - rect.left) / rect.width * W;
-    const idx = Math.round((sx - pL) / xS);
+    const idx  = Math.round((e.clientX - rect.left - pL) / xS);
     setHover(idx >= 0 && idx < n ? idx : null);
   };
 
   return (
-    <svg viewBox={`0 0 ${W} ${H}`} preserveAspectRatio="none"
-      style={{ display:"block", width:"100%", height:"156px", cursor:"crosshair", overflow:"visible" }}
-      onMouseMove={onMove} onMouseLeave={() => setHover(null)}>
-      <defs>
-        <linearGradient id="pchart-grad" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0%" stopColor={fillTop}/>
-          <stop offset="100%" stopColor={fillBot}/>
-        </linearGradient>
-      </defs>
-      {/* Y grid + ticks */}
-      {yTicks.map((v,i) => { const y=pT+(1-(v-minV)/rng)*cH; return (
-        <g key={i}>
-          <line x1={pL} y1={y} x2={W-pR} y2={y} stroke="rgba(20,22,24,0.07)" strokeWidth="1"/>
-          <text x={pL-5} y={y} textAnchor="end" dominantBaseline="middle"
-            fontSize="8.5" fill="#9aa0ac" fontFamily="var(--font-mono)">{v}</text>
-        </g>
-      ); })}
-      {/* X baseline + labels */}
-      <line x1={pL} y1={pT+cH} x2={W-pR} y2={pT+cH} stroke="rgba(20,22,24,0.10)" strokeWidth="1"/>
-      {labels.map((l,i) => (
-        <text key={i} x={pL+i*xS} y={H-6} textAnchor="middle"
-          fontSize="8" fill="#9aa0ac" fontFamily="var(--font-normal)">{l}</text>
-      ))}
-      {/* Area + line */}
-      <path d={area} fill="url(#pchart-grad)"/>
-      <path d={line} fill="none" stroke={color} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/>
-      {/* Hover indicator */}
-      {hover !== null && (
-        <g>
-          <line x1={pts[hover][0]} y1={pT} x2={pts[hover][0]} y2={pT+cH}
-            stroke={color} strokeWidth="1.5" strokeDasharray="3 3" strokeOpacity="0.45"/>
-          <circle cx={pts[hover][0]} cy={pts[hover][1]} r="5" fill={color} stroke="#fff" strokeWidth="2.5"/>
-          {(() => {
-            const tx = Math.min(pts[hover][0]+10, W-60);
-            const ty = Math.max(pts[hover][1]-28, pT);
-            return (
-              <g transform={`translate(${tx},${ty})`}>
-                <rect width="58" height="20" rx="5" fill="#1a2035" opacity="0.92"/>
-                <text x="29" y="10" textAnchor="middle" dominantBaseline="middle"
-                  fontSize="9.5" fontWeight="700" fill="#fff" fontFamily="var(--font-bold)">
-                  {data[hover]} kbpd
-                </text>
-              </g>
-            );
-          })()}
-        </g>
-      )}
-    </svg>
+    <div ref={wrapRef} style={{ width:"100%" }}>
+      <svg viewBox={`0 0 ${W} ${H}`} width={W} height={H}
+        style={{ display:"block", width:"100%", cursor:"crosshair", overflow:"visible" }}
+        onMouseMove={onMove} onMouseLeave={() => setHover(null)}>
+        <defs>
+          <linearGradient id="pchart-grad" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stopColor={fillTop}/>
+            <stop offset="100%" stopColor={fillBot}/>
+          </linearGradient>
+        </defs>
+        {yTicks.map((v,i) => { const y=pT+(1-(v-minV)/rng)*cH; return (
+          <g key={i}>
+            <line x1={pL} y1={y} x2={W-pR} y2={y} stroke="rgba(20,22,24,0.07)" strokeWidth="1"/>
+            <text x={pL-5} y={y} textAnchor="end" dominantBaseline="middle"
+              fontSize="11" fill="#9aa0ac" fontFamily="var(--font-mono)">{v}</text>
+          </g>
+        ); })}
+        <line x1={pL} y1={pT+cH} x2={W-pR} y2={pT+cH} stroke="rgba(20,22,24,0.10)" strokeWidth="1"/>
+        {labels.map((l,i) => (
+          <text key={i} x={pL+i*xS} y={H-5} textAnchor="middle" dominantBaseline="auto"
+            fontSize="11" fill="#9aa0ac" fontFamily="var(--font-normal)">{l}</text>
+        ))}
+        <path d={area} fill="url(#pchart-grad)"/>
+        <path d={line} fill="none" stroke={color} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/>
+        {hover !== null && (
+          <g>
+            <line x1={pts[hover][0]} y1={pT} x2={pts[hover][0]} y2={pT+cH}
+              stroke={color} strokeWidth="1.5" strokeDasharray="4 3" strokeOpacity="0.45"/>
+            <circle cx={pts[hover][0]} cy={pts[hover][1]} r="5" fill={color} stroke="#fff" strokeWidth="2.5"/>
+            {(() => {
+              const tx = Math.min(pts[hover][0]+10, W-68);
+              const ty = Math.max(pts[hover][1]-28, pT);
+              return (
+                <g transform={`translate(${tx},${ty})`}>
+                  <rect width="64" height="22" rx="5" fill="#1a2035" opacity="0.92"/>
+                  <text x="32" y="11" textAnchor="middle" dominantBaseline="middle"
+                    fontSize="11" fontWeight="700" fill="#fff" fontFamily="var(--font-bold)">
+                    {data[hover]} kbpd
+                  </text>
+                </g>
+              );
+            })()}
+          </g>
+        )}
+      </svg>
+    </div>
   );
 }
 
