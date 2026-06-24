@@ -503,7 +503,7 @@ function PipelineChart({ data, labels, color="#0036DD" }: {
   data: number[]; labels: string[]; color?: string;
 }) {
   const [hover, setHover] = React.useState<number|null>(null);
-  const W=400, H=130, pL=40, pR=10, pT=12, pB=28;
+  const W=400, H=130, pL=30, pR=10, pT=12, pB=28;
   const cW = W - pL - pR;
   const cH = H - pT - pB;
   const n = data.length;
@@ -548,10 +548,6 @@ function PipelineChart({ data, labels, color="#0036DD" }: {
             fontSize="8.5" fill="#9aa0ac" fontFamily="var(--font-mono)">{v}</text>
         </g>
       ); })}
-      {/* Y axis unit label */}
-      <text x={7} y={pT+cH/2} textAnchor="middle" dominantBaseline="middle"
-        fontSize="7.5" fill="#b0b7c3" fontFamily="var(--font-normal)"
-        transform={`rotate(-90,7,${pT+cH/2})`}>kbpd</text>
       {/* X baseline + labels */}
       <line x1={pL} y1={pT+cH} x2={W-pR} y2={pT+cH} stroke="rgba(20,22,24,0.10)" strokeWidth="1"/>
       {labels.map((l,i) => (
