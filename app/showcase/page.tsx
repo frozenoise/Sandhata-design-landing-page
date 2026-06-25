@@ -1187,8 +1187,8 @@ export default function ShowcasePage() {
     { id:"a4", tone:"error" as const,   title:"Build failed",  body:"TypeScript errors in Button.d.ts." },
   ]).filter(a=>!dismissed.includes(a.id));
 
-  const focusIndex  = atomicP * 5;
-  const activePanel = Math.min(5, Math.floor(focusIndex + 0.15));
+  const focusIndex = atomicP * 5;
+  const activePanel = Math.min(5, Math.round(focusIndex));
   const AP_STEPS = ["Sub-atomic","Atoms","Molecules","Organisms","Templates","Pages"];
   const AP_NUMS  = ["01","02","03","04","05","06"];
   const AP_SUBS  = [
@@ -1199,18 +1199,45 @@ export default function ShowcasePage() {
     "Page-level structure — organisms arranged into reusable layout patterns.",
     "Complete, production-ready interfaces — where every layer comes together.",
   ];
-  /* Scale 1 → 1/6: starts fully zoomed-in on panel 0, zooms out to reveal all 6 */
-  const worldScale = 1 / (1 + focusIndex);
+
+  /* flex weight: past panels halve each step back; next panel grows in; future = invisible */
+  const getFlexW = (i: number): number => {
+    const N = Math.floor(focusIndex);
+    const frac = focusIndex - N;
+    if (i > N + 1) return 0.001;
+    if (i === N + 1) return Math.max(0.001, frac);
+    return 1 / Math.pow(2, focusIndex - i);
+  };
+
   const panelLabel: React.CSSProperties = {
     fontFamily:"var(--font-mono)", fontSize:8, fontWeight:700,
     color:"rgba(20,22,24,0.28)", letterSpacing:".10em", textTransform:"uppercase", margin:"0 0 8px",
+  };
+  const panelTitle: React.CSSProperties = {
+    fontFamily:"var(--font-mono)", fontSize:9, fontWeight:700,
+    color:"rgba(255,255,255,0.45)", letterSpacing:".10em", textTransform:"uppercase",
+    textAlign:"center", margin:0, flexShrink:0,
   };
 
   const systemBand = (
     <section id="sc-foundations" ref={foundRef} style={{ height:"600vh", position:"relative", background:"#0A0B0D" }}>
       <div style={{ position:"sticky", top:0, height:"100vh", overflow:"hidden" }}>
 
-        {/* ── Fixed heading — above the zoom world ── */}
+        {/* ── Concentric arcs centered at left edge of content area ── */}
+        <div style={{ position:"absolute", left:lpad, right:0, top:148, bottom:28, overflow:"hidden", pointerEvents:"none", zIndex:0 }}>
+          {[1,2,3,4,5,6].map(i => (
+            <div key={i} style={{
+              position:"absolute", left:0, top:"50%",
+              width: i * 300, height: i * 300,
+              marginLeft: -(i * 300), marginTop: -(i * 150),
+              borderRadius:"50%",
+              border:`1px solid rgba(255,255,255,${i <= activePanel + 1 ? 0.07 : 0.02})`,
+              transition:"border-color .4s",
+            }}/>
+          ))}
+        </div>
+
+        {/* ── Fixed heading ── */}
         <div style={{ position:"absolute", top:30, left:lpad, right:48, zIndex:10, pointerEvents:"none" }}>
           <div style={{ display:"flex", alignItems:"center", gap:10, marginBottom:8 }}>
             <span style={{ fontFamily:"var(--font-mono)", fontSize:10, fontWeight:700,
@@ -1222,246 +1249,242 @@ export default function ShowcasePage() {
               letterSpacing:".08em", textTransform:"uppercase" }}>Atomic Design</span>
           </div>
           <h2 style={{ fontFamily:"var(--font-bold)", fontSize:54, fontWeight:800, color:"#fff",
-            margin:0, letterSpacing:"-2px", lineHeight:1, transition:"opacity .18s" }}>
+            margin:0, letterSpacing:"-2px", lineHeight:1 }}>
             {AP_STEPS[activePanel]}
           </h2>
           <p style={{ fontFamily:"var(--font-normal)", fontSize:14, color:"rgba(255,255,255,0.40)",
             margin:"10px 0 18px", maxWidth:520 }}>
             {AP_SUBS[activePanel]}
           </p>
-          {/* Step trail */}
           <div style={{ display:"flex", gap:7 }}>
-            {AP_STEPS.map((_, i) => (
+            {AP_STEPS.map((_,i) => (
               <div key={i} style={{
                 width: i <= activePanel ? 18 : 5, height:4, borderRadius:2, transition:"all .22s",
-                background: i <= activePanel
-                  ? "var(--colour-primaryblue-400,#2255FF)"
-                  : "rgba(255,255,255,0.14)",
+                background: i <= activePanel ? "var(--colour-primaryblue-400,#2255FF)" : "rgba(255,255,255,0.14)",
               }}/>
             ))}
           </div>
         </div>
 
-        {/* ── Zoomable world — starts filling viewport, zooms out to show all 6 ── */}
-        <div style={{ position:"absolute", left:lpad, right:0, top:150, bottom:28, overflow:"hidden" }}>
-          <div style={{
-            display:"flex", width:"600%", height:"100%",
-            transform:`scale(${worldScale})`,
-            transformOrigin:"left center",
-            willChange:"transform",
-          }}>
+        {/* ── Proportional flex panels — each panel's flex-grow shrinks as it falls behind ── */}
+        <div style={{ position:"absolute", left:lpad, right:0, top:148, bottom:28, display:"flex", gap:4, zIndex:1 }}>
 
-            {/* P0 — Sub-atomic */}
-            <div style={{ width:`${100/6}%`, flexShrink:0, height:"100%", padding:"0 10px", boxSizing:"border-box" }}>
-              <div style={{ background:"#fff", borderRadius:14, height:"100%", padding:22, boxSizing:"border-box", overflow:"hidden" }}>
-                <p style={labelCap}>Design tokens</p>
-                <div style={{ display:"grid", gridTemplateColumns:"repeat(4,1fr)", gap:14 }}>
-                  <div>
-                    <p style={panelLabel}>Colour</p>
-                    {["50","100","200","300","400","500","600","700"].map(s=>(
-                      <div key={s} style={{ display:"flex", alignItems:"center", gap:6, marginBottom:4 }}>
-                        <div style={{ width:30, height:10, borderRadius:2, background:`var(--colour-primaryblue-${s})`, flexShrink:0 }}/>
-                        <span style={{ fontFamily:"var(--font-mono)", fontSize:7, color:"rgba(20,22,24,0.28)" }}>{s}</span>
+          {/* P0 — Sub-atomic */}
+          <div style={{ flex:getFlexW(0), height:"100%", overflow:"hidden", minWidth:0, display:"flex", flexDirection:"column", gap:4 }}>
+            <p style={panelTitle}>Sub-atomic</p>
+            <div style={{ background:"#fff", borderRadius:14, flex:1, padding:16, boxSizing:"border-box", overflow:"hidden" }}>
+              <p style={labelCap}>Design tokens</p>
+              <div style={{ display:"grid", gridTemplateColumns:"repeat(4,1fr)", gap:12 }}>
+                <div>
+                  <p style={panelLabel}>Colour</p>
+                  {["50","100","200","300","400","500","600","700"].map(s=>(
+                    <div key={s} style={{ display:"flex", alignItems:"center", gap:6, marginBottom:4 }}>
+                      <div style={{ width:30, height:10, borderRadius:2, background:`var(--colour-primaryblue-${s})`, flexShrink:0 }}/>
+                      <span style={{ fontFamily:"var(--font-mono)", fontSize:7, color:"rgba(20,22,24,0.28)" }}>{s}</span>
+                    </div>
+                  ))}
+                </div>
+                <div>
+                  <p style={panelLabel}>Type</p>
+                  <span style={{ fontFamily:"var(--font-bold)", fontSize:24, fontWeight:800, color:"var(--text-title)", display:"block", lineHeight:1, marginBottom:8 }}>Aa</span>
+                  <span style={{ fontFamily:"var(--font-bold)", fontSize:14, fontWeight:700, color:"var(--text-body)", display:"block", marginBottom:6 }}>Title</span>
+                  <span style={{ fontFamily:"var(--font-normal)", fontSize:12, color:"var(--text-body)", display:"block", marginBottom:6 }}>Body</span>
+                  <span style={{ fontFamily:"var(--font-mono)", fontSize:10, color:"var(--text-caption)", display:"block" }}>mono</span>
+                </div>
+                <div>
+                  <p style={panelLabel}>Spacing</p>
+                  {[4,8,12,16,24,32,48].map(s=>(
+                    <div key={s} style={{ display:"flex", alignItems:"center", gap:5, marginBottom:5 }}>
+                      <div style={{ width:Math.min(s,44), height:5, background:"var(--colour-primaryblue-300,#5584F5)", borderRadius:1, flexShrink:0 }}/>
+                      <span style={{ fontFamily:"var(--font-mono)", fontSize:7, color:"rgba(20,22,24,0.28)" }}>{s}</span>
+                    </div>
+                  ))}
+                </div>
+                <div>
+                  <p style={panelLabel}>Radius</p>
+                  {[["none","0px"],["sm","4px"],["md","8px"],["lg","12px"],["full","9999px"]].map(([n,r])=>(
+                    <div key={n} style={{ display:"flex", alignItems:"center", gap:7, marginBottom:9 }}>
+                      <div style={{ width:26, height:16, background:"var(--colour-primaryblue-50,#EBF0FF)", border:"1.5px solid var(--colour-primaryblue-200,#9DBDFF)", borderRadius:r, flexShrink:0 }}/>
+                      <span style={{ fontFamily:"var(--font-mono)", fontSize:7, color:"rgba(20,22,24,0.28)" }}>{n}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* P1 — Atoms */}
+          <div style={{ flex:getFlexW(1), height:"100%", overflow:"hidden", minWidth:0, display:"flex", flexDirection:"column", gap:4 }}>
+            <p style={panelTitle}>Atoms</p>
+            <div style={{ background:"#fff", borderRadius:14, flex:1, padding:16, boxSizing:"border-box", overflow:"hidden" }}>
+              <p style={labelCap}>Core elements</p>
+              <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:14 }}>
+                <div>
+                  <p style={panelLabel}>Button</p>
+                  <div style={{ display:"flex", flexDirection:"column", gap:7 }}>
+                    <Button hierarchy="primary" size="small">Primary</Button>
+                    <Button hierarchy="secondary" size="small">Secondary</Button>
+                    <Button hierarchy="ghost" size="small">Ghost</Button>
+                  </div>
+                </div>
+                <div>
+                  <p style={panelLabel}>Badge</p>
+                  <div style={{ display:"flex", flexWrap:"wrap", gap:5 }}>
+                    <Badge tone="success">Live</Badge>
+                    <Badge tone="warning">Draft</Badge>
+                    <Badge tone="error">Error</Badge>
+                    <Badge tone="neutral">Idle</Badge>
+                    <Badge tone="action">Active</Badge>
+                  </div>
+                </div>
+                <div>
+                  <p style={panelLabel}>Avatar</p>
+                  <div style={{ display:"flex", gap:8, alignItems:"center" }}>
+                    <Avatar name="Ayo Paul" size={36}/>
+                    <Avatar name="Sandra Kim" size={28}/>
+                    <Avatar name="Tom L" size={22}/>
+                  </div>
+                </div>
+                <div>
+                  <p style={panelLabel}>Controls</p>
+                  <Switch checked={sw} onChange={setSw} label="Toggle on"/>
+                  <div style={{ display:"flex", gap:7, alignItems:"center", marginTop:9 }}>
+                    <Spinner size={14}/>
+                    <span style={{ fontFamily:"var(--font-normal)", fontSize:12, color:"var(--text-body)" }}>Loading…</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* P2 — Molecules */}
+          <div style={{ flex:getFlexW(2), height:"100%", overflow:"hidden", minWidth:0, display:"flex", flexDirection:"column", gap:4 }}>
+            <p style={panelTitle}>Molecules</p>
+            <div style={{ background:"#fff", borderRadius:14, flex:1, padding:16, boxSizing:"border-box", overflow:"hidden" }}>
+              <p style={labelCap}>Functional units</p>
+              <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:14 }}>
+                <div>
+                  <Input label="Email address" placeholder="you@company.com" helper="Never shared"/>
+                </div>
+                <div>
+                  <p style={panelLabel}>Labelled toggle</p>
+                  <Switch checked={sw} onChange={setSw} label="Notifications"/>
+                  <div style={{ marginTop:8 }}>
+                    <Switch checked={false} onChange={()=>{}} label="Auto-publish" disabled/>
+                  </div>
+                </div>
+                <div>
+                  <p style={panelLabel}>Identity row</p>
+                  {[{name:"Ayo Paul",role:"Admin"},{name:"Sandra Kim",role:"Editor"}].map(u=>(
+                    <div key={u.name} style={{ display:"flex", alignItems:"center", gap:8, marginBottom:8 }}>
+                      <Avatar name={u.name} size={26}/>
+                      <div style={{ flex:1 }}>
+                        <p style={{ fontFamily:"var(--font-bold)", fontSize:11, fontWeight:700, color:"var(--text-title)", margin:0 }}>{u.name}</p>
+                        <p style={{ fontFamily:"var(--font-normal)", fontSize:10, color:"var(--text-caption)", margin:0 }}>{u.role}</p>
                       </div>
+                      <Badge tone={u.role==="Admin"?"action":"neutral"}>{u.role}</Badge>
+                    </div>
+                  ))}
+                </div>
+                <div>
+                  <p style={panelLabel}>Tag chips</p>
+                  <div style={{ display:"flex", gap:5, flexWrap:"wrap" }}>
+                    {tags.map(t=><Tag key={t} onRemove={()=>setTags(ts=>ts.filter(x=>x!==t))}>{t}</Tag>)}
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* P3 — Organisms */}
+          <div style={{ flex:getFlexW(3), height:"100%", overflow:"hidden", minWidth:0, display:"flex", flexDirection:"column", gap:4 }}>
+            <p style={panelTitle}>Organisms</p>
+            <div style={{ background:"#fff", borderRadius:14, flex:1, padding:16, boxSizing:"border-box", overflow:"hidden" }}>
+              <p style={labelCap}>UI patterns</p>
+              <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:14 }}>
+                <div>
+                  <p style={panelLabel}>Alert system</p>
+                  <div style={{ display:"flex", flexDirection:"column", gap:7 }}>
+                    {visibleAlerts.slice(0,3).map(a=>(
+                      <Alert key={a.id} tone={a.tone} title={a.title} onClose={()=>setDismissed(d=>[...d,a.id])}>{a.body}</Alert>
                     ))}
-                  </div>
-                  <div>
-                    <p style={panelLabel}>Type</p>
-                    <span style={{ fontFamily:"var(--font-bold)", fontSize:24, fontWeight:800, color:"var(--text-title)", display:"block", lineHeight:1, marginBottom:8 }}>Aa</span>
-                    <span style={{ fontFamily:"var(--font-bold)", fontSize:14, fontWeight:700, color:"var(--text-body)", display:"block", marginBottom:6 }}>Title</span>
-                    <span style={{ fontFamily:"var(--font-normal)", fontSize:12, color:"var(--text-body)", display:"block", marginBottom:6 }}>Body</span>
-                    <span style={{ fontFamily:"var(--font-mono)", fontSize:10, color:"var(--text-caption)", display:"block" }}>mono</span>
-                  </div>
-                  <div>
-                    <p style={panelLabel}>Spacing</p>
-                    {[4,8,12,16,24,32,48].map(s=>(
-                      <div key={s} style={{ display:"flex", alignItems:"center", gap:5, marginBottom:5 }}>
-                        <div style={{ width:Math.min(s,44), height:5, background:"var(--colour-primaryblue-300,#5584F5)", borderRadius:1, flexShrink:0 }}/>
-                        <span style={{ fontFamily:"var(--font-mono)", fontSize:7, color:"rgba(20,22,24,0.28)" }}>{s}</span>
+                    {visibleAlerts.length===0&&(
+                      <div style={{ paddingTop:10, textAlign:"center" }}>
+                        <Button hierarchy="tertiary" size="small" onClick={()=>setDismissed([])}>Restore</Button>
                       </div>
-                    ))}
-                  </div>
-                  <div>
-                    <p style={panelLabel}>Radius</p>
-                    {[["none","0px"],["sm","4px"],["md","8px"],["lg","12px"],["full","9999px"]].map(([n,r])=>(
-                      <div key={n} style={{ display:"flex", alignItems:"center", gap:7, marginBottom:9 }}>
-                        <div style={{ width:26, height:16, background:"var(--colour-primaryblue-50,#EBF0FF)", border:"1.5px solid var(--colour-primaryblue-200,#9DBDFF)", borderRadius:r, flexShrink:0 }}/>
-                        <span style={{ fontFamily:"var(--font-mono)", fontSize:7, color:"rgba(20,22,24,0.28)" }}>{n}</span>
-                      </div>
-                    ))}
+                    )}
                   </div>
                 </div>
-              </div>
-            </div>
-
-            {/* P1 — Atoms */}
-            <div style={{ width:`${100/6}%`, flexShrink:0, height:"100%", padding:"0 10px", boxSizing:"border-box" }}>
-              <div style={{ background:"#fff", borderRadius:14, height:"100%", padding:22, boxSizing:"border-box", overflow:"hidden" }}>
-                <p style={labelCap}>Core elements</p>
-                <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:14 }}>
-                  <div>
-                    <p style={panelLabel}>Button</p>
-                    <div style={{ display:"flex", flexDirection:"column", gap:7 }}>
-                      <Button hierarchy="primary" size="small">Primary</Button>
-                      <Button hierarchy="secondary" size="small">Secondary</Button>
-                      <Button hierarchy="ghost" size="small">Ghost</Button>
-                    </div>
-                  </div>
-                  <div>
-                    <p style={panelLabel}>Badge</p>
-                    <div style={{ display:"flex", flexWrap:"wrap", gap:5 }}>
-                      <Badge tone="success">Live</Badge>
-                      <Badge tone="warning">Draft</Badge>
-                      <Badge tone="error">Error</Badge>
-                      <Badge tone="neutral">Idle</Badge>
-                      <Badge tone="action">Active</Badge>
-                    </div>
-                  </div>
-                  <div>
-                    <p style={panelLabel}>Avatar</p>
-                    <div style={{ display:"flex", gap:8, alignItems:"center" }}>
-                      <Avatar name="Ayo Paul" size={36}/>
-                      <Avatar name="Sandra Kim" size={28}/>
-                      <Avatar name="Tom L" size={22}/>
-                    </div>
-                  </div>
-                  <div>
-                    <p style={panelLabel}>Controls</p>
-                    <Switch checked={sw} onChange={setSw} label="Toggle on"/>
-                    <div style={{ display:"flex", gap:7, alignItems:"center", marginTop:9 }}>
-                      <Spinner size={14}/>
-                      <span style={{ fontFamily:"var(--font-normal)", fontSize:12, color:"var(--text-body)" }}>Loading…</span>
+                <div>
+                  <p style={panelLabel}>Form pattern</p>
+                  <div style={{ display:"flex", flexDirection:"column", gap:9 }}>
+                    <Input label="Full name" placeholder="Jane Smith" required/>
+                    <ShowcaseSelect label="Country" options={["United Kingdom","Ireland","France","Germany"]} placeholder="Select country"/>
+                    <div style={{ display:"flex", gap:7, justifyContent:"flex-end" }}>
+                      <Button hierarchy="tertiary" size="small">Cancel</Button>
+                      <Button hierarchy="primary" size="small" onClick={()=>showToast("Form submitted")}>Submit</Button>
                     </div>
                   </div>
                 </div>
               </div>
             </div>
+          </div>
 
-            {/* P2 — Molecules */}
-            <div style={{ width:`${100/6}%`, flexShrink:0, height:"100%", padding:"0 10px", boxSizing:"border-box" }}>
-              <div style={{ background:"#fff", borderRadius:14, height:"100%", padding:22, boxSizing:"border-box", overflow:"hidden" }}>
-                <p style={labelCap}>Functional units</p>
-                <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:14 }}>
-                  <div>
-                    <Input label="Email address" placeholder="you@company.com" helper="Never shared"/>
+          {/* P4 — Templates */}
+          <div style={{ flex:getFlexW(4), height:"100%", overflow:"hidden", minWidth:0, display:"flex", flexDirection:"column", gap:4 }}>
+            <p style={panelTitle}>Templates</p>
+            <div style={{ background:"#fff", borderRadius:14, flex:1, padding:16, boxSizing:"border-box", overflow:"hidden" }}>
+              <p style={labelCap}>Page structure</p>
+              <div style={{ display:"flex", flexDirection:"column", gap:12 }}>
+                <div style={{ display:"grid", gridTemplateColumns:"repeat(3,1fr)", gap:8 }}>
+                  <StatCard label="Users" value="24,891" trend="+12.3%" trendDirection="up"/>
+                  <StatCard label="Revenue" value="£1.24M" trend="+8.7%" trendDirection="up"/>
+                  <StatCard label="Incidents" value="2" trend="−3" trendDirection="down"/>
+                </div>
+                <div style={{ display:"grid", gridTemplateColumns:"1fr 190px", gap:12 }}>
+                  <div style={{ background:"var(--surface-secondary,#f5f6f8)", borderRadius:10, padding:12 }}>
+                    <p style={{ fontFamily:"var(--font-bold)", fontSize:10, fontWeight:700, color:"var(--text-title)", margin:"0 0 8px" }}>Throughput trend</p>
+                    <BrandSpark data={[30,34,31,38,36,42,40,46,44,49]} height={42}/>
                   </div>
-                  <div>
-                    <p style={panelLabel}>Labelled toggle</p>
-                    <Switch checked={sw} onChange={setSw} label="Notifications"/>
-                    <div style={{ marginTop:8 }}>
-                      <Switch checked={false} onChange={()=>{}} label="Auto-publish" disabled/>
-                    </div>
-                  </div>
-                  <div>
-                    <p style={panelLabel}>Identity row</p>
-                    {[{name:"Ayo Paul",role:"Admin"},{name:"Sandra Kim",role:"Editor"}].map(u=>(
-                      <div key={u.name} style={{ display:"flex", alignItems:"center", gap:8, marginBottom:8 }}>
-                        <Avatar name={u.name} size={26}/>
-                        <div style={{ flex:1 }}>
-                          <p style={{ fontFamily:"var(--font-bold)", fontSize:11, fontWeight:700, color:"var(--text-title)", margin:0 }}>{u.name}</p>
-                          <p style={{ fontFamily:"var(--font-normal)", fontSize:10, color:"var(--text-caption)", margin:0 }}>{u.role}</p>
-                        </div>
-                        <Badge tone={u.role==="Admin"?"action":"neutral"}>{u.role}</Badge>
-                      </div>
-                    ))}
-                  </div>
-                  <div>
-                    <p style={panelLabel}>Tag chips</p>
-                    <div style={{ display:"flex", gap:5, flexWrap:"wrap" }}>
-                      {tags.map(t=><Tag key={t} onRemove={()=>setTags(ts=>ts.filter(x=>x!==t))}>{t}</Tag>)}
-                    </div>
+                  <div style={{ display:"flex", flexDirection:"column", gap:6 }}>
+                    <Alert tone="success" title="Deploy OK" onClose={()=>{}}>v2.4.1 live.</Alert>
+                    <Alert tone="warning" title="Quota" onClose={()=>{}}>85% used.</Alert>
                   </div>
                 </div>
               </div>
             </div>
+          </div>
 
-            {/* P3 — Organisms */}
-            <div style={{ width:`${100/6}%`, flexShrink:0, height:"100%", padding:"0 10px", boxSizing:"border-box" }}>
-              <div style={{ background:"#fff", borderRadius:14, height:"100%", padding:22, boxSizing:"border-box", overflow:"hidden" }}>
-                <p style={labelCap}>UI patterns</p>
-                <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:14 }}>
-                  <div>
-                    <p style={panelLabel}>Alert system</p>
-                    <div style={{ display:"flex", flexDirection:"column", gap:7 }}>
-                      {visibleAlerts.slice(0,3).map(a=>(
-                        <Alert key={a.id} tone={a.tone} title={a.title} onClose={()=>setDismissed(d=>[...d,a.id])}>{a.body}</Alert>
-                      ))}
-                      {visibleAlerts.length===0&&(
-                        <div style={{ paddingTop:10, textAlign:"center" }}>
-                          <Button hierarchy="tertiary" size="small" onClick={()=>setDismissed([])}>Restore</Button>
-                        </div>
-                      )}
-                    </div>
+          {/* P5 — Pages */}
+          <div style={{ flex:getFlexW(5), height:"100%", overflow:"hidden", minWidth:0, display:"flex", flexDirection:"column", gap:4 }}>
+            <p style={panelTitle}>Pages</p>
+            <div style={{ background:"#fff", borderRadius:14, flex:1, padding:16, boxSizing:"border-box", overflow:"hidden" }}>
+              <p style={labelCap}>Complete interface</p>
+              <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:14 }}>
+                <div>
+                  <p style={panelLabel}>Sign in</p>
+                  <div style={{ display:"flex", flexDirection:"column", gap:10 }}>
+                    <Input label="Email" placeholder="you@company.com"/>
+                    <Input label="Password" placeholder="••••••••"/>
+                    <Button hierarchy="primary" onClick={()=>showToast("Welcome!")}>Sign in</Button>
+                    <p style={{ fontFamily:"var(--font-normal)", fontSize:11, color:"var(--text-caption)", textAlign:"center", margin:0 }}>
+                      No account?{" "}<span style={{ color:"var(--colour-primaryblue-600,#0029b0)", fontWeight:700 }}>Sign up</span>
+                    </p>
                   </div>
-                  <div>
-                    <p style={panelLabel}>Form pattern</p>
-                    <div style={{ display:"flex", flexDirection:"column", gap:9 }}>
-                      <Input label="Full name" placeholder="Jane Smith" required/>
-                      <ShowcaseSelect label="Country" options={["United Kingdom","Ireland","France","Germany"]} placeholder="Select country"/>
-                      <div style={{ display:"flex", gap:7, justifyContent:"flex-end" }}>
-                        <Button hierarchy="tertiary" size="small">Cancel</Button>
-                        <Button hierarchy="primary" size="small" onClick={()=>showToast("Form submitted")}>Submit</Button>
-                      </div>
-                    </div>
+                </div>
+                <div>
+                  <p style={panelLabel}>Dashboard</p>
+                  <div style={{ display:"flex", flexDirection:"column", gap:8 }}>
+                    <StatCard label="Pipeline" value="812 kbpd" trend="+4.1%" trendDirection="up"/>
+                    <BrandSpark data={[38,42,40,46,44,49,52,48,55,58]} height={34}/>
+                    <Alert tone="success" title="All nominal" onClose={()=>{}}>Last check: 2 min ago.</Alert>
                   </div>
                 </div>
               </div>
             </div>
+          </div>
 
-            {/* P4 — Templates */}
-            <div style={{ width:`${100/6}%`, flexShrink:0, height:"100%", padding:"0 10px", boxSizing:"border-box" }}>
-              <div style={{ background:"#fff", borderRadius:14, height:"100%", padding:22, boxSizing:"border-box", overflow:"hidden" }}>
-                <p style={labelCap}>Page structure</p>
-                <div style={{ display:"flex", flexDirection:"column", gap:12 }}>
-                  <div style={{ display:"grid", gridTemplateColumns:"repeat(3,1fr)", gap:8 }}>
-                    <StatCard label="Users" value="24,891" trend="+12.3%" trendDirection="up"/>
-                    <StatCard label="Revenue" value="£1.24M" trend="+8.7%" trendDirection="up"/>
-                    <StatCard label="Incidents" value="2" trend="−3" trendDirection="down"/>
-                  </div>
-                  <div style={{ display:"grid", gridTemplateColumns:"1fr 190px", gap:12 }}>
-                    <div style={{ background:"var(--surface-secondary,#f5f6f8)", borderRadius:10, padding:12 }}>
-                      <p style={{ fontFamily:"var(--font-bold)", fontSize:10, fontWeight:700, color:"var(--text-title)", margin:"0 0 8px" }}>Throughput trend</p>
-                      <BrandSpark data={[30,34,31,38,36,42,40,46,44,49]} height={42}/>
-                    </div>
-                    <div style={{ display:"flex", flexDirection:"column", gap:6 }}>
-                      <Alert tone="success" title="Deploy OK" onClose={()=>{}}>v2.4.1 live.</Alert>
-                      <Alert tone="warning" title="Quota" onClose={()=>{}}>85% used.</Alert>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* P5 — Pages */}
-            <div style={{ width:`${100/6}%`, flexShrink:0, height:"100%", padding:"0 10px", boxSizing:"border-box" }}>
-              <div style={{ background:"#fff", borderRadius:14, height:"100%", padding:22, boxSizing:"border-box", overflow:"hidden" }}>
-                <p style={labelCap}>Complete interface</p>
-                <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:14 }}>
-                  <div>
-                    <p style={panelLabel}>Sign in</p>
-                    <div style={{ display:"flex", flexDirection:"column", gap:10 }}>
-                      <Input label="Email" placeholder="you@company.com"/>
-                      <Input label="Password" placeholder="••••••••"/>
-                      <Button hierarchy="primary" onClick={()=>showToast("Welcome!")}>Sign in</Button>
-                      <p style={{ fontFamily:"var(--font-normal)", fontSize:11, color:"var(--text-caption)", textAlign:"center", margin:0 }}>
-                        No account?{" "}<span style={{ color:"var(--colour-primaryblue-600,#0029b0)", fontWeight:700 }}>Sign up</span>
-                      </p>
-                    </div>
-                  </div>
-                  <div>
-                    <p style={panelLabel}>Dashboard</p>
-                    <div style={{ display:"flex", flexDirection:"column", gap:8 }}>
-                      <StatCard label="Pipeline" value="812 kbpd" trend="+4.1%" trendDirection="up"/>
-                      <BrandSpark data={[38,42,40,46,44,49,52,48,55,58]} height={34}/>
-                      <Alert tone="success" title="All nominal" onClose={()=>{}}>Last check: 2 min ago.</Alert>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-          </div>{/* end world */}
-        </div>{/* end zoom area */}
+        </div>{/* end flex panels */}
 
       </div>{/* end sticky */}
     </section>
