@@ -749,9 +749,9 @@ button, a[href], input, .acc-btn, .nl { transition: background .2s ease, color .
 /* Layer 0: light frosted backdrop — lets section colours bleed through */
 .sc-glass-blur {
   position: absolute; inset: 0; z-index: 0; border-radius: 22px;
-  background: rgba(255, 255, 255, 0.68);
-  -webkit-backdrop-filter: blur(40px) saturate(180%) brightness(1.04);
-  backdrop-filter: blur(40px) saturate(180%) brightness(1.04);
+  background: rgba(255, 255, 255, 0.28);
+  -webkit-backdrop-filter: blur(16px) saturate(130%) brightness(1.02);
+  backdrop-filter: blur(16px) saturate(130%) brightness(1.02);
   filter: url(#lg-distort);
 }
 /* Layer 1: specular rim — light glass edition */

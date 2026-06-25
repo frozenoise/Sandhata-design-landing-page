@@ -1372,9 +1372,9 @@ export default function ShowcasePage() {
         {collapsed?(
           <a href="/" className="sc-nav-item sc-rail-icon" title="Back to home" style={{ marginBottom:8 }}>{NAV[0].icon}</a>
         ):(
-          <div style={{ marginBottom:8 }}>
-            <img src="/assets/logo/sandhata-logo.svg" alt="Sandhata" style={{ height:11 }}/>
-            <p style={{ fontSize:9, color:"rgba(20,22,24,0.36)", fontFamily:"var(--font-mono)", margin:"4px 0 0" }}>v1.0-stable</p>
+          <div style={{ marginBottom:20 }}>
+            <img src="/assets/logo/sandhata-logo.svg" alt="Sandhata" style={{ height:26 }}/>
+            <p style={{ fontSize:11, color:"rgba(20,22,24,0.36)", fontFamily:"var(--font-mono)", margin:"8px 0 0" }}>v1.0-stable</p>
           </div>
         )}
         {!collapsed&&<p className="sc-cap">Navigate</p>}
