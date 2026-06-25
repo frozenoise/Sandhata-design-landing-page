@@ -161,18 +161,17 @@ const I_chevR  = <svg width="16" height="16" viewBox="0 0 24 24" fill="none" str
 const I_code   = <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>;
 
 /* ── Shared helpers ─────────────────────────────────────────── */
-function DiagonalDivider({ from, to, lines = "rgba(10,10,20,0.07)" }: {
-  from: string; to: string; lines?: string;
+function SectionSep({ from, to, lines = "#f0f0f0", borderClr = "rgba(0,0,0,0.08)" }: {
+  from: string; to: string; lines?: string; borderClr?: string;
 }) {
   return (
-    <div style={{ position:"relative", height:56, overflow:"hidden", flexShrink:0 }}>
-      {/* Hard split at 50% gives each section colour exactly half the band */}
+    <div style={{ position:"relative", height:40, flexShrink:0, boxSizing:"border-box",
+      borderTop:`1px solid ${borderClr}`, borderBottom:`1px solid ${borderClr}` }}>
       <div style={{ position:"absolute", inset:0,
         background:`linear-gradient(to bottom, ${from} 50%, ${to} 50%)` }}/>
-      {/* Diagonal hatch overlay */}
+      {/* 135° diagonal hatch — ui-layouts.com exact pattern: 1px lines on 10px pitch */}
       <div style={{ position:"absolute", inset:0,
-        backgroundImage:`repeating-linear-gradient(-45deg, ${lines} 0, ${lines} 1px, transparent 0, transparent 50%)`,
-        backgroundSize:"10px 10px" }}/>
+        backgroundImage:`repeating-linear-gradient(135deg, ${lines} 0px 1px, transparent 1px 10px)` }}/>
     </div>
   );
 }
@@ -732,8 +731,10 @@ export default function ShowcasePage() {
         ...fillPts(bx, by, 280, 44, 110),
       ];
 
-      // Scene 2 — Organisms: password input border (accounts for form centering when password is ~50% grown)
-      const s2 = borderPts(cx-140, cy-8, 280, 44, 150);
+      // Scene 2 — Organisms: password input border
+      // Target is the midpoint of the input's travel: it starts ~20px below cy and ends ~20px above,
+      // so cy-4 gives the best alignment across the whole crossfade.
+      const s2 = borderPts(cx-140, cy-4, 280, 44, 150);
 
       // Scene 3 — Templates: browser frame outer border + chrome/nav/footer dividers + traffic lights + URL bar
       const fW = 460, fH = 383, fx = cx-230, fy = cy-fH/2-20;
@@ -753,7 +754,8 @@ export default function ShowcasePage() {
 
       scenes = [
         { inStart:0.15, inEnd:0.33, outStart:0.36, outEnd:0.44, dots:toDots(s1) },
-        { inStart:0.73, inEnd:0.80, outStart:0.82, outEnd:0.87, dots:toDots(s2) },
+        // Hold fully-formed 0.77→0.79, then crossfade with HTML 0.79→0.84
+        { inStart:0.71, inEnd:0.77, outStart:0.79, outEnd:0.84, dots:toDots(s2) },
         { inStart:0.86, inEnd:0.93, outStart:0.94, outEnd:0.99, dots:toDots(s3) },
       ];
     };
@@ -1356,8 +1358,8 @@ export default function ShowcasePage() {
   const cursorVis   = fo(atomicP, 0.57, 0.62);  // cursor gone once typing starts
   const emailLblOp  = fi(atomicP, 0.57, 0.63);
   const typingP     = fi(atomicP, 0.58, 0.70);
-  const passwordOp  = fi(atomicP, 0.75, 0.81);
-  const loginLblOp  = fi(atomicP, 0.77, 0.83);
+  const passwordOp  = fi(atomicP, 0.79, 0.85);  // starts as password dots begin fading
+  const loginLblOp  = fi(atomicP, 0.81, 0.87);
   const tplOp       = fi(atomicP, 0.88, 0.95);
 
   const EMAIL_PH = "name@email.com";
@@ -1696,13 +1698,13 @@ export default function ShowcasePage() {
       )}
       <main ref={mainRef} className="sc-main-wrap" style={{ marginLeft:0, height:"100vh", overflowY:"auto", background:surfCfg.bg, ...mainVars }}>
         {heroBand}
-        <DiagonalDivider from="#fdf5f0" to="#ffffff"/>
+        <SectionSep from="#fdf5f0" to="#ffffff"/>
         {atomsBand}
-        <DiagonalDivider from="#ffffff" to="#f5f6f8"/>
+        <SectionSep from="#ffffff" to="#f5f6f8"/>
         {dataBand}
-        <DiagonalDivider from="#f5f6f8" to="#000921"/>
+        <SectionSep from="#f5f6f8" to="#000921" borderClr="rgba(0,0,0,0.08)"/>
         {themesBand}
-        <DiagonalDivider from="#000921" to="#0A0B0D" lines="rgba(255,255,255,0.06)"/>
+        <SectionSep from="#000921" to="#0A0B0D" lines="#383838" borderClr="rgba(255,255,255,0.07)"/>
         {systemBand}
       </main>
     </div>
