@@ -161,8 +161,20 @@ const I_chevR  = <svg width="16" height="16" viewBox="0 0 24 24" fill="none" str
 const I_code   = <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>;
 
 /* ── Shared helpers ─────────────────────────────────────────── */
-function GradientRule() {
-  return <div style={{ height:3, background:"linear-gradient(90deg,#f68136 0%,#ff0083 50%,#5636f6 100%)" }}/>;
+function DiagonalDivider({ from, to, lines = "rgba(10,10,20,0.07)" }: {
+  from: string; to: string; lines?: string;
+}) {
+  return (
+    <div style={{ position:"relative", height:56, overflow:"hidden", flexShrink:0 }}>
+      {/* Hard split at 50% gives each section colour exactly half the band */}
+      <div style={{ position:"absolute", inset:0,
+        background:`linear-gradient(to bottom, ${from} 50%, ${to} 50%)` }}/>
+      {/* Diagonal hatch overlay */}
+      <div style={{ position:"absolute", inset:0,
+        backgroundImage:`repeating-linear-gradient(-45deg, ${lines} 0, ${lines} 1px, transparent 0, transparent 50%)`,
+        backgroundSize:"10px 10px" }}/>
+    </div>
+  );
 }
 function BandTag({ children }: { children:React.ReactNode }) {
   return (
@@ -1291,8 +1303,8 @@ export default function ShowcasePage() {
   // Content layer opacities — strictly non-overlapping windows with a 0.02 gap between each
   const subOp    = fi(atomicP, 0,    0.04)  * fo(atomicP, 0.12, 0.20);
   const atomsOp  = fi(atomicP, 0.36, 0.43)  * fo(atomicP, 0.50, 0.55);
-  // Persistent form — fades in at Atoms, stays until Templates replace it
-  const formVis     = fi(atomicP, 0.36, 0.43) * fo(atomicP, 0.86, 0.93);
+  // Persistent form — fades in at Atoms, stays visible while browser chrome fades in around it
+  const formVis     = fi(atomicP, 0.36, 0.43);
   const cursorVis   = fo(atomicP, 0.57, 0.62);  // cursor gone once typing starts
   const emailLblOp  = fi(atomicP, 0.57, 0.63);
   const typingP     = fi(atomicP, 0.58, 0.70);
@@ -1411,19 +1423,24 @@ export default function ShowcasePage() {
             </div>
           </div>
 
-          {/* ── Templates: browser frame with page chrome ── */}
+          {/* ── Templates: browser chrome hollow overlay — form shows through transparent center ── */}
           <div style={{ position:"absolute", opacity:tplOp, pointerEvents:"none",
             display:"flex", alignItems:"center", justifyContent:"center", inset:0 }}>
-            <div style={{ width:460, borderRadius:16, overflow:"hidden",
-              border:"1px solid rgba(255,255,255,0.13)",
-              background:"rgba(8,9,11,0.97)",
-              boxShadow:"0 40px 100px rgba(0,0,0,0.75), inset 0 1px 0 rgba(255,255,255,0.07)",
-              display:"flex", flexDirection:"column" }}>
+            {/*
+             * Frame is shifted up ~20px so its transparent center gap aligns with the
+             * persistent form which sits at viewport center.
+             * Chrome(36) + Nav(55) = 91px above center; Footer(52) below → offset ≈ (91-52)/2 = 20px.
+             */}
+            <div style={{ width:460, position:"relative", transform:"translateY(-20px)" }}>
+              {/* Border + shadow overlay on the full frame */}
+              <div style={{ position:"absolute", inset:0, borderRadius:16,
+                border:"1px solid rgba(255,255,255,0.13)",
+                boxShadow:"0 40px 100px rgba(0,0,0,0.55)", pointerEvents:"none" }}/>
 
               {/* Browser chrome bar */}
               <div style={{ display:"flex", alignItems:"center", gap:7, padding:"11px 16px",
-                borderBottom:"1px solid rgba(255,255,255,0.07)",
-                background:"rgba(255,255,255,0.025)", flexShrink:0 }}>
+                background:"rgba(8,9,11,0.97)", borderRadius:"16px 16px 0 0",
+                borderBottom:"1px solid rgba(255,255,255,0.07)" }}>
                 {["#FF5F57","#FFBD2E","#28C840"].map((c,k)=>(
                   <div key={k} style={{ width:10, height:10, borderRadius:"50%", background:c }}/>
                 ))}
@@ -1435,57 +1452,36 @@ export default function ShowcasePage() {
                 </div>
               </div>
 
-              {/* Page content */}
-              <div style={{ display:"flex", flexDirection:"column" }}>
-                {/* Page nav: hamburger left, avatar right */}
-                <div style={{ display:"flex", alignItems:"center", padding:"13px 20px",
-                  borderBottom:"1px solid rgba(255,255,255,0.06)" }}>
-                  <div style={{ display:"flex", flexDirection:"column", gap:4 }}>
-                    {[0,1,2].map(k=>(
-                      <div key={k} style={{ width:18, height:1.5,
-                        background:"rgba(255,255,255,0.45)", borderRadius:1 }}/>
-                    ))}
-                  </div>
-                  <div style={{ flex:1 }}/>
-                  <div style={{ width:28, height:28, borderRadius:"50%",
-                    background:"var(--colour-primaryblue-500,#0036DD)",
-                    display:"flex", alignItems:"center", justifyContent:"center" }}>
-                    <span style={{ color:"#fff", fontSize:11, fontWeight:700,
-                      fontFamily:"var(--font-bold)" }}>R</span>
-                  </div>
-                </div>
-
-                {/* Login form */}
-                <div style={{ padding:"28px 80px 24px", display:"flex", flexDirection:"column", gap:11 }}>
-                  <h3 style={{ color:"#fff", fontFamily:"var(--font-bold)", fontSize:18, fontWeight:800,
-                    textAlign:"center" as const, margin:"0 0 8px" }}>Login</h3>
-                  {[["Email","name@email.com"],["Password","••••••••"]].map(([lbl,ph])=>(
-                    <div key={lbl}>
-                      <p style={{ fontSize:11, color:"rgba(255,255,255,0.55)", margin:"0 0 5px",
-                        fontFamily:"var(--font-normal)" }}>{lbl}</p>
-                      <div style={{ height:36, border:"1px solid rgba(255,255,255,0.18)",
-                        borderRadius:7, display:"flex", alignItems:"center", paddingLeft:10 }}>
-                        <span style={{ fontSize:12, color:"rgba(255,255,255,0.28)",
-                          fontFamily:"var(--font-normal)" }}>{ph}</span>
-                      </div>
-                    </div>
-                  ))}
-                  <div style={{ height:36, background:"var(--colour-primaryblue-500,#0036DD)",
-                    borderRadius:7, marginTop:2, display:"flex", alignItems:"center",
-                    justifyContent:"center" }}>
-                    <span style={{ color:"#fff", fontSize:13, fontWeight:700,
-                      fontFamily:"var(--font-bold)" }}>Submit</span>
-                  </div>
-                </div>
-
-                {/* Footer */}
-                <div style={{ display:"flex", justifyContent:"center", gap:32, padding:"13px 20px",
-                  borderTop:"1px solid rgba(255,255,255,0.06)" }}>
-                  {["Home","Profile","Settings","About"].map(m=>(
-                    <span key={m} style={{ fontSize:11, color:"rgba(255,255,255,0.32)",
-                      fontFamily:"var(--font-normal)" }}>{m}</span>
+              {/* Page nav: hamburger left, avatar right */}
+              <div style={{ display:"flex", alignItems:"center", padding:"13px 20px",
+                background:"rgba(8,9,11,0.97)",
+                borderBottom:"1px solid rgba(255,255,255,0.06)" }}>
+                <div style={{ display:"flex", flexDirection:"column", gap:4 }}>
+                  {[0,1,2].map(k=>(
+                    <div key={k} style={{ width:18, height:1.5,
+                      background:"rgba(255,255,255,0.45)", borderRadius:1 }}/>
                   ))}
                 </div>
+                <div style={{ flex:1 }}/>
+                <div style={{ width:28, height:28, borderRadius:"50%",
+                  background:"var(--colour-primaryblue-500,#0036DD)",
+                  display:"flex", alignItems:"center", justifyContent:"center" }}>
+                  <span style={{ color:"#fff", fontSize:11, fontWeight:700,
+                    fontFamily:"var(--font-bold)" }}>R</span>
+                </div>
+              </div>
+
+              {/* Transparent center — persistent form shows through */}
+              <div style={{ height:240 }}/>
+
+              {/* Footer */}
+              <div style={{ display:"flex", justifyContent:"center", gap:32, padding:"13px 20px",
+                background:"rgba(8,9,11,0.97)", borderRadius:"0 0 16px 16px",
+                borderTop:"1px solid rgba(255,255,255,0.06)" }}>
+                {["Home","Profile","Settings","About"].map(m=>(
+                  <span key={m} style={{ fontSize:11, color:"rgba(255,255,255,0.32)",
+                    fontFamily:"var(--font-normal)" }}>{m}</span>
+                ))}
               </div>
             </div>
           </div>
@@ -1499,14 +1495,8 @@ export default function ShowcasePage() {
             {/* Connecting line */}
             <div style={{ position:"absolute", right:3, top:8, bottom:8, width:1,
               background:"rgba(255,255,255,0.10)", borderRadius:1 }}/>
-            {STAGES.map((s,i) => (
-              <div key={i} style={{ display:"flex", alignItems:"center", gap:10,
-                justifyContent:"flex-end" }}>
-                <span style={{ fontFamily:"var(--font-mono)", fontSize:9, letterSpacing:".06em",
-                  color:"rgba(255,255,255,0.45)", whiteSpace:"nowrap" as const,
-                  opacity: hOps[i] > 0.25 ? 1 : 0, transition:"opacity .3s" }}>
-                  {s.name}
-                </span>
+            {STAGES.map((_,i) => (
+              <div key={i} style={{ display:"flex", alignItems:"center", justifyContent:"flex-end" }}>
                 <div style={{
                   width: hOps[i] > 0.4 ? 7 : 5, height: hOps[i] > 0.4 ? 7 : 5,
                   borderRadius:"50%", transition:"all .25s", position:"relative", zIndex:1,
@@ -1658,13 +1648,13 @@ export default function ShowcasePage() {
       )}
       <main ref={mainRef} className="sc-main-wrap" style={{ marginLeft:0, height:"100vh", overflowY:"auto", background:surfCfg.bg, ...mainVars }}>
         {heroBand}
-        <GradientRule/>
+        <DiagonalDivider from="#fdf5f0" to="#ffffff"/>
         {atomsBand}
-        <GradientRule/>
+        <DiagonalDivider from="#ffffff" to="#f5f6f8"/>
         {dataBand}
-        <GradientRule/>
+        <DiagonalDivider from="#f5f6f8" to="#000921"/>
         {themesBand}
-        <GradientRule/>
+        <DiagonalDivider from="#000921" to="#0A0B0D" lines="rgba(255,255,255,0.06)"/>
         {systemBand}
       </main>
     </div>
