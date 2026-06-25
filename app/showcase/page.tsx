@@ -446,6 +446,7 @@ function ShowcaseSelect({ label, options, value: vProp, onChange, placeholder }:
 }) {
   const [internal, setInternal] = React.useState("");
   const [open, setOpen] = React.useState(false);
+  const [hovOpt, setHovOpt] = React.useState<string|null>(null);
   const ref = React.useRef<HTMLDivElement>(null);
   const controlled = vProp !== undefined;
   const value = controlled ? vProp! : internal;
@@ -483,13 +484,17 @@ function ShowcaseSelect({ label, options, value: vProp, onChange, placeholder }:
             boxShadow:"0 10px 32px rgba(20,22,24,0.16), 0 2px 8px rgba(20,22,24,0.06)",
             overflow:"hidden", padding:"4px 0" }}>
             {options.map(opt => (
-              <button key={opt} onClick={() => pick(opt)} style={{
-                display:"block", width:"100%", textAlign:"left", border:"none", outline:"none",
-                padding:"10px 14px", cursor:"pointer", fontFamily:"var(--font-normal)", fontSize:14,
-                background: opt === value ? "rgba(0,54,221,0.06)" : "transparent",
-                color: opt === value ? "var(--colour-primaryblue-600,#0029b0)" : "var(--text-body)",
-                fontWeight: opt === value ? 600 : 400,
-              }}>{opt}</button>
+              <button key={opt} onClick={() => pick(opt)}
+                onMouseEnter={() => setHovOpt(opt)}
+                onMouseLeave={() => setHovOpt(null)}
+                style={{
+                  display:"block", width:"100%", textAlign:"left", border:"none", outline:"none",
+                  padding:"10px 14px", cursor:"pointer", fontFamily:"var(--font-normal)", fontSize:14,
+                  background: opt === value ? "rgba(0,54,221,0.06)" : hovOpt === opt ? "rgba(20,22,24,0.04)" : "transparent",
+                  color: opt === value ? "var(--colour-primaryblue-600,#0029b0)" : "var(--text-body)",
+                  fontWeight: opt === value ? 600 : 400,
+                  transition:"background .12s",
+                }}>{opt}</button>
             ))}
           </div>
         )}
@@ -1131,13 +1136,16 @@ export default function ShowcasePage() {
         {/* Brand tab selector */}
         <div style={{ display:"flex", gap:8, marginBottom:32, justifyContent:"center" }}>
           {CLIENT_THEMES.map(t=>(
-            <button key={t.id} onClick={()=>setBrandTab(t.id)} style={{
-              padding:"9px 20px", borderRadius:"var(--radius-pill)", border:"none", cursor:"pointer",
-              fontFamily:"var(--font-normal)", fontSize:13, fontWeight:600,
-              background: brandTab===t.id ? t.brandColor : "rgba(255,255,255,0.08)",
-              color: brandTab===t.id ? "#fff" : "rgba(255,255,255,0.55)",
-              transition:"all .2s",
-            }}>{t.name}</button>
+            <button key={t.id} onClick={()=>setBrandTab(t.id)}
+              onMouseEnter={e=>{if(brandTab!==t.id)(e.currentTarget as HTMLButtonElement).style.background="rgba(255,255,255,0.15)";}}
+              onMouseLeave={e=>{if(brandTab!==t.id)(e.currentTarget as HTMLButtonElement).style.background="rgba(255,255,255,0.08)";}}
+              style={{
+                padding:"9px 20px", borderRadius:"var(--radius-pill)", border:"none", cursor:"pointer",
+                fontFamily:"var(--font-normal)", fontSize:13, fontWeight:600,
+                background: brandTab===t.id ? t.brandColor : "rgba(255,255,255,0.08)",
+                color: brandTab===t.id ? "#fff" : "rgba(255,255,255,0.55)",
+                transition:"background .18s, color .18s",
+              }}>{t.name}</button>
           ))}
         </div>
 
@@ -1364,9 +1372,9 @@ export default function ShowcasePage() {
         {collapsed?(
           <a href="/" className="sc-nav-item sc-rail-icon" title="Back to home" style={{ marginBottom:8 }}>{NAV[0].icon}</a>
         ):(
-          <div style={{ marginBottom:20 }}>
-            <img src="/assets/logo/sandhata-logo.svg" alt="Sandhata" style={{ height:26 }}/>
-            <p style={{ fontSize:11, color:"rgba(20,22,24,0.36)", fontFamily:"var(--font-mono)", margin:"8px 0 0" }}>v1.0-stable</p>
+          <div style={{ marginBottom:8 }}>
+            <img src="/assets/logo/sandhata-logo.svg" alt="Sandhata" style={{ height:11 }}/>
+            <p style={{ fontSize:9, color:"rgba(20,22,24,0.36)", fontFamily:"var(--font-mono)", margin:"4px 0 0" }}>v1.0-stable</p>
           </div>
         )}
         {!collapsed&&<p className="sc-cap">Navigate</p>}

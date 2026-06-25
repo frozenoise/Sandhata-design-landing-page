@@ -804,7 +804,7 @@ button, a[href], input, .acc-btn, .nl { transition: background .2s ease, color .
   color: rgba(20,22,24,0.52); font: 500 13px/1 var(--font-normal); white-space: nowrap;
   transition: background .15s, color .15s;
 }
-.sc-nav-item:hover { background: rgba(20,22,24,0.06); color: rgba(20,22,24,0.90); }
+.sc-nav-item:hover { background: rgba(20,22,24,0.10); color: rgba(20,22,24,0.90); }
 .sc-nav-item.on { background: rgba(20,22,24,0.08); color: rgba(20,22,24,0.95); font-weight: 600; }
 .sc-nav-item svg { flex-shrink: 0; }
 .sc-rail-icon { justify-content: center; padding: 11px 0; }
