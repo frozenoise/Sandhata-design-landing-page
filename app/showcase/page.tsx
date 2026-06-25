@@ -619,7 +619,9 @@ export default function ShowcasePage() {
   const [toast, setToast] = React.useState<string|null>(null);
   const [envVal, setEnvVal] = React.useState("");
   const [atomicP, setAtomicP] = React.useState(0);
-  const foundRef = React.useRef<HTMLDivElement>(null);
+  const foundRef  = React.useRef<HTMLDivElement>(null);
+  const canvasRef = React.useRef<HTMLCanvasElement>(null);
+  const apRef     = React.useRef(0);
 
   const showToast = React.useCallback((msg: string) => {
     setToast(msg);
@@ -657,6 +659,76 @@ export default function ShowcasePage() {
     };
     el.addEventListener("scroll", onScroll, { passive:true });
     return () => el.removeEventListener("scroll", onScroll);
+  }, []);
+
+  // Mirror atomicP into a ref so the canvas rAF loop can read it without re-mounting
+  React.useEffect(() => { apRef.current = atomicP; }, [atomicP]);
+
+  // Canvas particle system — dots converge to form the atoms (input + button) during transition
+  React.useEffect(() => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return;
+    const dpr = Math.min(window.devicePixelRatio || 1, 2);
+    type Dot = { sx:number; sy:number; tx:number; ty:number; size:number; a:number };
+    let dots: Dot[] = [];
+
+    const init = () => {
+      const W = canvas.offsetWidth, H = canvas.offsetHeight;
+      canvas.width  = W * dpr; canvas.height = H * dpr;
+      ctx.scale(dpr, dpr);
+      const cx = W / 2, cy = H / 2;
+      const iW = 280, iH = 44;
+      const ix = cx - iW / 2, iy = cy - 54;
+      const bW = 280, bH = 44;
+      const bx = cx - bW / 2, by = iy + iH + 18;
+      const pts: {tx:number; ty:number}[] = [];
+      const peri = 2 * (iW + iH);
+      for (let k = 0; k < 130; k++) {
+        const t = (k / 130) * peri;
+        if      (t < iW)           pts.push({tx: ix + t,              ty: iy});
+        else if (t < iW + iH)      pts.push({tx: ix + iW,             ty: iy + (t - iW)});
+        else if (t < 2 * iW + iH)  pts.push({tx: ix + iW - (t - iW - iH), ty: iy + iH});
+        else                        pts.push({tx: ix,                  ty: iy + iH - (t - 2 * iW - iH)});
+      }
+      for (let k = 0; k < 8; k++) pts.push({tx: ix + 14, ty: iy + 8 + k * 3.5});
+      for (let k = 0; k < 110; k++) pts.push({tx: bx + Math.random() * bW, ty: by + Math.random() * bH});
+      dots = pts.map(p => ({
+        sx: cx + (Math.random() - 0.5) * W * 0.85,
+        sy: cy + (Math.random() - 0.5) * H * 0.75,
+        tx: p.tx, ty: p.ty,
+        size: 1 + Math.random() * 1.5,
+        a: 0.45 + Math.random() * 0.55,
+      }));
+    };
+
+    init();
+    window.addEventListener("resize", init);
+
+    const ease = (t: number) => t < 0.5 ? 2 * t * t : -1 + (4 - 2 * t) * t;
+    let raf: number;
+    const draw = () => {
+      const p = apRef.current;
+      const W = canvas.offsetWidth, H = canvas.offsetHeight;
+      ctx.clearRect(0, 0, W, H);
+      if (p > 0.12 && p < 0.44) {
+        const conv = ease(Math.min(1, Math.max(0, (p - 0.15) / 0.18)));
+        const fadeOut = p > 0.36 ? Math.max(0, 1 - (p - 0.36) / 0.06) : 1;
+        ctx.fillStyle = "#5584F5";
+        for (const d of dots) {
+          const x = d.sx + (d.tx - d.sx) * conv;
+          const y = d.sy + (d.ty - d.sy) * conv;
+          ctx.globalAlpha = d.a * conv * fadeOut;
+          ctx.beginPath();
+          ctx.arc(x, y, d.size, 0, Math.PI * 2);
+          ctx.fill();
+        }
+      }
+      raf = requestAnimationFrame(draw);
+    };
+    draw();
+    return () => { cancelAnimationFrame(raf); window.removeEventListener("resize", init); };
   }, []);
 
   const accent    = ACCENTS[accentIdx];
@@ -1179,202 +1251,228 @@ export default function ShowcasePage() {
     </section>
   );
 
-  /* ─ Foundations — horizontal sticky scroll ──────────── */
-  const visibleAlerts = ([
-    { id:"a1", tone:"info" as const,    title:"System update", body:"Maintenance Sunday 2–4 AM UTC." },
-    { id:"a2", tone:"success" as const, title:"Deployed!",     body:"v2.4.1 is live on production." },
-    { id:"a3", tone:"warning" as const, title:"Token drift",   body:"3 tokens diverged from Figma." },
-    { id:"a4", tone:"error" as const,   title:"Build failed",  body:"TypeScript errors in Button.d.ts." },
-  ]).filter(a=>!dismissed.includes(a.id));
+  /* ─ Foundations — single morphing view ──────────── */
+  const c01 = (v: number) => Math.max(0, Math.min(1, v));
+  const fi  = (p: number, s: number, e: number) => c01((p - s) / (e - s));
+  const fo  = (p: number, s: number, e: number) => 1 - fi(p, s, e);
+  const fr  = (p: number, is: number, ie: number, os: number, oe: number) => fi(p,is,ie) * fo(p,os,oe);
 
-  const focusIndex = atomicP * 5;
-  const activePanel = Math.min(5, Math.round(focusIndex));
-  const AP_STEPS = ["Sub-atomic","Atoms","Molecules","Organisms","Templates","Pages"];
-  const AP_NUMS  = ["01","02","03","04","05","06"];
-  const AP_SUBS  = [
-    "Design tokens — the invisible foundation that unifies every surface.",
-    "The smallest, indivisible units — each one a single, perfectly formed purpose.",
-    "Atoms combined into simple, functional units that work toward one goal.",
-    "Complete, reusable UI patterns — complex sections that form meaningful interfaces.",
-    "Page-level structure — organisms arranged into reusable layout patterns.",
-    "Complete, production-ready interfaces — where every layer comes together.",
+  const STAGES = [
+    { name:"Sub-atomic", num:"01", sub:"Design tokens — the invisible foundation that unifies every surface." },
+    { name:"Atoms",      num:"02", sub:"The smallest, indivisible units — each one a single, perfectly formed purpose." },
+    { name:"Molecules",  num:"03", sub:"Atoms combined into simple, functional units that work toward one goal." },
+    { name:"Organisms",  num:"04", sub:"Complete, reusable UI patterns built from molecules." },
+    { name:"Templates",  num:"05", sub:"Page structure — organisms arranged into reusable layout patterns." },
   ];
 
-  /*
-   * Weight model: active panel = 2, context panels = 1 (equal), next panel grows 0→1.
-   * This keeps past panels at roughly equal "context" sizes while the active one dominates.
-   * Final state (all 6 visible): Pages 2/7 ≈ 29%, each past ≈ 14% — matching the reference.
-   */
-  const getFlexW = (i: number): number => {
-    const dist = focusIndex - i;         // positive = in the past, negative = future
-    if (dist < -1) return 0.001;         // far future: hidden
-    if (dist < 0)  return Math.max(0.001, dist + 1); // near-next: 0 → 1
-    if (dist < 1)  return 2 - dist;     // active → context: 2 → 1
-    return 1;                            // past context: fixed weight
-  };
+  // Stage heading crossfades
+  const hOps = [
+    fr(atomicP, 0, 0.04,  0.16, 0.24),
+    fr(atomicP, 0.16, 0.26, 0.44, 0.52),
+    fr(atomicP, 0.44, 0.54, 0.66, 0.74),
+    fr(atomicP, 0.66, 0.76, 0.88, 0.94),
+    fi(atomicP, 0.88, 0.96),
+  ];
+  // Stage "reached" thresholds for progress dots
+  const dotReached = [0, 0.20, 0.48, 0.70, 0.92];
 
-  /* ── Panel content: dark-bg progressive nesting ─────────────────────── */
-  const dInput = (placeholder: string, filled = false) => (
-    <div style={{ border:"1px solid rgba(255,255,255,0.18)", borderRadius:6, padding:"7px 10px",
-      color: filled ? "rgba(255,255,255,0.80)" : "rgba(255,255,255,0.0)",
-      fontSize:12, fontFamily:"var(--font-normal)", background:"rgba(255,255,255,0.05)",
-      width:"100%", boxSizing:"border-box" as const, height:34 }}>
-      {filled ? placeholder : ""}
-    </div>
-  );
-  const dBtn = (label: string) => (
-    <div style={{ background:"var(--colour-primaryblue-500,#0036DD)", borderRadius:6, padding:"9px 14px",
-      color:"#fff", fontSize:12, fontWeight:600, textAlign:"center" as const, fontFamily:"var(--font-bold)" }}>
-      {label}
-    </div>
-  );
-  const dLbl = (text: string) => (
-    <p style={{ color:"rgba(255,255,255,0.60)", fontSize:11, fontFamily:"var(--font-normal)", margin:"0 0 4px" }}>{text}</p>
-  );
-  const dDevice = (title: string, rows: { lbl:string; val:string }[], btn: string, footer: string) => (
-    <div style={{ border:"1.5px solid rgba(255,255,255,0.22)", borderRadius:16, padding:"12px 11px",
-      display:"flex", flexDirection:"column" as const, gap:6, width:164, flexShrink:0 }}>
-      <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", marginBottom:2 }}>
-        <div style={{ width:8, height:8, borderRadius:"50%", background:"var(--colour-primaryblue-500,#0036DD)" }}/>
-        <span style={{ color:"rgba(255,255,255,0.45)", fontSize:15, lineHeight:1 }}>≡</span>
-      </div>
-      <p style={{ color:"#fff", fontSize:11, fontWeight:700, fontFamily:"var(--font-bold)", textAlign:"center" as const, margin:0 }}>{title}</p>
-      {rows.map((r,j) => (
-        <div key={j}>
-          {r.lbl && <p style={{ color:"rgba(255,255,255,0.38)", fontSize:7, margin:"0 0 2px", fontFamily:"var(--font-normal)" }}>{r.lbl}</p>}
-          <div style={{ border:"1px solid rgba(255,255,255,0.14)", borderRadius:4, padding:"4px 7px",
-            color: r.val ? "rgba(255,255,255,0.75)" : "transparent", fontSize:9, fontFamily:"var(--font-normal)" }}>{r.val || " "}</div>
-        </div>
-      ))}
-      <div style={{ background:"var(--colour-primaryblue-500,#0036DD)", borderRadius:4, padding:"5px 7px",
-        color:"#fff", fontSize:9, textAlign:"center" as const, fontFamily:"var(--font-normal)" }}>{btn}</div>
-      <p style={{ color:"rgba(255,255,255,0.20)", fontSize:6.5, textAlign:"center" as const, margin:"2px 0 0", fontFamily:"var(--font-normal)" }}>{footer}</p>
-    </div>
-  );
-
-  /* P0 — Sub-atomic: Venn diagram of token categories */
-  const panelP0 = (
-    <svg viewBox="0 0 200 200" style={{ width:"min(100%,min(100%,200px))", height:"min(100%,200px)" }}>
-      <circle cx="65" cy="65" r="60" fill="rgba(255,255,255,0.02)" stroke="rgba(255,255,255,0.20)" strokeWidth="1"/>
-      <circle cx="135" cy="65" r="60" fill="rgba(255,255,255,0.02)" stroke="rgba(255,255,255,0.20)" strokeWidth="1"/>
-      <circle cx="65" cy="135" r="60" fill="rgba(255,255,255,0.02)" stroke="rgba(255,255,255,0.20)" strokeWidth="1"/>
-      <circle cx="135" cy="135" r="60" fill="rgba(255,255,255,0.02)" stroke="rgba(255,255,255,0.20)" strokeWidth="1"/>
-      <text x="37" y="49" textAnchor="middle" fill="rgba(255,255,255,0.90)" fontSize="22" fontWeight="bold" fontFamily="serif">T</text>
-      <text x="37" y="61" textAnchor="middle" fill="rgba(255,255,255,0.42)" fontSize="7.5">Typography</text>
-      <rect x="126" y="38" width="18" height="12" rx="2" fill="rgba(100,120,220,0.70)"/>
-      <text x="163" y="61" textAnchor="middle" fill="rgba(255,255,255,0.42)" fontSize="7.5">Shadows</text>
-      <circle cx="30" cy="148" r="5" fill="#ff6b6b"/><circle cx="40" cy="148" r="5" fill="#ffd93d"/><circle cx="35" cy="140" r="5" fill="#6bcb77"/>
-      <text x="37" y="164" textAnchor="middle" fill="rgba(255,255,255,0.42)" fontSize="7.5">Color Palette</text>
-      <line x1="150" y1="144" x2="176" y2="144" stroke="rgba(220,80,80,0.85)" strokeWidth="2.5"/>
-      <line x1="150" y1="151" x2="176" y2="151" stroke="rgba(220,80,80,0.85)" strokeWidth="2.5"/>
-      <text x="163" y="164" textAnchor="middle" fill="rgba(255,255,255,0.42)" fontSize="7.5">Spacing</text>
-    </svg>
-  );
-
-  /* P1 — Atoms: bare input + button */
-  const panelP1 = (
-    <div style={{ display:"flex", flexDirection:"column", gap:12, padding:"0 18px", width:"100%" }}>
-      <p style={{ color:"rgba(255,255,255,0.30)", fontSize:9, fontFamily:"var(--font-mono)", letterSpacing:".08em", margin:0 }}>input labels</p>
-      {dInput("")}
-      {dBtn("Submit")}
-    </div>
-  );
-
-  /* P2 — Molecules: labeled input (atom + label = molecule) */
-  const panelP2 = (
-    <div style={{ display:"flex", flexDirection:"column", gap:12, padding:"0 18px", width:"100%" }}>
-      <div style={{ display:"flex", flexDirection:"column", gap:3 }}>
-        {dLbl("Email")}
-        {dInput("name@email.com")}
-      </div>
-      {dBtn("Submit")}
-    </div>
-  );
-
-  /* P3 — Organisms: two molecules + action = login form */
-  const panelP3 = (
-    <div style={{ display:"flex", flexDirection:"column", gap:10, padding:"0 18px", width:"100%" }}>
-      <div>{dLbl("Email")}{dInput("name@email.com")}</div>
-      <div>{dLbl("Password")}{dInput("••••••••••••", true)}</div>
-      {dBtn("Login")}
-    </div>
-  );
-
-  /* P4 — Templates: organism in a device wireframe */
-  const panelP4 = dDevice("Form", [{ lbl:"First field", val:"" },{ lbl:"Last field", val:"" }], "Call to action", "Company Name   ·   1/5   ·   1/5   ·   1/5");
-
-  /* P5 — Pages: filled template = complete interface */
-  const panelP5 = dDevice("Login", [{ lbl:"Email", val:"rohan@email.com" },{ lbl:"Password", val:"••••••" }], "Login", "Rohan   ·   Status   ·   Today   ·   Today");
-
-  const panelContents = [panelP0, panelP1, panelP2, panelP3, panelP4, panelP5];
+  // Content layer opacities
+  const subOp    = fr(atomicP, 0, 0.04,  0.16, 0.25);
+  const atomsOp  = fr(atomicP, 0.36, 0.44, 0.50, 0.58);
+  const molOp    = fr(atomicP, 0.50, 0.58, 0.66, 0.74);
+  const orgOp    = fr(atomicP, 0.66, 0.76, 0.88, 0.94);
+  const orgPwOp  = fi(atomicP, 0.72, 0.80);
+  const orgBtnOp = fi(atomicP, 0.76, 0.84);
+  const tplOp    = fi(atomicP, 0.88, 0.96);
 
   const systemBand = (
-    <section id="sc-foundations" ref={foundRef} style={{ height:"600vh", position:"relative", background:"#0A0B0D" }}>
+    <section id="sc-foundations" ref={foundRef} style={{ height:"700vh", position:"relative", background:"#0A0B0D" }}>
+      <style>{`@keyframes sc-cursor{0%,100%{opacity:1}50%{opacity:0}}`}</style>
       <div style={{ position:"sticky", top:0, height:"100vh", overflow:"hidden" }}>
 
-        {/* ── Compact heading ── */}
-        <div style={{ position:"absolute", top:32, left:lpad, right:48, zIndex:10, pointerEvents:"none" }}>
-          <div style={{ display:"flex", alignItems:"baseline", gap:12, flexWrap:"wrap" }}>
-            <h2 style={{ fontFamily:"var(--font-bold)", fontSize:38, fontWeight:800, color:"#fff",
-              margin:0, letterSpacing:"-1.5px", lineHeight:1 }}>
-              {AP_STEPS[activePanel]}
-            </h2>
-            <span style={{ fontFamily:"var(--font-mono)", fontSize:9, color:"rgba(255,255,255,0.28)",
-              letterSpacing:".10em", textTransform:"uppercase" }}>
-              {AP_NUMS[activePanel]} / Atomic Design
-            </span>
-          </div>
-          <p style={{ fontFamily:"var(--font-normal)", fontSize:12, color:"rgba(255,255,255,0.38)",
-            margin:"6px 0 10px", maxWidth:460 }}>
-            {AP_SUBS[activePanel]}
-          </p>
-          <div style={{ display:"flex", gap:6 }}>
-            {AP_STEPS.map((_,i) => (
-              <div key={i} style={{
-                width: i <= activePanel ? 16 : 5, height:3, borderRadius:2, transition:"all .22s",
-                background: i <= activePanel ? "var(--colour-primaryblue-400,#2255FF)" : "rgba(255,255,255,0.14)",
-              }}/>
-            ))}
-          </div>
-        </div>
+        {/* Canvas for dot-convergence particle effect */}
+        <canvas ref={canvasRef} style={{ position:"absolute", inset:0, width:"100%", height:"100%",
+          pointerEvents:"none", zIndex:1 }}/>
 
-        {/* ── Concentric arcs — centered at left edge, light up per level ── */}
-        <div style={{ position:"absolute", left:lpad, right:0, top:112, bottom:20, overflow:"hidden", pointerEvents:"none", zIndex:0 }}>
-          {[1,2,3,4,5,6].map(i => (
-            <div key={i} style={{
-              position:"absolute", left:0, top:"50%",
-              width: i * 300, height: i * 300,
-              marginLeft: -(i * 300), marginTop: -(i * 150),
-              borderRadius:"50%",
-              border:`1px solid rgba(255,255,255,${i <= activePanel + 1 ? 0.08 : 0.025})`,
-              transition:"border-color .4s",
-            }}/>
+        {/* Stage headings — crossfade in place */}
+        <div style={{ position:"absolute", top:64, left:0, right:0, zIndex:5, pointerEvents:"none" }}>
+          {STAGES.map((s,i) => (
+            <div key={i} style={{ position:"absolute", left:0, right:0, textAlign:"center",
+              opacity: hOps[i], pointerEvents:"none" }}>
+              <p style={{ fontFamily:"var(--font-mono)", fontSize:10,
+                color:"var(--colour-primaryblue-400,#2255FF)",
+                letterSpacing:".14em", textTransform:"uppercase" as const, margin:"0 0 10px" }}>
+                {s.num} / Atomic Design
+              </p>
+              <h2 style={{ fontFamily:"var(--font-bold)", fontSize:52, fontWeight:800, color:"#fff",
+                margin:0, letterSpacing:"-2px", lineHeight:1 }}>
+                {s.name}
+              </h2>
+              <p style={{ fontFamily:"var(--font-normal)", fontSize:13, color:"rgba(255,255,255,0.38)",
+                margin:"10px auto 0", maxWidth:380 }}>
+                {s.sub}
+              </p>
+            </div>
           ))}
         </div>
 
-        {/* ── Flex panels — progressive content nesting ── */}
-        <div style={{ position:"absolute", left:lpad, right:0, top:112, bottom:20, display:"flex", gap:3, zIndex:1 }}>
-          {[0,1,2,3,4,5].map(i => (
-            <div key={i} style={{
-              flex: getFlexW(i), height:"100%", minWidth:0,
-              display:"flex", flexDirection:"column", gap:6, overflow:"hidden",
-            }}>
-              {/* Panel name */}
-              <p style={{
-                fontFamily: i === activePanel ? "var(--font-bold)" : "var(--font-normal)",
-                fontSize: i === activePanel ? 12 : 10,
-                fontWeight: i === activePanel ? 800 : 400,
-                color: i === activePanel ? "#fff" : "rgba(255,255,255,0.32)",
-                textAlign:"center", margin:0, flexShrink:0, letterSpacing:"-0.2px",
-                transition:"color .2s, font-size .2s",
-              }}>
-                {AP_STEPS[i]}
-              </p>
-              {/* Content — dark bg, centered */}
-              <div style={{ flex:1, minHeight:0, display:"flex", alignItems:"center", justifyContent:"center", overflow:"hidden" }}>
-                {panelContents[i]}
+        {/* Content layers — all centered, stacked, fade in/out */}
+        <div style={{ position:"absolute", inset:0, display:"flex",
+          alignItems:"center", justifyContent:"center", zIndex:2 }}>
+
+          {/* ── Sub-atomic: floating text tokens ── */}
+          <div style={{ position:"absolute", opacity:subOp, pointerEvents:"none",
+            display:"flex", flexDirection:"column", alignItems:"center", gap:14 }}>
+            <span style={{ fontFamily:"var(--font-bold)", fontSize:72, fontWeight:800,
+              color:"rgba(255,255,255,0.85)", letterSpacing:"-3px", lineHeight:1 }}>Aa</span>
+            <div style={{ display:"flex", gap:28, alignItems:"baseline" }}>
+              <span style={{ fontFamily:"var(--font-bold)", fontSize:24, color:"rgba(255,255,255,0.65)" }}>Heading</span>
+              <span style={{ fontFamily:"var(--font-normal)", fontSize:15, color:"rgba(255,255,255,0.42)" }}>Body text</span>
+              <span style={{ fontFamily:"var(--font-normal)", fontSize:11, color:"rgba(255,255,255,0.28)" }}>Caption</span>
+            </div>
+            <div style={{ display:"flex", gap:10 }}>
+              {["50","200","400","500","600","700"].map(s=>(
+                <div key={s} style={{ width:32, height:32, borderRadius:8,
+                  background:`var(--colour-primaryblue-${s})`, opacity:0.85 }}/>
+              ))}
+            </div>
+            <div style={{ display:"flex", gap:18, marginTop:4 }}>
+              {[4,8,16,24,32,48].map(sp=>(
+                <div key={sp} style={{ display:"flex", flexDirection:"column", alignItems:"center", gap:3 }}>
+                  <div style={{ width:sp, height:3, background:"rgba(255,255,255,0.22)", borderRadius:2 }}/>
+                  <span style={{ fontFamily:"var(--font-mono)", fontSize:8, color:"rgba(255,255,255,0.22)" }}>{sp}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* ── Atoms: bare input outline + blinking cursor + button ── */}
+          <div style={{ position:"absolute", opacity:atomsOp, pointerEvents:"none",
+            display:"flex", flexDirection:"column", alignItems:"center", gap:18 }}>
+            <div style={{ width:280, height:44, border:"1.5px solid rgba(255,255,255,0.38)",
+              borderRadius:8, display:"flex", alignItems:"center", paddingLeft:12 }}>
+              <span style={{ width:2, height:20, background:"rgba(255,255,255,0.75)", borderRadius:1,
+                display:"block", animation:"sc-cursor 1s step-start infinite" }}/>
+            </div>
+            <div style={{ width:280, height:44, background:"var(--colour-primaryblue-500,#0036DD)",
+              borderRadius:8, display:"flex", alignItems:"center", justifyContent:"center" }}>
+              <span style={{ color:"#fff", fontSize:14, fontWeight:700, fontFamily:"var(--font-bold)" }}>Submit</span>
+            </div>
+          </div>
+
+          {/* ── Molecules: label + input (= labeled input) + button ── */}
+          <div style={{ position:"absolute", opacity:molOp, pointerEvents:"none",
+            display:"flex", flexDirection:"column", gap:16, width:280 }}>
+            <div>
+              <p style={{ fontFamily:"var(--font-normal)", fontSize:13, color:"rgba(255,255,255,0.65)",
+                margin:"0 0 6px" }}>Email</p>
+              <div style={{ height:44, border:"1.5px solid rgba(255,255,255,0.35)", borderRadius:8,
+                display:"flex", alignItems:"center", paddingLeft:12, boxSizing:"border-box" as const }}>
+                <span style={{ fontFamily:"var(--font-normal)", fontSize:13, color:"rgba(255,255,255,0.30)" }}>
+                  name@email.com
+                </span>
               </div>
             </div>
+            <div style={{ height:44, background:"var(--colour-primaryblue-500,#0036DD)",
+              borderRadius:8, display:"flex", alignItems:"center", justifyContent:"center" }}>
+              <span style={{ color:"#fff", fontSize:14, fontWeight:700, fontFamily:"var(--font-bold)" }}>Submit</span>
+            </div>
+          </div>
+
+          {/* ── Organisms: email molecule + password molecule + login button ── */}
+          <div style={{ position:"absolute", opacity:orgOp, pointerEvents:"none",
+            display:"flex", flexDirection:"column", gap:14, width:280 }}>
+            <div>
+              <p style={{ fontFamily:"var(--font-normal)", fontSize:13, color:"rgba(255,255,255,0.65)",
+                margin:"0 0 6px" }}>Email</p>
+              <div style={{ height:44, border:"1.5px solid rgba(255,255,255,0.35)", borderRadius:8,
+                display:"flex", alignItems:"center", paddingLeft:12, boxSizing:"border-box" as const }}>
+                <span style={{ fontFamily:"var(--font-normal)", fontSize:13, color:"rgba(255,255,255,0.50)" }}>
+                  name@email.com
+                </span>
+              </div>
+            </div>
+            <div style={{ opacity:orgPwOp }}>
+              <p style={{ fontFamily:"var(--font-normal)", fontSize:13, color:"rgba(255,255,255,0.65)",
+                margin:"0 0 6px" }}>Password</p>
+              <div style={{ height:44, border:"1.5px solid rgba(255,255,255,0.35)", borderRadius:8,
+                display:"flex", alignItems:"center", paddingLeft:12, boxSizing:"border-box" as const }}>
+                <span style={{ fontFamily:"var(--font-normal)", fontSize:13, color:"rgba(255,255,255,0.50)" }}>
+                  ••••••••••
+                </span>
+              </div>
+            </div>
+            <div style={{ height:44, background:"var(--colour-primaryblue-500,#0036DD)",
+              borderRadius:8, display:"flex", alignItems:"center", justifyContent:"center",
+              opacity:orgBtnOp }}>
+              <span style={{ color:"#fff", fontSize:14, fontWeight:700, fontFamily:"var(--font-bold)" }}>Login</span>
+            </div>
+          </div>
+
+          {/* ── Templates: page chrome — nav + avatar + form + footer ── */}
+          <div style={{ position:"absolute", opacity:tplOp, pointerEvents:"none",
+            inset:0, display:"flex", flexDirection:"column" }}>
+            {/* Top nav bar */}
+            <div style={{ display:"flex", alignItems:"center", padding:"20px 40px",
+              borderBottom:"1px solid rgba(255,255,255,0.08)" }}>
+              <div style={{ width:34, height:34, borderRadius:"50%",
+                background:"var(--colour-primaryblue-500,#0036DD)",
+                display:"flex", alignItems:"center", justifyContent:"center", flexShrink:0 }}>
+                <span style={{ color:"#fff", fontSize:13, fontWeight:700, fontFamily:"var(--font-bold)" }}>R</span>
+              </div>
+              <div style={{ flex:1 }}/>
+              <div style={{ display:"flex", flexDirection:"column", gap:5 }}>
+                {[0,1,2].map(k=>(
+                  <div key={k} style={{ width:22, height:2, background:"rgba(255,255,255,0.55)", borderRadius:1 }}/>
+                ))}
+              </div>
+            </div>
+            {/* Center: login form */}
+            <div style={{ flex:1, display:"flex", alignItems:"center", justifyContent:"center" }}>
+              <div style={{ display:"flex", flexDirection:"column", gap:14, width:280 }}>
+                <h3 style={{ fontFamily:"var(--font-bold)", fontSize:24, fontWeight:800,
+                  color:"#fff", margin:"0 0 8px", textAlign:"center" as const }}>Login</h3>
+                {(["Email","Password"] as const).map((lbl,li)=>(
+                  <div key={lbl}>
+                    <p style={{ fontFamily:"var(--font-normal)", fontSize:13, color:"rgba(255,255,255,0.60)",
+                      margin:"0 0 6px" }}>{lbl}</p>
+                    <div style={{ height:44, border:"1.5px solid rgba(255,255,255,0.22)", borderRadius:8,
+                      display:"flex", alignItems:"center", paddingLeft:12, boxSizing:"border-box" as const }}>
+                      <span style={{ fontFamily:"var(--font-normal)", fontSize:13, color:"rgba(255,255,255,0.35)" }}>
+                        {li===0 ? "name@email.com" : "••••••••••"}
+                      </span>
+                    </div>
+                  </div>
+                ))}
+                <div style={{ height:44, background:"var(--colour-primaryblue-500,#0036DD)", borderRadius:8,
+                  display:"flex", alignItems:"center", justifyContent:"center" }}>
+                  <span style={{ color:"#fff", fontSize:14, fontWeight:700, fontFamily:"var(--font-bold)" }}>Submit</span>
+                </div>
+              </div>
+            </div>
+            {/* Footer menu */}
+            <div style={{ display:"flex", justifyContent:"center", gap:48, padding:"20px",
+              borderTop:"1px solid rgba(255,255,255,0.08)" }}>
+              {["Home","Profile","Settings","About"].map(m=>(
+                <span key={m} style={{ fontFamily:"var(--font-normal)", fontSize:12,
+                  color:"rgba(255,255,255,0.38)" }}>{m}</span>
+              ))}
+            </div>
+          </div>
+
+        </div>{/* end content layers */}
+
+        {/* Progress dots */}
+        <div style={{ position:"absolute", bottom:32, left:0, right:0, zIndex:10,
+          display:"flex", justifyContent:"center", gap:6, pointerEvents:"none" }}>
+          {STAGES.map((_,i) => (
+            <div key={i} style={{
+              width: hOps[i] > 0.5 ? 18 : 5, height:3, borderRadius:2,
+              transition:"width .25s, background .25s",
+              background: atomicP > dotReached[i]
+                ? "var(--colour-primaryblue-400,#2255FF)"
+                : "rgba(255,255,255,0.14)",
+            }}/>
           ))}
         </div>
 
