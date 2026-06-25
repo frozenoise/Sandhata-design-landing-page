@@ -63,7 +63,8 @@ body { background: #FEFAF7; overflow-x: hidden; font-family: var(--font-normal);
 }
 /* aurora — wide sunrise arc rising from just below the hero bottom */
 .hero-aurora {
-  position: absolute; inset: 0; z-index: 0; pointer-events: none;
+  /* Extend 20% past each side so scaleX(0.90) still covers 108% → no edge gaps */
+  position: absolute; top: 0; bottom: 0; left: -20%; right: -20%; z-index: 0; pointer-events: none;
   background:
     radial-gradient(300% 55% at 50% 115%,
       rgba(255,148,0,0.90)  0%,
@@ -136,6 +137,22 @@ body { background: #FEFAF7; overflow-x: hidden; font-family: var(--font-normal);
   max-width: 1232px; margin: 56px auto 0;
   padding: 0 40px;
 }
+/* Warm sunrise glow centred behind the browser/video frame */
+.browser-glow {
+  position: absolute; z-index: 0; pointer-events: none;
+  top: -60%; left: -25%; right: -25%; height: 140%;
+  background: radial-gradient(ellipse 70% 55% at 50% 58%,
+    rgba(255,148,0,0.55)  0%,
+    rgba(255,182,56,0.35) 18%,
+    rgba(255,210,120,0.18) 38%,
+    rgba(252,190,168,0.08) 57%,
+    transparent 74%
+  );
+  transform-origin: 50% 50%;
+  animation: auroraSunrise 18s ease-in-out infinite alternate;
+}
+@media (prefers-reduced-motion: reduce) { .browser-glow { animation: none; } }
+
 .browser-cut {
   content: ''; position: absolute; z-index: 0;
   top: 50%; height: 320px;
@@ -822,6 +839,18 @@ button, a[href], input, .acc-btn, .nl { transition: background .2s ease, color .
   color: rgba(20,22,24,0.55); cursor: pointer; flex-shrink: 0; transition: background .15s, color .15s;
 }
 .sc-iconbtn:hover { background: rgba(20,22,24,0.08); color: rgba(20,22,24,0.90); }
+
+/* Dark surface: flip sidebar chrome to light-on-dark */
+.sc-sidebar.dark-mode .sc-glass-blur { background: rgba(10,10,30,0.55); }
+.sc-sidebar.dark-mode .sc-cap { color: rgba(255,255,255,0.35); }
+.sc-sidebar.dark-mode .sc-nav-item { color: rgba(255,255,255,0.50); }
+.sc-sidebar.dark-mode .sc-nav-item:hover { background: rgba(255,255,255,0.10); color: rgba(255,255,255,0.90); }
+.sc-sidebar.dark-mode .sc-nav-item.on { background: rgba(255,255,255,0.08); color: rgba(255,255,255,0.95); }
+.sc-sidebar.dark-mode .sc-divider { background: rgba(255,255,255,0.08); }
+.sc-sidebar.dark-mode .sc-homebtn { border-color: rgba(255,255,255,0.12); background: rgba(255,255,255,0.04); color: rgba(255,255,255,0.72); }
+.sc-sidebar.dark-mode .sc-homebtn:hover { background: rgba(255,255,255,0.08); border-color: rgba(255,255,255,0.20); }
+.sc-sidebar.dark-mode .sc-iconbtn { border-color: rgba(255,255,255,0.10); background: rgba(255,255,255,0.04); color: rgba(255,255,255,0.55); }
+.sc-sidebar.dark-mode .sc-iconbtn:hover { background: rgba(255,255,255,0.08); color: rgba(255,255,255,0.90); }
 .sc-cta {
   width: 100%; padding: 11px; border-radius: 11px; border: none; cursor: pointer;
   background: linear-gradient(135deg, #f68136 0%, #ff0083 52%, #5636f6 100%);
@@ -882,5 +911,11 @@ button, a[href], input, .acc-btn, .nl { transition: background .2s ease, color .
   border-radius: var(--radius-md); background: var(--surface-secondary,#f5f6f8);
 }
 @media (max-width: 900px) { .sc-brand-body { grid-template-columns: 1fr; } }
+
+/* ── Section separator gradient animation ── */
+@keyframes sep-grad {
+  0%, 100% { background-position: 0% 50%; }
+  50%       { background-position: 100% 50%; }
+}
 
 /* ── Atomic design section ── */

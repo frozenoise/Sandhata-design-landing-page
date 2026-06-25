@@ -161,17 +161,80 @@ const I_chevR  = <svg width="16" height="16" viewBox="0 0 24 24" fill="none" str
 const I_code   = <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>;
 
 /* ── Shared helpers ─────────────────────────────────────────── */
-function SectionSep({ from, to, lines = "#f0f0f0", borderClr = "rgba(0,0,0,0.08)" }: {
-  from: string; to: string; lines?: string; borderClr?: string;
-}) {
+const SEP_COLORS = ["#ffcc44","#f68136","#ff0083","#5636f6","#ff0083","#f68136","#ffcc44"];
+const SEP_PITCH  = 11;   // 1px line + 10px gap (in CSS px)
+const SEP_CYCLE  = 18000; // ms for one full gradient sweep (slow, matches aurora feel)
+
+function SectionSep({ bg }: { bg: string; dark?: boolean }) {
+  const cvRef = React.useRef<HTMLCanvasElement>(null);
+  React.useEffect(() => {
+    const cv = cvRef.current;
+    if (!cv) return;
+    let raf = 0;
+
+    /* Draw the separator every frame with a canvas.
+       Single gradient object → top/bottom borders and all diagonal lines share
+       the SAME colour at every x-position, with no CSS anti-aliasing width drift. */
+    const draw = () => {
+      const ctx = cv.getContext("2d");
+      if (!ctx) { raf = requestAnimationFrame(draw); return; }
+      const W = cv.offsetWidth, H = cv.offsetHeight;
+      ctx.clearRect(0, 0, W, H);
+
+      /* Sinusoidal sweep 0→1→0 (matches CSS ease-in-out feel) */
+      const raw  = (Date.now() % SEP_CYCLE) / SEP_CYCLE;
+      const t    = (1 - Math.cos(raw * 2 * Math.PI)) / 2;
+      /* Scroll parallax: read CSS variable written by main scroll handler */
+      const sepX = parseFloat(
+        cv.parentElement
+          ? getComputedStyle(cv.parentElement).getPropertyValue("--sep-x")
+          : ""
+      ) || 0;
+      const offset = t * W * 3 + sepX;
+
+      /* 7-stop gradient (4× element width, shifted by offset to animate) */
+      const g = ctx.createLinearGradient(-offset, 0, W * 4 - offset, 0);
+      SEP_COLORS.forEach((c, i) => g.addColorStop(i / (SEP_COLORS.length - 1), c));
+      ctx.fillStyle = g;
+
+      /* 1px top + bottom border — solid horizontal, same gradient */
+      ctx.fillRect(0, 0, W, 1);
+      ctx.fillRect(0, H - 1, W, 1);
+
+      /* Diagonal lines at 45° (= CSS 135deg): each line is a 1px-wide parallelogram.
+         Integer coords → each pixel row covered exactly once → perfectly uniform widths. */
+      for (let i = -H; i < W + H; i += SEP_PITCH) {
+        ctx.beginPath();
+        ctx.moveTo(i,         H);
+        ctx.lineTo(i + 1,     H);
+        ctx.lineTo(i + H + 1, 0);
+        ctx.lineTo(i + H,     0);
+        ctx.closePath();
+        ctx.fill();
+      }
+
+      raf = requestAnimationFrame(draw);
+    };
+
+    /* Retina-aware sizing: reset canvas px dimensions and re-apply DPR scale */
+    const setup = () => {
+      const dpr = window.devicePixelRatio || 1;
+      cv.width  = cv.offsetWidth  * dpr;
+      cv.height = cv.offsetHeight * dpr;
+      const ctx = cv.getContext("2d");
+      if (ctx) ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    };
+
+    const ro = new ResizeObserver(setup);
+    ro.observe(cv);
+    setup();
+    draw();
+    return () => { cancelAnimationFrame(raf); ro.disconnect(); };
+  }, []);
+
   return (
-    <div style={{ position:"relative", height:40, flexShrink:0, boxSizing:"border-box",
-      borderTop:`1px solid ${borderClr}`, borderBottom:`1px solid ${borderClr}` }}>
-      <div style={{ position:"absolute", inset:0,
-        background:`linear-gradient(to bottom, ${from} 50%, ${to} 50%)` }}/>
-      {/* 135° diagonal hatch — ui-layouts.com exact pattern: 1px lines on 10px pitch */}
-      <div style={{ position:"absolute", inset:0,
-        backgroundImage:`repeating-linear-gradient(135deg, ${lines} 0px 1px, transparent 1px 10px)` }}/>
+    <div style={{ height:56, flexShrink:0, position:"relative", background:bg }}>
+      <canvas ref={cvRef} style={{ position:"absolute", inset:0, width:"100%", height:"100%", display:"block" }}/>
     </div>
   );
 }
@@ -667,6 +730,8 @@ export default function ShowcasePage() {
         const rawP = (scrollTop - found.offsetTop) / (found.scrollHeight - viewH);
         setAtomicP(Math.max(0, Math.min(1, rawP)));
       }
+      /* Parallax for separators: shifts their gradient/hatch sideways as you scroll */
+      el.style.setProperty("--sep-x", `${(scrollTop * 0.05).toFixed(1)}px`);
     };
     el.addEventListener("scroll", onScroll, { passive:true });
     return () => el.removeEventListener("scroll", onScroll);
@@ -799,6 +864,9 @@ export default function ShowcasePage() {
   const mainVars  = { ...accent.vars, ...surfCfg.tokens, ...radiusCfg.vars } as React.CSSProperties;
   const sidebarW  = collapsed ? 76 : 256;
   const lpad      = isMobile ? 20 : sidebarW + 48;
+  /* Sidebar is dark when the main surface is dark → flip all sidebar text to light */
+  const sidebarDark = surface === "dark";
+  const si = (a: number) => sidebarDark ? `rgba(255,255,255,${a})` : `rgba(20,22,24,${a})`;
 
   const go = (id:string) => {
     setNavActive(id);
@@ -1259,15 +1327,15 @@ export default function ShowcasePage() {
   );
 
   const themesBand = (
-    <section id="sc-theming" style={{ background:"#000921" }}>
+    <section id="sc-theming" style={{ background:"#ffffff" }}>
       <div className="sc-band-content" style={{ ...bandPad({ paddingTop:56, paddingBottom:56 }) }}>
         <div style={{ textAlign:"center", marginBottom:44 }}>
           <p style={{ fontFamily:"var(--font-normal)", fontSize:11, fontWeight:700, letterSpacing:"0.10em",
-            textTransform:"uppercase", color:"rgba(255,255,255,0.28)", margin:"0 0 14px" }}>Multi-tenant Theming</p>
-          <h2 style={{ fontFamily:"var(--font-bold)", fontSize:38, fontWeight:700, color:"#fff", letterSpacing:"-1px", margin:"0 0 14px" }}>
+            textTransform:"uppercase", color:"rgba(0,0,0,0.35)", margin:"0 0 14px" }}>Multi-tenant Theming</p>
+          <h2 style={{ fontFamily:"var(--font-bold)", fontSize:38, fontWeight:700, color:"#0a0a14", letterSpacing:"-1px", margin:"0 0 14px" }}>
             One system.{" "}<span style={{ color:"#f68136" }}>Any brand.</span>
           </h2>
-          <p style={{ fontFamily:"var(--font-normal)", fontSize:15, color:"rgba(255,255,255,0.40)", maxWidth:520, margin:"0 auto 32px", lineHeight:1.6 }}>
+          <p style={{ fontFamily:"var(--font-normal)", fontSize:15, color:"rgba(0,0,0,0.52)", maxWidth:520, margin:"0 auto 32px", lineHeight:1.6 }}>
             The same components re-skinned per client by overriding one token ramp. Each client gets a bespoke dashboard layout. Zero forked code.
           </p>
         </div>
@@ -1276,13 +1344,13 @@ export default function ShowcasePage() {
         <div style={{ display:"flex", gap:8, marginBottom:32, justifyContent:"center" }}>
           {CLIENT_THEMES.map(t=>(
             <button key={t.id} onClick={()=>setBrandTab(t.id)}
-              onMouseEnter={e=>{if(brandTab!==t.id)(e.currentTarget as HTMLButtonElement).style.background="rgba(255,255,255,0.15)";}}
-              onMouseLeave={e=>{if(brandTab!==t.id)(e.currentTarget as HTMLButtonElement).style.background="rgba(255,255,255,0.08)";}}
+              onMouseEnter={e=>{if(brandTab!==t.id)(e.currentTarget as HTMLButtonElement).style.background="rgba(0,0,0,0.08)";}}
+              onMouseLeave={e=>{if(brandTab!==t.id)(e.currentTarget as HTMLButtonElement).style.background="rgba(0,0,0,0.05)";}}
               style={{
                 padding:"9px 20px", borderRadius:"var(--radius-pill)", border:"none", cursor:"pointer",
                 fontFamily:"var(--font-normal)", fontSize:13, fontWeight:600,
-                background: brandTab===t.id ? t.brandColor : "rgba(255,255,255,0.08)",
-                color: brandTab===t.id ? "#fff" : "rgba(255,255,255,0.55)",
+                background: brandTab===t.id ? t.brandColor : "rgba(0,0,0,0.05)",
+                color: brandTab===t.id ? "#fff" : "rgba(0,0,0,0.55)",
                 transition:"background .18s, color .18s",
               }}>{t.name}</button>
           ))}
@@ -1565,7 +1633,7 @@ export default function ShowcasePage() {
 
   /* ─ Sidebar ───────────────────────────────────────────── */
   const Sidebar = (
-    <aside className="sc-sidebar" style={{ width:sidebarW }}>
+    <aside className={`sc-sidebar${sidebarDark?" dark-mode":""}`} style={{ width:sidebarW }}>
       <div className="sc-glass-blur"/>
       <div className="sc-glass-spec"/>
       <div className="sc-scroll">
@@ -1580,8 +1648,8 @@ export default function ShowcasePage() {
           <a href="/" className="sc-nav-item sc-rail-icon" title="Back to home" style={{ marginBottom:8 }}>{NAV[0].icon}</a>
         ):(
           <div style={{ marginBottom:20 }}>
-            <img src="/assets/logo/sandhata-logo.svg" alt="Sandhata" style={{ height:26 }}/>
-            <p style={{ fontSize:11, color:"rgba(20,22,24,0.36)", fontFamily:"var(--font-mono)", margin:"8px 0 0" }}>v1.0-stable</p>
+            <img src="/assets/logo/sandhata-logo.svg" alt="Sandhata" style={{ height:26, filter:sidebarDark?"brightness(10)":"none" }}/>
+            <p style={{ fontSize:11, color:si(0.35), fontFamily:"var(--font-mono)", margin:"8px 0 0" }}>v1.0-stable</p>
           </div>
         )}
         {!collapsed&&<p className="sc-cap">Navigate</p>}
@@ -1600,11 +1668,11 @@ export default function ShowcasePage() {
             {ACCENTS.map((a,i)=>(
               <button key={a.hex} title={`${a.name} — ${a.token}`} onClick={()=>setAccentIdx(i)} style={{
                 width:26, height:26, borderRadius:"50%", background:a.hex, border:"none", cursor:"pointer",
-                outline:accentIdx===i?"2px solid rgba(20,22,24,0.60)":"2px solid transparent", outlineOffset:2, transition:"outline .15s",
+                outline:accentIdx===i?`2px solid ${si(0.60)}`:"2px solid transparent", outlineOffset:2, transition:"outline .15s",
               }}/>
             ))}
           </div>
-          <p style={{ fontFamily:"var(--font-mono)", fontSize:9, color:"rgba(20,22,24,0.30)", margin:"8px 0 0", wordBreak:"break-all" }}>{accent.token}</p>
+          <p style={{ fontFamily:"var(--font-mono)", fontSize:9, color:si(0.30), margin:"8px 0 0", wordBreak:"break-all" }}>{accent.token}</p>
           <div style={{ height:18 }}/>
           <p className="sc-cap">Surface</p>
           <div style={{ display:"flex", flexDirection:"column", gap:4 }}>
@@ -1612,8 +1680,8 @@ export default function ShowcasePage() {
               <button key={s} onClick={()=>setSurface(s)} style={{
                 padding:"7px 11px", borderRadius:9, border:"none", cursor:"pointer",
                 fontFamily:"var(--font-normal)", fontSize:13,
-                background:surface===s?"rgba(20,22,24,0.08)":"transparent",
-                color:surface===s?"rgba(20,22,24,0.95)":"rgba(20,22,24,0.50)",
+                background:surface===s?si(0.08):"transparent",
+                color:surface===s?si(0.95):si(0.50),
                 fontWeight:surface===s?600:400,
                 textAlign:"left", transition:"background .15s,color .15s",
               }}>{SURFACES[s].label}</button>
@@ -1626,18 +1694,18 @@ export default function ShowcasePage() {
               <button key={r.label} onClick={()=>setRadiusIdx(i)} style={{
                 flex:1, padding:"6px 0", borderRadius:8, cursor:"pointer",
                 fontFamily:"var(--font-normal)", fontSize:11, fontWeight:600,
-                border:`1px solid ${radiusIdx===i?"rgba(20,22,24,0.40)":"rgba(20,22,24,0.12)"}`,
-                background:radiusIdx===i?"rgba(20,22,24,0.08)":"transparent",
-                color:radiusIdx===i?"rgba(20,22,24,0.95)":"rgba(20,22,24,0.40)", transition:"all .15s",
+                border:`1px solid ${radiusIdx===i?si(0.40):si(0.12)}`,
+                background:radiusIdx===i?si(0.08):"transparent",
+                color:radiusIdx===i?si(0.95):si(0.40), transition:"all .15s",
               }}>{r.label}</button>
             ))}
           </div>
           <div className="sc-divider"/>
           <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", marginBottom:4 }}>
-            <span style={{ fontSize:12, color:"rgba(20,22,24,0.60)", fontFamily:"var(--font-normal)" }}>Token Inspector</span>
+            <span style={{ fontSize:12, color:si(0.60), fontFamily:"var(--font-normal)" }}>Token Inspector</span>
             <button onClick={() => setShowTokens(t => !t)} style={{
               width:40, height:22, borderRadius:999, border:"none", cursor:"pointer", flexShrink:0, padding:0, position:"relative",
-              background:showTokens?"var(--colour-primaryblue-500,#0036DD)":"rgba(20,22,24,0.20)",
+              background:showTokens?"var(--colour-primaryblue-500,#0036DD)":si(0.20),
               transition:"background .18s",
             }}>
               <span style={{
@@ -1647,12 +1715,12 @@ export default function ShowcasePage() {
               }}/>
             </button>
           </div>
-          {showTokens&&<p style={{ fontFamily:"var(--font-mono)", fontSize:9, color:"rgba(20,22,24,0.38)", margin:"4px 0 0", lineHeight:1.4 }}>Hover any component to see its token</p>}
+          {showTokens&&<p style={{ fontFamily:"var(--font-mono)", fontSize:9, color:si(0.38), margin:"4px 0 0", lineHeight:1.4 }}>Hover any component to see its token</p>}
           <div style={{ height:22 }}/>
           <div style={{ display:"flex", flexDirection:"column", gap:8 }}>
             <button className="sc-cta">Get the code</button>
             <a href="/components" style={{ display:"block", padding:"9px 14px", borderRadius:11,
-              border:"1px solid rgba(20,22,24,0.12)", color:"rgba(20,22,24,0.60)",
+              border:`1px solid ${si(0.12)}`, color:si(0.60),
               fontSize:13, textDecoration:"none", textAlign:"center", fontFamily:"var(--font-normal)" }}>Open Docs</a>
           </div>
         </>)}
@@ -1698,13 +1766,13 @@ export default function ShowcasePage() {
       )}
       <main ref={mainRef} className="sc-main-wrap" style={{ marginLeft:0, height:"100vh", overflowY:"auto", background:surfCfg.bg, ...mainVars }}>
         {heroBand}
-        <SectionSep from="#fdf5f0" to="#ffffff"/>
+        <SectionSep bg={surfCfg.bg} dark={surface === "dark"}/>
         {atomsBand}
-        <SectionSep from="#ffffff" to="#f5f6f8"/>
+        <SectionSep bg={surfCfg.bg} dark={surface === "dark"}/>
         {dataBand}
-        <SectionSep from="#f5f6f8" to="#000921" borderClr="rgba(0,0,0,0.08)"/>
+        <SectionSep bg={surfCfg.bg} dark={surface === "dark"}/>
         {themesBand}
-        <SectionSep from="#000921" to="#0A0B0D" lines="#383838" borderClr="rgba(255,255,255,0.07)"/>
+        <SectionSep bg={surfCfg.bg} dark={surface === "dark"}/>
         {systemBand}
       </main>
     </div>

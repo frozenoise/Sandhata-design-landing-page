@@ -612,6 +612,7 @@ export default function App() {
 
         {/* BROWSER WINDOW — straddles the cut line at its halfmark */}
         <div className="browser-outer">
+          <div className="browser-glow"/>
           <div className="browser-cut"/>
           <div className="browser">
             <div className="browser-bar">
