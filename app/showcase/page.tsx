@@ -676,67 +676,115 @@ export default function ShowcasePage() {
   // Mirror atomicP into a ref so the canvas rAF loop can read it without re-mounting
   React.useEffect(() => { apRef.current = atomicP; }, [atomicP]);
 
-  // Canvas particle system — dots converge to form the atoms (input + button) during transition
+  // Canvas particle system — multiple scenes, each converging dots to a new element's shape
   React.useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
     const ctx = canvas.getContext("2d");
     if (!ctx) return;
     const dpr = Math.min(window.devicePixelRatio || 1, 2);
+
     type Dot = { sx:number; sy:number; tx:number; ty:number; size:number; a:number };
-    let dots: Dot[] = [];
+    type Scene = { inStart:number; inEnd:number; outStart:number; outEnd:number; dots:Dot[] };
+    let scenes: Scene[] = [];
+
+    // Dots evenly distributed around a rectangle perimeter
+    const borderPts = (x:number, y:number, w:number, h:number, n:number) => {
+      const pts: {tx:number;ty:number}[] = [];
+      const peri = 2*(w+h);
+      for (let k = 0; k < n; k++) {
+        const t = (k/n)*peri;
+        if      (t < w)       pts.push({tx:x+t,         ty:y});
+        else if (t < w+h)     pts.push({tx:x+w,         ty:y+(t-w)});
+        else if (t < 2*w+h)   pts.push({tx:x+w-(t-w-h), ty:y+h});
+        else                   pts.push({tx:x,           ty:y+h-(t-2*w-h)});
+      }
+      return pts;
+    };
+    // Random dots filling a rectangle
+    const fillPts = (x:number, y:number, w:number, h:number, n:number) =>
+      Array.from({length:n}, () => ({tx:x+Math.random()*w, ty:y+Math.random()*h}));
+    // Dots along a horizontal line
+    const hLinePts = (x:number, y:number, w:number, n:number) =>
+      Array.from({length:n}, (_,k) => ({tx:x+(k/n)*w, ty:y}));
 
     const init = () => {
       const W = canvas.offsetWidth, H = canvas.offsetHeight;
-      canvas.width  = W * dpr; canvas.height = H * dpr;
+      canvas.width = W * dpr; canvas.height = H * dpr;
       ctx.scale(dpr, dpr);
-      const cx = W / 2, cy = H / 2;
-      const iW = 280, iH = 44;
-      const ix = cx - iW / 2, iy = cy - 54;
-      const bW = 280, bH = 44;
-      const bx = cx - bW / 2, by = iy + iH + 18;
-      const pts: {tx:number; ty:number}[] = [];
-      const peri = 2 * (iW + iH);
-      for (let k = 0; k < 130; k++) {
-        const t = (k / 130) * peri;
-        if      (t < iW)           pts.push({tx: ix + t,              ty: iy});
-        else if (t < iW + iH)      pts.push({tx: ix + iW,             ty: iy + (t - iW)});
-        else if (t < 2 * iW + iH)  pts.push({tx: ix + iW - (t - iW - iH), ty: iy + iH});
-        else                        pts.push({tx: ix,                  ty: iy + iH - (t - 2 * iW - iH)});
-      }
-      for (let k = 0; k < 8; k++) pts.push({tx: ix + 14, ty: iy + 8 + k * 3.5});
-      for (let k = 0; k < 110; k++) pts.push({tx: bx + Math.random() * bW, ty: by + Math.random() * bH});
-      dots = pts.map(p => ({
-        sx: cx + (Math.random() - 0.5) * W * 0.85,
-        sy: cy + (Math.random() - 0.5) * H * 0.75,
-        tx: p.tx, ty: p.ty,
-        size: 1 + Math.random() * 1.5,
-        a: 0.45 + Math.random() * 0.55,
-      }));
+      const cx = W/2, cy = H/2;
+
+      const toDots = (pts:{tx:number;ty:number}[]): Dot[] =>
+        pts.map(p => ({
+          sx: cx + (Math.random()-0.5)*W*0.85,
+          sy: cy + (Math.random()-0.5)*H*0.75,
+          tx: p.tx, ty: p.ty,
+          size: 1 + Math.random()*1.5,
+          a: 0.45 + Math.random()*0.55,
+        }));
+
+      // Scene 1 — Atoms: input field border + cursor + button fill
+      const iW = 280, iH = 44, ix = cx-140, iy = cy-54;
+      const bx = cx-140, by = iy+iH+18;
+      const s1 = [
+        ...borderPts(ix, iy, iW, iH, 130),
+        ...Array.from({length:8}, (_,k) => ({tx:ix+14, ty:iy+8+k*3.5})),
+        ...fillPts(bx, by, 280, 44, 110),
+      ];
+
+      // Scene 2 — Organisms: password input border (accounts for form centering when password is ~50% grown)
+      const s2 = borderPts(cx-140, cy-8, 280, 44, 150);
+
+      // Scene 3 — Templates: browser frame outer border + chrome/nav/footer dividers + traffic lights + URL bar
+      const fW = 460, fH = 383, fx = cx-230, fy = cy-fH/2-20;
+      const chromeH = 36, navH = 55, footerH = 52;
+      const s3 = [
+        ...borderPts(fx, fy, fW, fH, 200),
+        ...hLinePts(fx, fy+chromeH, fW, 55),
+        ...hLinePts(fx, fy+chromeH+navH, fW, 55),
+        ...hLinePts(fx, fy+fH-footerH, fW, 55),
+        // Traffic lights
+        ...[0,17,34].flatMap(ox => Array.from({length:6}, () => ({
+          tx: fx+22+ox+(Math.random()-0.5)*3, ty: fy+chromeH/2+(Math.random()-0.5)*3,
+        }))),
+        // URL bar
+        ...borderPts(fx+75, fy+8, fW-95, 20, 50),
+      ];
+
+      scenes = [
+        { inStart:0.15, inEnd:0.33, outStart:0.36, outEnd:0.44, dots:toDots(s1) },
+        { inStart:0.73, inEnd:0.80, outStart:0.82, outEnd:0.87, dots:toDots(s2) },
+        { inStart:0.86, inEnd:0.93, outStart:0.94, outEnd:0.99, dots:toDots(s3) },
+      ];
     };
 
     init();
     window.addEventListener("resize", init);
 
-    const ease = (t: number) => t < 0.5 ? 2 * t * t : -1 + (4 - 2 * t) * t;
+    const ease = (t: number) => t < 0.5 ? 2*t*t : -1+(4-2*t)*t;
     let raf: number;
     const draw = () => {
       const p = apRef.current;
       const W = canvas.offsetWidth, H = canvas.offsetHeight;
       ctx.clearRect(0, 0, W, H);
-      if (p > 0.12 && p < 0.44) {
-        const conv = ease(Math.min(1, Math.max(0, (p - 0.15) / 0.18)));
-        const fadeOut = p > 0.36 ? Math.max(0, 1 - (p - 0.36) / 0.06) : 1;
-        ctx.fillStyle = "#5584F5";
-        for (const d of dots) {
+      ctx.fillStyle = "#5584F5";
+
+      for (const sc of scenes) {
+        if (p < sc.inStart - 0.04 || p > sc.outEnd + 0.01) continue;
+        const conv    = ease(Math.min(1, Math.max(0, (p - sc.inStart) / (sc.inEnd - sc.inStart))));
+        const fadeOut = p > sc.outStart ? Math.max(0, 1 - (p - sc.outStart) / (sc.outEnd - sc.outStart)) : 1;
+        const alpha   = conv * fadeOut;
+        if (alpha < 0.001) continue;
+        for (const d of sc.dots) {
           const x = d.sx + (d.tx - d.sx) * conv;
           const y = d.sy + (d.ty - d.sy) * conv;
-          ctx.globalAlpha = d.a * conv * fadeOut;
+          ctx.globalAlpha = d.a * alpha;
           ctx.beginPath();
-          ctx.arc(x, y, d.size, 0, Math.PI * 2);
+          ctx.arc(x, y, d.size, 0, Math.PI*2);
           ctx.fill();
         }
       }
+      ctx.globalAlpha = 1;
       raf = requestAnimationFrame(draw);
     };
     draw();
