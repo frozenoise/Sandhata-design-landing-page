@@ -618,6 +618,8 @@ export default function ShowcasePage() {
   const [tags, setTags] = React.useState(["Design system","React","TypeScript","Tokens"]);
   const [toast, setToast] = React.useState<string|null>(null);
   const [envVal, setEnvVal] = React.useState("");
+  const [atomicP, setAtomicP] = React.useState(0);
+  const foundRef = React.useRef<HTMLDivElement>(null);
 
   const showToast = React.useCallback((msg: string) => {
     setToast(msg);
@@ -633,7 +635,7 @@ export default function ShowcasePage() {
     return () => window.removeEventListener("resize", check);
   }, []);
 
-  /* Scroll-spy */
+  /* Scroll-spy + atomic scroll progress */
   const mainRef = React.useRef<HTMLElement>(null);
   React.useEffect(() => {
     const el = mainRef.current;
@@ -641,14 +643,17 @@ export default function ShowcasePage() {
     const onScroll = () => {
       const scrollTop = el.scrollTop;
       const viewH = el.clientHeight;
+      let active = NAV[0].id;
       for (let i = NAV.length - 1; i >= 0; i--) {
         const sec = document.getElementById(NAV[i].id);
-        if (sec && sec.offsetTop - viewH * 0.35 <= scrollTop) {
-          setNavActive(NAV[i].id);
-          return;
-        }
+        if (sec && sec.offsetTop - viewH * 0.35 <= scrollTop) { active = NAV[i].id; break; }
       }
-      setNavActive(NAV[0].id);
+      setNavActive(active);
+      const found = foundRef.current;
+      if (found) {
+        const rawP = (scrollTop - found.offsetTop) / (found.scrollHeight - viewH);
+        setAtomicP(Math.max(0, Math.min(1, rawP)));
+      }
     };
     el.addEventListener("scroll", onScroll, { passive:true });
     return () => el.removeEventListener("scroll", onScroll);
@@ -1174,7 +1179,7 @@ export default function ShowcasePage() {
     </section>
   );
 
-  /* ─ Foundations — atomic design ──────────────────────── */
+  /* ─ Foundations — horizontal sticky scroll ──────────── */
   const visibleAlerts = ([
     { id:"a1", tone:"info" as const,    title:"System update", body:"Maintenance Sunday 2–4 AM UTC." },
     { id:"a2", tone:"success" as const, title:"Deployed!",     body:"v2.4.1 is live on production." },
@@ -1182,177 +1187,293 @@ export default function ShowcasePage() {
     { id:"a4", tone:"error" as const,   title:"Build failed",  body:"TypeScript errors in Button.d.ts." },
   ]).filter(a=>!dismissed.includes(a.id));
 
-  const systemBand = (
-    <section id="sc-foundations" style={{ background:"var(--surface-raised,#fff)" }}>
-      <div className="sc-band-content" style={bandPad()}>
-        <BandTag>Foundations · atomic design system</BandTag>
-
-        {/* ── ATOMS ── */}
-        <div className="sc-atomic-tier">
-          <div className="sc-atomic-label">Atoms — raw design decisions</div>
-          <div className="sc-atomic-grid">
-            {/* Color tokens */}
-            <div className="sc-atom-box" style={{ minWidth:120 }}>
-              <div style={{ display:"flex", gap:4 }}>
-                {["50","200","400","500","600","700"].map(s=>(
-                  <div key={s} style={{ width:14, height:14, borderRadius:3, background:`var(--colour-primaryblue-${s})` }}/>
-                ))}
-              </div>
-              Colour scale
-            </div>
-            {/* Type tokens */}
-            <div className="sc-atom-box" style={{ minWidth:130 }}>
-              <div style={{ textAlign:"left", width:"100%" }}>
-                <p style={{ fontFamily:"var(--font-bold)", fontSize:16, color:"var(--text-title)", margin:"0 0 2px", lineHeight:1.2 }}>Heading</p>
-                <p style={{ fontFamily:"var(--font-normal)", fontSize:12, color:"var(--text-body)", margin:"0 0 2px" }}>Body copy</p>
-                <p style={{ fontFamily:"var(--font-mono)", fontSize:10, color:"var(--text-caption)", margin:0 }}>mono</p>
-              </div>
-              Type scale
-            </div>
-            {/* Spacing */}
-            <div className="sc-atom-box" style={{ minWidth:120 }}>
-              <div style={{ display:"flex", flexDirection:"column", gap:3, width:"100%" }}>
-                {[4,8,12,16,24].map(s=>(
-                  <div key={s} style={{ display:"flex", alignItems:"center", gap:4 }}>
-                    <div style={{ width:s, height:6, background:"var(--colour-primaryblue-300)", borderRadius:2, flexShrink:0 }}/>
-                    <span style={{ fontSize:8, color:"var(--text-caption)", fontFamily:"var(--font-mono)" }}>{s}px</span>
-                  </div>
-                ))}
-              </div>
-              Spacing
-            </div>
-            {/* Radius */}
-            <div className="sc-atom-box">
-              <div style={{ display:"flex", gap:5 }}>
-                {[0,4,8,12,999].map(r=>(
-                  <div key={r} style={{ width:20, height:20, background:"var(--colour-primaryblue-100)", border:"1px solid var(--colour-primaryblue-300)", borderRadius:r }}/>
-                ))}
-              </div>
-              Border radius
-            </div>
-            {/* Individual atoms */}
-            <div className="sc-atom-box"><Button hierarchy="primary" size="small">Button</Button></div>
-            <div className="sc-atom-box"><Switch checked={true} onChange={()=>{}} label=""/></div>
-            <div className="sc-atom-box"><Badge tone="success" dot>Live</Badge></div>
-            <div className="sc-atom-box"><Spinner size={22}/></div>
-          </div>
-        </div>
-
-        {/* ── MOLECULES ── */}
-        <div className="sc-atomic-tier">
-          <div className="sc-atomic-label">Molecules — atoms combined into functional units</div>
-          <div className="sc-atomic-grid">
-            <div className="sc-molecule-box">
-              <p style={labelCap}>Form field</p>
-              <Input label="Email address" placeholder="you@company.com" helper="We'll never share your email" required/>
-            </div>
-            <div className="sc-molecule-box">
-              <p style={labelCap}>Labelled toggle</p>
-              <div style={{ display:"flex", flexDirection:"column", gap:10 }}>
-                <Switch checked={sw} onChange={setSw} label="Enable notifications"/>
-                <Switch checked={false} onChange={()=>{}} label="Auto-publish" disabled/>
-              </div>
-            </div>
-            <div className="sc-molecule-box">
-              <p style={labelCap}>Avatar + identity</p>
-              <div style={{ display:"flex", flexDirection:"column", gap:10 }}>
-                {[{name:"Ayo Paul",role:"Admin"},{name:"Sandra Kim",role:"Editor"}].map(u=>(
-                  <div key={u.name} style={{ display:"flex", alignItems:"center", gap:10 }}>
-                    <Avatar name={u.name} size={32}/>
-                    <div>
-                      <p style={{ fontFamily:"var(--font-bold)", fontSize:13, fontWeight:700, color:"var(--text-title)", margin:0 }}>{u.name}</p>
-                      <p style={{ fontFamily:"var(--font-normal)", fontSize:11, color:"var(--text-caption)", margin:0 }}>{u.role}</p>
-                    </div>
-                    <div style={{ marginLeft:"auto" }}><Badge tone={u.role==="Admin"?"action":"neutral"}>{u.role}</Badge></div>
-                  </div>
-                ))}
-              </div>
-            </div>
-            <div className="sc-molecule-box">
-              <p style={labelCap}>Button states</p>
-              <div style={{ display:"flex", flexDirection:"column", gap:8 }}>
-                <Button hierarchy="primary">Submit form</Button>
-                <Button hierarchy="primary" style={{ opacity:0.7 }}><Spinner size={14}/>&nbsp;Saving…</Button>
-                <Button hierarchy="danger">Delete record</Button>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* ── ORGANISMS ── */}
-        <div className="sc-atomic-tier">
-          <div className="sc-atomic-label">Organisms — complete, reusable UI patterns</div>
-          <div className="sc-atomic-grid" style={{ alignItems:"stretch" }}>
-            <div className="sc-organism-box">
-              <p style={labelCap}>Alert system · 4 tones · dismissible</p>
-              <div style={{ display:"flex", flexDirection:"column", gap:10 }}>
-                {visibleAlerts.map(a=>(
-                  <Alert key={a.id} tone={a.tone} title={a.title} onClose={()=>setDismissed(d=>[...d,a.id])}>{a.body}</Alert>
-                ))}
-                {visibleAlerts.length===0&&(
-                  <div style={{ textAlign:"center", padding:"12px 0" }}>
-                    <p style={{ fontFamily:"var(--font-normal)", fontSize:13, color:"var(--text-caption)", margin:"0 0 8px" }}>All dismissed.</p>
-                    <Button hierarchy="tertiary" size="small" onClick={()=>setDismissed([])}>Restore all</Button>
-                  </div>
-                )}
-              </div>
-            </div>
-            <div className="sc-organism-box">
-              <p style={labelCap}>Full form pattern</p>
-              <div style={{ display:"flex", flexDirection:"column", gap:12 }}>
-                <Input label="Full name" required placeholder="Jane Smith" helper="As shown on your passport"/>
-                <ShowcaseSelect label="Country" options={["United Kingdom","Ireland","France","Germany"]} placeholder="Select country"/>
-                <Textarea label="Notes" rows={3} placeholder="Any additional context…"/>
-                <div style={{ display:"flex", gap:8, justifyContent:"flex-end" }}>
-                  <Button hierarchy="tertiary">Cancel</Button>
-                  <Button hierarchy="primary" onClick={() => showToast("Form submitted successfully")}>Submit</Button>
-                </div>
-              </div>
-            </div>
-            <div className="sc-organism-box">
-              <p style={labelCap}>Data card pattern</p>
-              <Card title="Pipeline Alpha" subtitle="North Sea · Active"
-                action={<Badge tone="success" dot>Online</Badge>}>
-                <div style={{ marginBottom:12 }}>
-                  <StatCard label="Throughput" value="812 kbpd" trend="+4.1% vs target" trendDirection="up"/>
-                </div>
-                <BrandSpark data={[30,34,31,38,36,42,40,46,44,49]} height={36}/>
-                <div style={{ display:"flex", gap:8, marginTop:12 }}>
-                  <Button hierarchy="primary" size="small" style={{ flex:1 }}>Export</Button>
-                  <Button hierarchy="tertiary" size="small">Details</Button>
-                </div>
-              </Card>
-            </div>
-          </div>
-        </div>
-
-        {/* Colour token grid */}
-        <div style={{ paddingTop:36, borderTop:"1px solid var(--border-subtle)", marginTop:8 }}>
-          <BandTag>Data-viz palette · 6 semantic tokens</BandTag>
-          <div style={{ display:"grid", gridTemplateColumns:"repeat(6,1fr)", gap:14 }}>
-            {[
-              { name:"--viz-1", label:"Purple",   hex:"#602DEA", light:"#ede7fd" },
-              { name:"--viz-2", label:"Blue",     hex:"#445CFF", light:"#e6eaff" },
-              { name:"--viz-3", label:"Cyan",     hex:"#00D4D4", light:"#e0fafa" },
-              { name:"--viz-4", label:"Navy",     hex:"#00208F", light:"#e0e5f5" },
-              { name:"--viz-5", label:"Lavender", hex:"#9A8AF5", light:"#f0eefe" },
-              { name:"--viz-6", label:"Steel",    hex:"#608FEC", light:"#e8eeff" },
-            ].map((t,i)=>(
-              <div key={t.name} style={{ borderRadius:14, overflow:"hidden", border:"1px solid rgba(20,22,24,0.07)", boxShadow:"0 2px 10px rgba(20,22,24,0.06)" }}>
-                <div style={{ height:96, background:`linear-gradient(155deg, ${t.hex} 0%, ${t.light} 100%)`, position:"relative", display:"flex", flexDirection:"column", justifyContent:"flex-end", padding:"10px 12px" }}>
-                  <span style={{ fontFamily:"var(--font-bold)", fontWeight:700, fontSize:15, color:"#fff", textShadow:"0 1px 6px rgba(0,0,0,0.28)", letterSpacing:"-0.3px" }}>{t.label}</span>
-                  <span style={{ position:"absolute", top:10, right:10, width:8, height:8, borderRadius:"50%", background:"rgba(255,255,255,0.55)", boxShadow:"0 0 0 2px rgba(255,255,255,0.25)" }}/>
-                  {i===0&&<span style={{ position:"absolute", top:8, left:8, fontFamily:"var(--font-mono)", fontSize:7, fontWeight:700, letterSpacing:".08em", color:"rgba(255,255,255,0.70)", textTransform:"uppercase" }}>Primary</span>}
-                </div>
-                <div style={{ padding:"9px 12px", background:"var(--surface-raised,#fff)" }}>
-                  <p style={{ fontFamily:"var(--font-mono)", fontSize:9, fontWeight:600, color:"var(--text-body,#3c4044)", margin:"0 0 2px", letterSpacing:".02em" }}>{t.name}</p>
-                  <p style={{ fontFamily:"var(--font-mono)", fontSize:8, color:"var(--text-caption,#777880)", margin:0, letterSpacing:".04em" }}>{t.hex}</p>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
+  const activePanel = Math.min(5, Math.floor(atomicP * 5 + 0.05));
+  const AP_STEPS = ["Sub-atomic","Atoms","Molecules","Organisms","Templates","Pages"];
+  const AP_NUMS  = ["01","02","03","04","05","06"];
+  const AP_SUBS  = [
+    "Design tokens — the invisible foundation that unifies every surface.",
+    "The smallest, indivisible units — each one a single, perfectly formed purpose.",
+    "Atoms combined into simple, functional units that work toward one goal.",
+    "Complete, reusable UI patterns — complex sections that form meaningful interfaces.",
+    "Page-level structure — organisms arranged into reusable layout patterns.",
+    "Complete, production-ready interfaces — where every layer comes together.",
+  ];
+  const AP_CARD: React.CSSProperties = {
+    background:"rgba(255,255,255,0.05)", borderRadius:18,
+    border:"1px solid rgba(255,255,255,0.08)", overflow:"hidden",
+  };
+  const AP_INNER: React.CSSProperties = {
+    background:"#fff", borderRadius:12, padding:18,
+  };
+  const apLeft = (idx: number) => (
+    <div style={{ flexShrink:0, width:300 }}>
+      <div style={{ display:"inline-flex", alignItems:"center", gap:8, marginBottom:22 }}>
+        <span style={{ fontFamily:"var(--font-mono)", fontSize:10, fontWeight:700, color:"var(--colour-primaryblue-400,#2255FF)", letterSpacing:".12em" }}>{AP_NUMS[idx]}</span>
+        <span style={{ width:1, height:12, background:"rgba(255,255,255,0.15)" }}/>
+        <span style={{ fontFamily:"var(--font-mono)", fontSize:9, color:"rgba(255,255,255,0.28)", letterSpacing:".08em", textTransform:"uppercase" }}>Foundations</span>
       </div>
+      <h2 style={{ fontFamily:"var(--font-bold)", fontSize:42, fontWeight:800, color:"#fff", margin:0, letterSpacing:"-1.5px", lineHeight:1 }}>{AP_STEPS[idx]}</h2>
+      <p style={{ fontFamily:"var(--font-normal)", fontSize:14, color:"rgba(255,255,255,0.42)", margin:"14px 0 0", lineHeight:1.6, maxWidth:300 }}>{AP_SUBS[idx]}</p>
+    </div>
+  );
+
+  const systemBand = (
+    <section id="sc-foundations" ref={foundRef} style={{ height:"600vh", position:"relative", background:"#0A0B0D" }}>
+      <div style={{ position:"sticky", top:0, height:"100vh", overflow:"hidden", display:"flex", flexDirection:"column" }}>
+
+        {/* Step dots */}
+        <div style={{ position:"absolute", top:20, left:0, right:0, zIndex:3, display:"flex", justifyContent:"center", gap:10, pointerEvents:"none" }}>
+          {AP_STEPS.map((lbl, i) => {
+            const act = activePanel === i;
+            return (
+              <div key={lbl} style={{ display:"flex", alignItems:"center", gap:5 }}>
+                <div style={{ width:act?18:5, height:5, borderRadius:3, transition:"all .22s ease",
+                  background:act?"var(--colour-primaryblue-400,#2255FF)":"rgba(255,255,255,0.18)" }}/>
+                {act&&<span style={{ fontFamily:"var(--font-mono)", fontSize:8, fontWeight:700, color:"rgba(255,255,255,0.48)", letterSpacing:".10em", textTransform:"uppercase" }}>{lbl}</span>}
+              </div>
+            );
+          })}
+        </div>
+
+        {/* Horizontal strip — 600% wide, one panel per 100%/6 */}
+        <div style={{ display:"flex", width:"600%", height:"100%",
+          transform:`translateX(-${atomicP * (500/6)}%)`, willChange:"transform" }}>
+
+          {/* ── P0: Sub-atomic ─────────────────────────────── */}
+          <div style={{ width:`${100/6}%`, flexShrink:0, height:"100%", boxSizing:"border-box",
+            paddingLeft:lpad, paddingRight:48, display:"flex", alignItems:"center", gap:52 }}>
+            {apLeft(0)}
+            <div style={{ flex:1, display:"grid", gridTemplateColumns:"repeat(4,1fr)", gap:12 }}>
+              {/* Colour */}
+              <div style={{ ...AP_CARD, padding:18 }}>
+                <p style={{ fontFamily:"var(--font-mono)", fontSize:9, fontWeight:700, color:"rgba(255,255,255,0.32)", letterSpacing:".10em", textTransform:"uppercase", margin:"0 0 12px" }}>Colour</p>
+                {["50","100","200","300","400","500","600","700"].map(s=>(
+                  <div key={s} style={{ display:"flex", alignItems:"center", gap:8, marginBottom:5 }}>
+                    <div style={{ width:32, height:11, borderRadius:3, background:`var(--colour-primaryblue-${s})`, flexShrink:0 }}/>
+                    <span style={{ fontFamily:"var(--font-mono)", fontSize:8, color:"rgba(255,255,255,0.25)" }}>{s}</span>
+                  </div>
+                ))}
+              </div>
+              {/* Type */}
+              <div style={{ ...AP_CARD, padding:18 }}>
+                <p style={{ fontFamily:"var(--font-mono)", fontSize:9, fontWeight:700, color:"rgba(255,255,255,0.32)", letterSpacing:".10em", textTransform:"uppercase", margin:"0 0 12px" }}>Type</p>
+                <div style={{ display:"flex", flexDirection:"column", gap:9 }}>
+                  <span style={{ fontFamily:"var(--font-bold)", fontSize:26, fontWeight:800, color:"#fff", lineHeight:1 }}>Aa</span>
+                  <span style={{ fontFamily:"var(--font-bold)", fontSize:15, fontWeight:700, color:"rgba(255,255,255,0.75)" }}>Title</span>
+                  <span style={{ fontFamily:"var(--font-normal)", fontSize:13, color:"rgba(255,255,255,0.50)" }}>Body text</span>
+                  <span style={{ fontFamily:"var(--font-mono)", fontSize:11, color:"rgba(255,255,255,0.32)" }}>mono</span>
+                </div>
+              </div>
+              {/* Spacing */}
+              <div style={{ ...AP_CARD, padding:18 }}>
+                <p style={{ fontFamily:"var(--font-mono)", fontSize:9, fontWeight:700, color:"rgba(255,255,255,0.32)", letterSpacing:".10em", textTransform:"uppercase", margin:"0 0 12px" }}>Spacing</p>
+                {[4,8,12,16,24,32,48].map(s=>(
+                  <div key={s} style={{ display:"flex", alignItems:"center", gap:6, marginBottom:5 }}>
+                    <div style={{ width:Math.min(s,44), height:6, background:"var(--colour-primaryblue-500,#0036DD)", borderRadius:2, flexShrink:0 }}/>
+                    <span style={{ fontFamily:"var(--font-mono)", fontSize:8, color:"rgba(255,255,255,0.25)" }}>{s}px</span>
+                  </div>
+                ))}
+              </div>
+              {/* Radius */}
+              <div style={{ ...AP_CARD, padding:18 }}>
+                <p style={{ fontFamily:"var(--font-mono)", fontSize:9, fontWeight:700, color:"rgba(255,255,255,0.32)", letterSpacing:".10em", textTransform:"uppercase", margin:"0 0 12px" }}>Radius</p>
+                {[["none","0px"],["sm","4px"],["md","8px"],["lg","12px"],["full","9999px"]].map(([n,r])=>(
+                  <div key={n} style={{ display:"flex", alignItems:"center", gap:8, marginBottom:8 }}>
+                    <div style={{ width:28, height:18, background:"rgba(255,255,255,0.12)", border:"1.5px solid rgba(255,255,255,0.22)", borderRadius:r, flexShrink:0 }}/>
+                    <span style={{ fontFamily:"var(--font-mono)", fontSize:8, color:"rgba(255,255,255,0.25)" }}>{n}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+
+          {/* ── P1: Atoms ──────────────────────────────────── */}
+          <div style={{ width:`${100/6}%`, flexShrink:0, height:"100%", boxSizing:"border-box",
+            paddingLeft:lpad, paddingRight:48, display:"flex", alignItems:"center", gap:52 }}>
+            {apLeft(1)}
+            <div style={{ flex:1 }}>
+              <div style={{ ...AP_CARD, padding:20, display:"grid", gridTemplateColumns:"1fr 1fr", gap:14 }}>
+                <div style={AP_INNER}>
+                  <p style={labelCap}>Button</p>
+                  <div style={{ display:"flex", flexDirection:"column", gap:8 }}>
+                    <Button hierarchy="primary" size="small">Primary</Button>
+                    <Button hierarchy="secondary" size="small">Secondary</Button>
+                    <Button hierarchy="ghost" size="small">Ghost</Button>
+                  </div>
+                </div>
+                <div style={AP_INNER}>
+                  <p style={labelCap}>Badge</p>
+                  <div style={{ display:"flex", flexWrap:"wrap", gap:6 }}>
+                    <Badge tone="success">Live</Badge>
+                    <Badge tone="warning">Draft</Badge>
+                    <Badge tone="error">Error</Badge>
+                    <Badge tone="neutral">Idle</Badge>
+                    <Badge tone="action">Active</Badge>
+                  </div>
+                </div>
+                <div style={AP_INNER}>
+                  <p style={labelCap}>Avatar</p>
+                  <div style={{ display:"flex", gap:10, alignItems:"center" }}>
+                    <Avatar name="Ayo Paul" size={40}/>
+                    <Avatar name="Sandra Kim" size={32}/>
+                    <Avatar name="Tom L" size={24}/>
+                  </div>
+                </div>
+                <div style={AP_INNER}>
+                  <p style={labelCap}>Controls</p>
+                  <div style={{ display:"flex", flexDirection:"column", gap:10 }}>
+                    <Switch checked={sw} onChange={setSw} label="Toggle on"/>
+                    <div style={{ display:"flex", gap:8, alignItems:"center" }}>
+                      <Spinner size={16}/><span style={{ fontFamily:"var(--font-normal)", fontSize:13, color:"var(--text-body)" }}>Loading…</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* ── P2: Molecules ──────────────────────────────── */}
+          <div style={{ width:`${100/6}%`, flexShrink:0, height:"100%", boxSizing:"border-box",
+            paddingLeft:lpad, paddingRight:48, display:"flex", alignItems:"center", gap:52 }}>
+            {apLeft(2)}
+            <div style={{ flex:1 }}>
+              <div style={{ ...AP_CARD, padding:20, display:"grid", gridTemplateColumns:"1fr 1fr", gap:14 }}>
+                <div style={AP_INNER}>
+                  <p style={labelCap}>Form field</p>
+                  <Input label="Email address" placeholder="you@company.com" helper="We'll never share your email"/>
+                </div>
+                <div style={AP_INNER}>
+                  <p style={labelCap}>Labelled toggle</p>
+                  <div style={{ display:"flex", flexDirection:"column", gap:10 }}>
+                    <Switch checked={sw} onChange={setSw} label="Enable notifications"/>
+                    <Switch checked={false} onChange={()=>{}} label="Auto-publish" disabled/>
+                  </div>
+                </div>
+                <div style={AP_INNER}>
+                  <p style={labelCap}>Avatar + identity</p>
+                  {[{name:"Ayo Paul",role:"Admin"},{name:"Sandra Kim",role:"Editor"}].map(u=>(
+                    <div key={u.name} style={{ display:"flex", alignItems:"center", gap:8, marginBottom:8 }}>
+                      <Avatar name={u.name} size={28}/>
+                      <div style={{ flex:1 }}>
+                        <p style={{ fontFamily:"var(--font-bold)", fontSize:12, fontWeight:700, color:"var(--text-title)", margin:0 }}>{u.name}</p>
+                        <p style={{ fontFamily:"var(--font-normal)", fontSize:11, color:"var(--text-caption)", margin:0 }}>{u.role}</p>
+                      </div>
+                      <Badge tone={u.role==="Admin"?"action":"neutral"}>{u.role}</Badge>
+                    </div>
+                  ))}
+                </div>
+                <div style={AP_INNER}>
+                  <p style={labelCap}>Tag chips</p>
+                  <div style={{ display:"flex", gap:6, flexWrap:"wrap" }}>
+                    {tags.map(t=><Tag key={t} onRemove={()=>setTags(ts=>ts.filter(x=>x!==t))}>{t}</Tag>)}
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* ── P3: Organisms ──────────────────────────────── */}
+          <div style={{ width:`${100/6}%`, flexShrink:0, height:"100%", boxSizing:"border-box",
+            paddingLeft:lpad, paddingRight:48, display:"flex", alignItems:"center", gap:52 }}>
+            {apLeft(3)}
+            <div style={{ flex:1, display:"grid", gridTemplateColumns:"1fr 1fr", gap:14 }}>
+              <div style={{ ...AP_CARD, padding:16 }}>
+                <div style={AP_INNER}>
+                  <p style={labelCap}>Alert system</p>
+                  <div style={{ display:"flex", flexDirection:"column", gap:8 }}>
+                    {visibleAlerts.slice(0,3).map(a=>(
+                      <Alert key={a.id} tone={a.tone} title={a.title} onClose={()=>setDismissed(d=>[...d,a.id])}>{a.body}</Alert>
+                    ))}
+                    {visibleAlerts.length===0&&(
+                      <div style={{ textAlign:"center", padding:"10px 0" }}>
+                        <p style={{ fontFamily:"var(--font-normal)", fontSize:12, color:"var(--text-caption)", margin:"0 0 8px" }}>All dismissed.</p>
+                        <Button hierarchy="tertiary" size="small" onClick={()=>setDismissed([])}>Restore</Button>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+              <div style={{ ...AP_CARD, padding:16 }}>
+                <div style={AP_INNER}>
+                  <p style={labelCap}>Form pattern</p>
+                  <div style={{ display:"flex", flexDirection:"column", gap:10 }}>
+                    <Input label="Full name" placeholder="Jane Smith" required/>
+                    <ShowcaseSelect label="Country" options={["United Kingdom","Ireland","France","Germany"]} placeholder="Select country"/>
+                    <div style={{ display:"flex", gap:8, justifyContent:"flex-end", marginTop:4 }}>
+                      <Button hierarchy="tertiary" size="small">Cancel</Button>
+                      <Button hierarchy="primary" size="small" onClick={()=>showToast("Form submitted successfully")}>Submit</Button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* ── P4: Templates ──────────────────────────────── */}
+          <div style={{ width:`${100/6}%`, flexShrink:0, height:"100%", boxSizing:"border-box",
+            paddingLeft:lpad, paddingRight:48, display:"flex", alignItems:"center", gap:52 }}>
+            {apLeft(4)}
+            <div style={{ flex:1 }}>
+              <div style={{ ...AP_CARD, padding:20 }}>
+                <div style={{ ...AP_INNER, display:"flex", flexDirection:"column", gap:14 }}>
+                  <p style={labelCap}>Dashboard template</p>
+                  <div style={{ display:"grid", gridTemplateColumns:"repeat(3,1fr)", gap:10 }}>
+                    <StatCard label="Total users" value="24,891" trend="+12.3%" trendDirection="up"/>
+                    <StatCard label="Revenue" value="£1.24M" trend="+8.7%" trendDirection="up"/>
+                    <StatCard label="Incidents" value="2" trend="−3 vs last wk" trendDirection="down"/>
+                  </div>
+                  <div style={{ display:"grid", gridTemplateColumns:"1fr 220px", gap:14 }}>
+                    <div style={{ background:"var(--surface-secondary,#f5f6f8)", borderRadius:10, padding:14 }}>
+                      <p style={{ fontFamily:"var(--font-bold)", fontSize:11, fontWeight:700, color:"var(--text-title)", margin:"0 0 8px" }}>Throughput · last 7 days</p>
+                      <BrandSpark data={[30,34,31,38,36,42,40,46,44,49,52,48]} height={46}/>
+                    </div>
+                    <div style={{ display:"flex", flexDirection:"column", gap:6 }}>
+                      <Alert tone="success" title="Build passed" onClose={()=>{}}>Deploy complete.</Alert>
+                      <Alert tone="warning" title="Quota" onClose={()=>{}}>85% of API limit.</Alert>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* ── P5: Pages ──────────────────────────────────── */}
+          <div style={{ width:`${100/6}%`, flexShrink:0, height:"100%", boxSizing:"border-box",
+            paddingLeft:lpad, paddingRight:48, display:"flex", alignItems:"center", gap:52 }}>
+            {apLeft(5)}
+            <div style={{ flex:1 }}>
+              <div style={{ ...AP_CARD, padding:20 }}>
+                <div style={{ ...AP_INNER, display:"flex", gap:20 }}>
+                  {/* Login panel */}
+                  <div style={{ flex:1 }}>
+                    <p style={labelCap}>Sign in · Onboarding</p>
+                    <div style={{ display:"flex", flexDirection:"column", gap:12 }}>
+                      <Input label="Email address" placeholder="you@company.com"/>
+                      <Input label="Password" placeholder="••••••••"/>
+                      <Button hierarchy="primary" onClick={()=>showToast("Welcome to Sandhata DS")}>Sign in</Button>
+                      <p style={{ fontFamily:"var(--font-normal)", fontSize:12, color:"var(--text-caption)", textAlign:"center", margin:0 }}>
+                        No account?{" "}
+                        <span style={{ color:"var(--colour-primaryblue-600,#0029b0)", fontWeight:700, cursor:"pointer" }}>Sign up</span>
+                      </p>
+                    </div>
+                  </div>
+                  <div style={{ width:1, background:"var(--border-subtle,rgba(20,22,24,0.07))" }}/>
+                  {/* Data panel */}
+                  <div style={{ flex:1 }}>
+                    <p style={labelCap}>Dashboard · Overview</p>
+                    <div style={{ display:"flex", flexDirection:"column", gap:10 }}>
+                      <StatCard label="Pipeline throughput" value="812 kbpd" trend="+4.1% vs target" trendDirection="up"/>
+                      <BrandSpark data={[38,42,40,46,44,49,52,48,55,58]} height={38}/>
+                      <Alert tone="success" title="All systems nominal" onClose={()=>{}}>Last check: 2 min ago.</Alert>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+        </div>{/* end strip */}
+      </div>{/* end sticky */}
     </section>
   );
 
