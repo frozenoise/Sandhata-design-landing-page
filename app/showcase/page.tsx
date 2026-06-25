@@ -1265,40 +1265,59 @@ export default function ShowcasePage() {
     { name:"Templates",  num:"05", sub:"Page structure — organisms arranged into reusable layout patterns." },
   ];
 
-  // Stage heading crossfades
-  const hOps = [
-    fr(atomicP, 0, 0.04,  0.16, 0.24),
-    fr(atomicP, 0.16, 0.26, 0.44, 0.52),
-    fr(atomicP, 0.44, 0.54, 0.66, 0.74),
-    fr(atomicP, 0.66, 0.76, 0.88, 0.94),
-    fi(atomicP, 0.88, 0.96),
+  // Per-stage in/out progress — used for both opacity and translateY so headings
+  // physically separate (slide out upward / slide in from below) and never ghost.
+  const sIn  = [
+    fi(atomicP, 0,    0.06),
+    fi(atomicP, 0.22, 0.30),
+    fi(atomicP, 0.54, 0.60),
+    fi(atomicP, 0.74, 0.80),
+    fi(atomicP, 0.93, 0.99),
   ];
-  // Stage "reached" thresholds for progress dots
-  const dotReached = [0, 0.20, 0.48, 0.70, 0.92];
+  const sOut = [
+    fo(atomicP, 0.12, 0.20),
+    fo(atomicP, 0.44, 0.52),
+    fo(atomicP, 0.64, 0.72),
+    fo(atomicP, 0.86, 0.92),
+    1,
+  ];
+  const hOps = sIn.map((v, i) => v * sOut[i]);
+  // Heading slides in from +24px below, exits to −24px above — no Y overlap when two are partial
+  const hTy  = (i: number) => `${(1 - sIn[i]) * 24 + (1 - sOut[i]) * -24}px`;
 
-  // Content layer opacities
-  const subOp    = fr(atomicP, 0, 0.04,  0.16, 0.25);
-  const atomsOp  = fr(atomicP, 0.36, 0.44, 0.50, 0.58);
-  const molOp    = fr(atomicP, 0.50, 0.58, 0.66, 0.74);
-  const orgOp    = fr(atomicP, 0.66, 0.76, 0.88, 0.94);
-  const orgPwOp  = fi(atomicP, 0.72, 0.80);
-  const orgBtnOp = fi(atomicP, 0.76, 0.84);
-  const tplOp    = fi(atomicP, 0.88, 0.96);
+  // Stage "reached" thresholds for progress dots
+  const dotReached = [0, 0.26, 0.55, 0.75, 0.93];
+
+  // Content layer opacities — strictly non-overlapping windows with a 0.02 gap between each
+  const subOp    = fi(atomicP, 0,    0.04)  * fo(atomicP, 0.12, 0.20);
+  const atomsOp  = fi(atomicP, 0.36, 0.43)  * fo(atomicP, 0.50, 0.55);
+  // Persistent form — fades in at Atoms, stays until Templates replace it
+  const formVis     = fi(atomicP, 0.36, 0.43) * fo(atomicP, 0.86, 0.93);
+  const cursorVis   = fo(atomicP, 0.57, 0.62);  // cursor gone once typing starts
+  const emailLblOp  = fi(atomicP, 0.57, 0.63);
+  const typingP     = fi(atomicP, 0.58, 0.70);
+  const passwordOp  = fi(atomicP, 0.75, 0.81);
+  const loginLblOp  = fi(atomicP, 0.77, 0.83);
+  const tplOp       = fi(atomicP, 0.88, 0.95);
+
+  const EMAIL_PH = "name@email.com";
+  const typedText = EMAIL_PH.slice(0, Math.floor(typingP * (EMAIL_PH.length + 1)));
 
   const systemBand = (
     <section id="sc-foundations" ref={foundRef} style={{ height:"700vh", position:"relative", background:"#0A0B0D" }}>
       <style>{`@keyframes sc-cursor{0%,100%{opacity:1}50%{opacity:0}}`}</style>
       <div style={{ position:"sticky", top:0, height:"100vh", overflow:"hidden" }}>
 
-        {/* Canvas for dot-convergence particle effect */}
+        {/* Canvas — particle dots converge to form input + button during sub-atomic→atoms */}
         <canvas ref={canvasRef} style={{ position:"absolute", inset:0, width:"100%", height:"100%",
           pointerEvents:"none", zIndex:1 }}/>
 
-        {/* Stage headings — crossfade in place */}
+        {/* Stage headings — slide in from below (+24px), exit upward (−24px) */}
         <div style={{ position:"absolute", top:64, left:0, right:0, zIndex:5, pointerEvents:"none" }}>
           {STAGES.map((s,i) => (
             <div key={i} style={{ position:"absolute", left:0, right:0, textAlign:"center",
-              opacity: hOps[i], pointerEvents:"none" }}>
+              opacity: hOps[i], transform:`translateY(${hTy(i)})`,
+              willChange:"opacity, transform", pointerEvents:"none" }}>
               <p style={{ fontFamily:"var(--font-mono)", fontSize:10,
                 color:"var(--colour-primaryblue-400,#2255FF)",
                 letterSpacing:".14em", textTransform:"uppercase" as const, margin:"0 0 10px" }}>
@@ -1316,11 +1335,11 @@ export default function ShowcasePage() {
           ))}
         </div>
 
-        {/* Content layers — all centered, stacked, fade in/out */}
-        <div style={{ position:"absolute", inset:0, display:"flex",
-          alignItems:"center", justifyContent:"center", zIndex:2 }}>
+        {/* Content — centered stack */}
+        <div style={{ position:"absolute", inset:0, display:"flex", alignItems:"center",
+          justifyContent:"center", zIndex:2 }}>
 
-          {/* ── Sub-atomic: floating text tokens ── */}
+          {/* ── Sub-atomic ── */}
           <div style={{ position:"absolute", opacity:subOp, pointerEvents:"none",
             display:"flex", flexDirection:"column", alignItems:"center", gap:14 }}>
             <span style={{ fontFamily:"var(--font-bold)", fontSize:72, fontWeight:800,
@@ -1346,134 +1365,158 @@ export default function ShowcasePage() {
             </div>
           </div>
 
-          {/* ── Atoms: bare input outline + blinking cursor + button ── */}
-          <div style={{ position:"absolute", opacity:atomsOp, pointerEvents:"none",
-            display:"flex", flexDirection:"column", alignItems:"center", gap:18 }}>
-            <div style={{ width:280, height:44, border:"1.5px solid rgba(255,255,255,0.38)",
-              borderRadius:8, display:"flex", alignItems:"center", paddingLeft:12 }}>
-              <span style={{ width:2, height:20, background:"rgba(255,255,255,0.75)", borderRadius:1,
-                display:"block", animation:"sc-cursor 1s step-start infinite" }}/>
-            </div>
-            <div style={{ width:280, height:44, background:"var(--colour-primaryblue-500,#0036DD)",
-              borderRadius:8, display:"flex", alignItems:"center", justifyContent:"center" }}>
-              <span style={{ color:"#fff", fontSize:14, fontWeight:700, fontFamily:"var(--font-bold)" }}>Submit</span>
-            </div>
-          </div>
-
-          {/* ── Molecules: label + input (= labeled input) + button ── */}
-          <div style={{ position:"absolute", opacity:molOp, pointerEvents:"none",
-            display:"flex", flexDirection:"column", gap:16, width:280 }}>
-            <div>
-              <p style={{ fontFamily:"var(--font-normal)", fontSize:13, color:"rgba(255,255,255,0.65)",
-                margin:"0 0 6px" }}>Email</p>
-              <div style={{ height:44, border:"1.5px solid rgba(255,255,255,0.35)", borderRadius:8,
-                display:"flex", alignItems:"center", paddingLeft:12, boxSizing:"border-box" as const }}>
-                <span style={{ fontFamily:"var(--font-normal)", fontSize:13, color:"rgba(255,255,255,0.30)" }}>
-                  name@email.com
-                </span>
-              </div>
-            </div>
-            <div style={{ height:44, background:"var(--colour-primaryblue-500,#0036DD)",
-              borderRadius:8, display:"flex", alignItems:"center", justifyContent:"center" }}>
-              <span style={{ color:"#fff", fontSize:14, fontWeight:700, fontFamily:"var(--font-bold)" }}>Submit</span>
-            </div>
-          </div>
-
-          {/* ── Organisms: email molecule + password molecule + login button ── */}
-          <div style={{ position:"absolute", opacity:orgOp, pointerEvents:"none",
+          {/* ── Persistent form (Atoms → Organisms) ── */}
+          <div style={{ position:"absolute", opacity:formVis, pointerEvents:"none",
             display:"flex", flexDirection:"column", gap:14, width:280 }}>
+
+            {/* Email field — label fades in (Molecules), field stays throughout */}
             <div>
-              <p style={{ fontFamily:"var(--font-normal)", fontSize:13, color:"rgba(255,255,255,0.65)",
-                margin:"0 0 6px" }}>Email</p>
-              <div style={{ height:44, border:"1.5px solid rgba(255,255,255,0.35)", borderRadius:8,
-                display:"flex", alignItems:"center", paddingLeft:12, boxSizing:"border-box" as const }}>
-                <span style={{ fontFamily:"var(--font-normal)", fontSize:13, color:"rgba(255,255,255,0.50)" }}>
-                  name@email.com
+              <p style={{ fontFamily:"var(--font-normal)", fontSize:13, margin:"0 0 6px",
+                color:"rgba(255,255,255,0.65)", opacity:emailLblOp }}>Email</p>
+              <div style={{ height:44, border:"1.5px solid rgba(255,255,255,0.38)", borderRadius:8,
+                display:"flex", alignItems:"center", paddingLeft:12, gap:1,
+                boxSizing:"border-box" as const }}>
+                {/* Cursor — visible until typing starts */}
+                <span style={{ width:2, height:20, background:"rgba(255,255,255,0.75)", borderRadius:1,
+                  flexShrink:0, display:"block", animation:"sc-cursor 1s step-start infinite",
+                  opacity:cursorVis }}/>
+                {/* Scroll-typed placeholder */}
+                <span style={{ fontFamily:"var(--font-mono)", fontSize:12,
+                  color:"rgba(255,255,255,0.42)", letterSpacing:".01em" }}>
+                  {typedText}
                 </span>
               </div>
             </div>
-            <div style={{ opacity:orgPwOp }}>
-              <p style={{ fontFamily:"var(--font-normal)", fontSize:13, color:"rgba(255,255,255,0.65)",
-                margin:"0 0 6px" }}>Password</p>
+
+            {/* Password field — slides in via max-height (Organisms) */}
+            <div style={{ overflow:"hidden",
+              maxHeight:`${Math.round(passwordOp * 82)}px`, opacity:passwordOp }}>
+              <p style={{ fontFamily:"var(--font-normal)", fontSize:13, margin:"0 0 6px",
+                color:"rgba(255,255,255,0.65)" }}>Password</p>
               <div style={{ height:44, border:"1.5px solid rgba(255,255,255,0.35)", borderRadius:8,
                 display:"flex", alignItems:"center", paddingLeft:12, boxSizing:"border-box" as const }}>
-                <span style={{ fontFamily:"var(--font-normal)", fontSize:13, color:"rgba(255,255,255,0.50)" }}>
-                  ••••••••••
-                </span>
+                <span style={{ fontFamily:"var(--font-normal)", fontSize:14,
+                  color:"rgba(255,255,255,0.50)", letterSpacing:".08em" }}>••••••••••</span>
               </div>
             </div>
+
+            {/* Button — "Submit" cross-fades to "Login" at Organisms */}
             <div style={{ height:44, background:"var(--colour-primaryblue-500,#0036DD)",
               borderRadius:8, display:"flex", alignItems:"center", justifyContent:"center",
-              opacity:orgBtnOp }}>
-              <span style={{ color:"#fff", fontSize:14, fontWeight:700, fontFamily:"var(--font-bold)" }}>Login</span>
+              position:"relative" }}>
+              <span style={{ position:"absolute", color:"#fff", fontSize:14, fontWeight:700,
+                fontFamily:"var(--font-bold)", opacity: 1 - loginLblOp }}>Submit</span>
+              <span style={{ position:"absolute", color:"#fff", fontSize:14, fontWeight:700,
+                fontFamily:"var(--font-bold)", opacity: loginLblOp }}>Login</span>
             </div>
           </div>
 
-          {/* ── Templates: page chrome — nav + avatar + form + footer ── */}
+          {/* ── Templates: browser frame with page chrome ── */}
           <div style={{ position:"absolute", opacity:tplOp, pointerEvents:"none",
-            inset:0, display:"flex", flexDirection:"column" }}>
-            {/* Top nav bar */}
-            <div style={{ display:"flex", alignItems:"center", padding:"20px 40px",
-              borderBottom:"1px solid rgba(255,255,255,0.08)" }}>
-              <div style={{ width:34, height:34, borderRadius:"50%",
-                background:"var(--colour-primaryblue-500,#0036DD)",
-                display:"flex", alignItems:"center", justifyContent:"center", flexShrink:0 }}>
-                <span style={{ color:"#fff", fontSize:13, fontWeight:700, fontFamily:"var(--font-bold)" }}>R</span>
-              </div>
-              <div style={{ flex:1 }}/>
-              <div style={{ display:"flex", flexDirection:"column", gap:5 }}>
-                {[0,1,2].map(k=>(
-                  <div key={k} style={{ width:22, height:2, background:"rgba(255,255,255,0.55)", borderRadius:1 }}/>
+            display:"flex", alignItems:"center", justifyContent:"center", inset:0 }}>
+            <div style={{ width:460, borderRadius:16, overflow:"hidden",
+              border:"1px solid rgba(255,255,255,0.13)",
+              background:"rgba(8,9,11,0.97)",
+              boxShadow:"0 40px 100px rgba(0,0,0,0.75), inset 0 1px 0 rgba(255,255,255,0.07)",
+              display:"flex", flexDirection:"column" }}>
+
+              {/* Browser chrome bar */}
+              <div style={{ display:"flex", alignItems:"center", gap:7, padding:"11px 16px",
+                borderBottom:"1px solid rgba(255,255,255,0.07)",
+                background:"rgba(255,255,255,0.025)", flexShrink:0 }}>
+                {["#FF5F57","#FFBD2E","#28C840"].map((c,k)=>(
+                  <div key={k} style={{ width:10, height:10, borderRadius:"50%", background:c }}/>
                 ))}
+                <div style={{ flex:1, margin:"0 12px", height:20,
+                  background:"rgba(255,255,255,0.05)", borderRadius:5,
+                  display:"flex", alignItems:"center", paddingLeft:8 }}>
+                  <span style={{ fontFamily:"var(--font-mono)", fontSize:10,
+                    color:"rgba(255,255,255,0.22)" }}>app.sandhata.io/login</span>
+                </div>
               </div>
-            </div>
-            {/* Center: login form */}
-            <div style={{ flex:1, display:"flex", alignItems:"center", justifyContent:"center" }}>
-              <div style={{ display:"flex", flexDirection:"column", gap:14, width:280 }}>
-                <h3 style={{ fontFamily:"var(--font-bold)", fontSize:24, fontWeight:800,
-                  color:"#fff", margin:"0 0 8px", textAlign:"center" as const }}>Login</h3>
-                {(["Email","Password"] as const).map((lbl,li)=>(
-                  <div key={lbl}>
-                    <p style={{ fontFamily:"var(--font-normal)", fontSize:13, color:"rgba(255,255,255,0.60)",
-                      margin:"0 0 6px" }}>{lbl}</p>
-                    <div style={{ height:44, border:"1.5px solid rgba(255,255,255,0.22)", borderRadius:8,
-                      display:"flex", alignItems:"center", paddingLeft:12, boxSizing:"border-box" as const }}>
-                      <span style={{ fontFamily:"var(--font-normal)", fontSize:13, color:"rgba(255,255,255,0.35)" }}>
-                        {li===0 ? "name@email.com" : "••••••••••"}
-                      </span>
-                    </div>
+
+              {/* Page content */}
+              <div style={{ display:"flex", flexDirection:"column" }}>
+                {/* Page nav: hamburger left, avatar right */}
+                <div style={{ display:"flex", alignItems:"center", padding:"13px 20px",
+                  borderBottom:"1px solid rgba(255,255,255,0.06)" }}>
+                  <div style={{ display:"flex", flexDirection:"column", gap:4 }}>
+                    {[0,1,2].map(k=>(
+                      <div key={k} style={{ width:18, height:1.5,
+                        background:"rgba(255,255,255,0.45)", borderRadius:1 }}/>
+                    ))}
                   </div>
-                ))}
-                <div style={{ height:44, background:"var(--colour-primaryblue-500,#0036DD)", borderRadius:8,
-                  display:"flex", alignItems:"center", justifyContent:"center" }}>
-                  <span style={{ color:"#fff", fontSize:14, fontWeight:700, fontFamily:"var(--font-bold)" }}>Submit</span>
+                  <div style={{ flex:1 }}/>
+                  <div style={{ width:28, height:28, borderRadius:"50%",
+                    background:"var(--colour-primaryblue-500,#0036DD)",
+                    display:"flex", alignItems:"center", justifyContent:"center" }}>
+                    <span style={{ color:"#fff", fontSize:11, fontWeight:700,
+                      fontFamily:"var(--font-bold)" }}>R</span>
+                  </div>
+                </div>
+
+                {/* Login form */}
+                <div style={{ padding:"28px 80px 24px", display:"flex", flexDirection:"column", gap:11 }}>
+                  <h3 style={{ color:"#fff", fontFamily:"var(--font-bold)", fontSize:18, fontWeight:800,
+                    textAlign:"center" as const, margin:"0 0 8px" }}>Login</h3>
+                  {[["Email","name@email.com"],["Password","••••••••"]].map(([lbl,ph])=>(
+                    <div key={lbl}>
+                      <p style={{ fontSize:11, color:"rgba(255,255,255,0.55)", margin:"0 0 5px",
+                        fontFamily:"var(--font-normal)" }}>{lbl}</p>
+                      <div style={{ height:36, border:"1px solid rgba(255,255,255,0.18)",
+                        borderRadius:7, display:"flex", alignItems:"center", paddingLeft:10 }}>
+                        <span style={{ fontSize:12, color:"rgba(255,255,255,0.28)",
+                          fontFamily:"var(--font-normal)" }}>{ph}</span>
+                      </div>
+                    </div>
+                  ))}
+                  <div style={{ height:36, background:"var(--colour-primaryblue-500,#0036DD)",
+                    borderRadius:7, marginTop:2, display:"flex", alignItems:"center",
+                    justifyContent:"center" }}>
+                    <span style={{ color:"#fff", fontSize:13, fontWeight:700,
+                      fontFamily:"var(--font-bold)" }}>Submit</span>
+                  </div>
+                </div>
+
+                {/* Footer */}
+                <div style={{ display:"flex", justifyContent:"center", gap:32, padding:"13px 20px",
+                  borderTop:"1px solid rgba(255,255,255,0.06)" }}>
+                  {["Home","Profile","Settings","About"].map(m=>(
+                    <span key={m} style={{ fontSize:11, color:"rgba(255,255,255,0.32)",
+                      fontFamily:"var(--font-normal)" }}>{m}</span>
+                  ))}
                 </div>
               </div>
             </div>
-            {/* Footer menu */}
-            <div style={{ display:"flex", justifyContent:"center", gap:48, padding:"20px",
-              borderTop:"1px solid rgba(255,255,255,0.08)" }}>
-              {["Home","Profile","Settings","About"].map(m=>(
-                <span key={m} style={{ fontFamily:"var(--font-normal)", fontSize:12,
-                  color:"rgba(255,255,255,0.38)" }}>{m}</span>
-              ))}
-            </div>
           </div>
 
-        </div>{/* end content layers */}
+        </div>{/* end content */}
 
-        {/* Progress dots */}
-        <div style={{ position:"absolute", bottom:32, left:0, right:0, zIndex:10,
-          display:"flex", justifyContent:"center", gap:6, pointerEvents:"none" }}>
-          {STAGES.map((_,i) => (
-            <div key={i} style={{
-              width: hOps[i] > 0.5 ? 18 : 5, height:3, borderRadius:2,
-              transition:"width .25s, background .25s",
-              background: atomicP > dotReached[i]
-                ? "var(--colour-primaryblue-400,#2255FF)"
-                : "rgba(255,255,255,0.14)",
-            }}/>
-          ))}
+        {/* Vertical stage indicator — right edge */}
+        <div style={{ position:"absolute", right:28, top:0, bottom:0, zIndex:10,
+          pointerEvents:"none", display:"flex", alignItems:"center" }}>
+          <div style={{ position:"relative", display:"flex", flexDirection:"column", gap:22 }}>
+            {/* Connecting line */}
+            <div style={{ position:"absolute", right:3, top:8, bottom:8, width:1,
+              background:"rgba(255,255,255,0.10)", borderRadius:1 }}/>
+            {STAGES.map((s,i) => (
+              <div key={i} style={{ display:"flex", alignItems:"center", gap:10,
+                justifyContent:"flex-end" }}>
+                <span style={{ fontFamily:"var(--font-mono)", fontSize:9, letterSpacing:".06em",
+                  color:"rgba(255,255,255,0.45)", whiteSpace:"nowrap" as const,
+                  opacity: hOps[i] > 0.25 ? 1 : 0, transition:"opacity .3s" }}>
+                  {s.name}
+                </span>
+                <div style={{
+                  width: hOps[i] > 0.4 ? 7 : 5, height: hOps[i] > 0.4 ? 7 : 5,
+                  borderRadius:"50%", transition:"all .25s", position:"relative", zIndex:1,
+                  background: atomicP > dotReached[i]
+                    ? "var(--colour-primaryblue-400,#2255FF)"
+                    : hOps[i] > 0.25 ? "rgba(255,255,255,0.55)" : "rgba(255,255,255,0.18)",
+                }}/>
+              </div>
+            ))}
+          </div>
         </div>
 
       </div>{/* end sticky */}
