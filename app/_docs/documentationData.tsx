@@ -346,8 +346,66 @@ const docTheming = {
   ],
 };
 
-export const DOC_PAGES = [
+const docFigmaMake = {
+  id: "figma-make", name: "Figma Make edits",
+  description: "How to edit and extend Sandhata UI inside Figma Make so changes stay faithful to the tokens and round-trip cleanly back to code. Figma Make is for composing and refining product surfaces from the design system — not for inventing new primitives.",
+  sections: [
+    {
+      id: "when-to-use", title: "When to use it",
+      bullets: [
+        ["Compose, don't invent", "assemble screens from existing components and tokens; new primitives are added in code first"],
+        ["Explore layouts", "iterate on spacing, hierarchy and copy on real product surfaces"],
+        ["Stay portable", "every edit should reduce to a token, a component property, or an auto-layout change — nothing bespoke"],
+      ],
+    },
+    {
+      id: "variables", title: "Bind to variables, never raw values",
+      note: "Sandhata tokens are published as Figma variables. Always pick a variable — a raw hex or a hand-typed px value has no home in code and is dropped on the round-trip.",
+      bullets: [
+        ["Colour", "bind fills and strokes to colour/* variables (primaryblue scale, neutrals, status)"],
+        ["Type", "apply the text styles that mirror the --text-* tokens; don't override size or line-height by hand"],
+        ["Spacing & radius", "use the 8-point spacing and radius variables, not arbitrary numbers"],
+      ],
+      code: `Fill    →  colour/primaryblue/500     var(--colour-primaryblue-500)\nText    →  text/title                 var(--text-title)\nRadius  →  radius/md                   var(--radius-md)\nGap     →  spacing/16                  8-point grid`,
+    },
+    {
+      id: "components", title: "Keep components intact",
+      bullets: [
+        ["Use main components", "insert instances of the published Sandhata components; never detach"],
+        ["Change via properties", "swap hierarchy, size and state through component properties — these map to props"],
+        ["Match the barrel", "component and variant names mirror components/index.js (Button, Badge, Alert, StatCard…)"],
+        ["Detaching is a fork", "a detached instance no longer maps to a coded component and won't sync back"],
+      ],
+    },
+    {
+      id: "round-trip", title: "The round-trip contract",
+      note: "An edit is only \"done\" when it can be described as a token change, a component property, or an auto-layout change. Anything else is a code task first.",
+      table: {
+        head: ["Figma Make edit", "Maps to code as"],
+        codeCol: 1,
+        rows: [
+          ["Recolour a fill to colour/*", "token / semantic alias"],
+          ["Swap a component property", "component prop"],
+          ["Adjust auto-layout gap or padding", "spacing token"],
+          ["Restyle a text layer to text/*", "type token"],
+          ["Raw hex · detached instance · new primitive", "not portable — do it in code"],
+        ],
+      },
+    },
+    {
+      id: "checklist", title: "Pre-handoff checklist",
+      bullets: [
+        ["No raw values", "every colour, size and radius is bound to a variable"],
+        ["No detached instances", "all components are live instances"],
+        ["Auto-layout intact", "spacing reads as gap and padding, not absolute coordinates"],
+        ["Names match the system", "components and variants line up with the code barrel"],
+      ],
+    },
+  ],
+};
+
+export const DOC_PAGES: any[] = [
   { label: "Getting started", items: [docOverview] },
   { label: "Foundations", items: [docColour, docTypography, docSpacing, docShape, docMotion] },
-  { label: "Guidelines", items: [docContent, docBrand, docTheming] },
+  { label: "Guidelines", items: [docContent, docBrand, docTheming, docFigmaMake] },
 ];

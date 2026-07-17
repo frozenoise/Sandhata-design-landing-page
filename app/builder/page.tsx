@@ -13,12 +13,31 @@ const EXAMPLES = [
   "A dashboard header with three stat cards and a status alert",
 ];
 
+const KEY_STORAGE = "sd-builder-api-key";
+
 export default function BuilderPage() {
   const [prompt, setPrompt] = React.useState("");
   const [tree, setTree] = React.useState<UINode | null>(null);
   const [loading, setLoading] = React.useState(false);
   const [error, setError] = React.useState<string | null>(null);
+  const [needsKey, setNeedsKey] = React.useState(false);
+  const [apiKey, setApiKey] = React.useState("");
+  const [keyDraft, setKeyDraft] = React.useState("");
   const [view, setView] = React.useState<"preview" | "code">("preview");
+
+  React.useEffect(() => {
+    const saved = window.localStorage.getItem(KEY_STORAGE) || "";
+    setApiKey(saved);
+    setKeyDraft(saved);
+  }, []);
+
+  function saveKey(key: string) {
+    const trimmed = key.trim();
+    setApiKey(trimmed);
+    setKeyDraft(trimmed);
+    if (trimmed) window.localStorage.setItem(KEY_STORAGE, trimmed);
+    else window.localStorage.removeItem(KEY_STORAGE);
+  }
 
   async function generate(p?: string) {
     const text = (p ?? prompt).trim();
@@ -26,15 +45,19 @@ export default function BuilderPage() {
     setPrompt(text);
     setLoading(true);
     setError(null);
+    setNeedsKey(false);
     try {
       const res = await fetch("/api/generate", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ prompt: text }),
+        body: JSON.stringify({ prompt: text, apiKey }),
       });
       const data = await res.json();
-      if (!res.ok) { setError(data.message || data.error || "Generation failed"); setTree(null); }
-      else { setTree(data.tree); setView("preview"); }
+      if (!res.ok) {
+        setError(data.message || data.error || "Generation failed");
+        setNeedsKey(data.error === "missing_key" || data.error === "invalid_key");
+        setTree(null);
+      } else { setTree(data.tree); setView("preview"); }
     } catch (e: any) {
       setError(e?.message || "Network error");
     } finally {
@@ -80,6 +103,31 @@ export default function BuilderPage() {
               </button>
             ))}
           </div>
+
+          <div className="bld-keybox">
+            <div className="bld-examples-label">Your Anthropic API key</div>
+            <p className="bld-hint" style={{ textAlign: "left", margin: "0 0 10px" }}>
+              Used only for this request, never stored on our server — kept in your
+              browser&apos;s local storage.{" "}
+              <a href="https://console.anthropic.com/settings/keys" target="_blank" rel="noopener noreferrer">
+                Get an API key
+              </a>
+            </p>
+            <input
+              className="bld-key-input"
+              type="password"
+              placeholder="sk-ant-…"
+              value={keyDraft}
+              onChange={(e) => setKeyDraft(e.target.value)}
+              onBlur={() => saveKey(keyDraft)}
+              onKeyDown={(e) => { if (e.key === "Enter") saveKey(keyDraft); }}
+            />
+            {apiKey && (
+              <button className="bld-key-clear" onClick={() => saveKey("")}>
+                Clear saved key
+              </button>
+            )}
+          </div>
         </aside>
 
         {/* Right: preview / code */}
@@ -98,8 +146,27 @@ export default function BuilderPage() {
             {loading && <div className="bld-state"><div className="bld-spinner" /><span>Generating your interface…</span></div>}
             {!loading && error && (
               <div className="bld-state bld-error">
-                <strong>Couldn&apos;t generate</strong>
+                <strong>{needsKey ? "API key needed" : "Couldn't generate"}</strong>
                 <span>{error}</span>
+                {needsKey && (
+                  <div className="bld-key-inline">
+                    <input
+                      className="bld-key-input"
+                      type="password"
+                      placeholder="sk-ant-…"
+                      value={keyDraft}
+                      onChange={(e) => setKeyDraft(e.target.value)}
+                      onKeyDown={(e) => { if (e.key === "Enter") { saveKey(keyDraft); generate(); } }}
+                      autoFocus
+                    />
+                    <button className="bld-go" onClick={() => { saveKey(keyDraft); generate(); }} disabled={!keyDraft.trim()}>
+                      Save &amp; retry
+                    </button>
+                    <a href="https://console.anthropic.com/settings/keys" target="_blank" rel="noopener noreferrer" className="bld-hint">
+                      Get an API key
+                    </a>
+                  </div>
+                )}
               </div>
             )}
             {!loading && !error && !tree && (

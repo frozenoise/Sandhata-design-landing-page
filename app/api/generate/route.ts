@@ -44,22 +44,26 @@ RULES:
 - Output ONLY the JSON object.`;
 
 export async function POST(req: Request) {
-  const key = process.env.ANTHROPIC_API_KEY;
-  if (!key) {
-    return NextResponse.json(
-      { error: "missing_key", message: "Set ANTHROPIC_API_KEY in .env.local and restart the dev server." },
-      { status: 503 }
-    );
-  }
-
   let prompt = "";
+  let clientKey = "";
   try {
-    ({ prompt } = await req.json());
+    ({ prompt, apiKey: clientKey = "" } = await req.json());
   } catch {
     return NextResponse.json({ error: "bad_request" }, { status: 400 });
   }
   if (!prompt || typeof prompt !== "string") {
     return NextResponse.json({ error: "bad_request", message: "Provide a prompt." }, { status: 400 });
+  }
+
+  const key = (typeof clientKey === "string" && clientKey.trim()) || process.env.ANTHROPIC_API_KEY;
+  if (!key) {
+    return NextResponse.json(
+      {
+        error: "missing_key",
+        message: "Enter your Anthropic API key to generate — it's sent only with this request and never stored on our server.",
+      },
+      { status: 503 }
+    );
   }
 
   try {
@@ -85,9 +89,15 @@ export async function POST(req: Request) {
     const tree = JSON.parse(text.slice(start, end + 1));
     return NextResponse.json({ tree });
   } catch (e: any) {
+    const status = e?.status === 401 ? 401 : 500;
     return NextResponse.json(
-      { error: "generation_failed", message: e?.message ?? "Unknown error" },
-      { status: 500 }
+      {
+        error: status === 401 ? "invalid_key" : "generation_failed",
+        message: status === 401
+          ? "That API key was rejected by Anthropic. Check it and try again."
+          : e?.message ?? "Unknown error",
+      },
+      { status }
     );
   }
 }

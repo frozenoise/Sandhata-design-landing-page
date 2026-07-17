@@ -737,7 +737,7 @@ export default function ShowcasePage() {
     return () => el.removeEventListener("scroll", onScroll);
   }, []);
 
-  // Mirror atomicP into a ref so the canvas rAF loop can read it without re-mounting
+// Mirror atomicP into a ref so the canvas rAF loop can read it without re-mounting
   React.useEffect(() => { apRef.current = atomicP; }, [atomicP]);
 
   // Canvas particle system — multiple scenes, each converging dots to a new element's shape
@@ -1764,16 +1764,18 @@ export default function ShowcasePage() {
           {toast}
         </motion.div>
       )}
-      <main ref={mainRef} className="sc-main-wrap" style={{ marginLeft:0, height:"100vh", overflowY:"auto", background:surfCfg.bg, ...mainVars }}>
-        {heroBand}
-        <SectionSep bg={surfCfg.bg} dark={surface === "dark"}/>
-        {atomsBand}
-        <SectionSep bg={surfCfg.bg} dark={surface === "dark"}/>
-        {dataBand}
-        <SectionSep bg={surfCfg.bg} dark={surface === "dark"}/>
-        {themesBand}
-        <SectionSep bg={surfCfg.bg} dark={surface === "dark"}/>
-        {systemBand}
+      <main ref={mainRef} className="sc-main-wrap" style={{ marginLeft:0, height:"100vh", overflowY:"auto", overflowX:"hidden", background:surfCfg.bg, ...mainVars }}>
+        <div>
+          {heroBand}
+          <SectionSep bg={surfCfg.bg} dark={surface === "dark"}/>
+          {atomsBand}
+          <SectionSep bg={surfCfg.bg} dark={surface === "dark"}/>
+          {dataBand}
+          <SectionSep bg={surfCfg.bg} dark={surface === "dark"}/>
+          {themesBand}
+          <SectionSep bg={surfCfg.bg} dark={surface === "dark"}/>
+          {systemBand}
+        </div>
       </main>
     </div>
   );

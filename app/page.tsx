@@ -592,11 +592,13 @@ export default function App() {
         </nav>
       </header>
 
+<div>
+
       {/* HERO */}
       <section className="hero">
         <div className="hero-aurora"/>
         <h1>
-          The design system built for&nbsp;<em>clarity<Sparkle/></em>
+          The AI-ready design system built for&nbsp;<em>clarity<Sparkle/></em>
         </h1>
 
         <p className="hero-sub">
@@ -886,6 +888,7 @@ export default function App() {
         </div>
       </footer>
 
+      </div>
     </div>
   );
 }
