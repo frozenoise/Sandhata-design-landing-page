@@ -27,8 +27,8 @@ body { margin: 0; background: var(--doc-bg); }
 .doc-search input { border: none; outline: none; background: transparent; width: 100%; font: 14px/1 var(--font-normal); color: var(--text-body); }
 .doc-nav-all { display: block; padding: 7px 12px; border-radius: var(--radius-sm); font: 14px/1.3 var(--font-normal); color: var(--text-title); cursor: pointer; }
 .doc-nav-all.on, .doc-nav-item.on { background: var(--doc-active); color: var(--text-title); font-family: var(--font-bold); font-weight: 700; }
-.doc-group { margin-top: 18px; }
-.doc-group-label { font: 700 11px/1 var(--font-bold); letter-spacing: 0.4px; color: var(--text-caption); text-transform: none; padding: 0 12px 8px; }
+.doc-group { margin-top: 32px; }
+.doc-group-label { font: 300 14px/1.3 var(--font-light); letter-spacing: 0; color: var(--text-caption); text-transform: none; padding: 0 12px 8px; }
 .doc-nav-item { display: block; padding: 7px 12px; border-radius: var(--radius-sm); font: 14px/1.3 var(--font-normal); color: var(--text-subtitle); cursor: pointer; }
 .doc-nav-item:hover, .doc-nav-all:hover { background: rgba(20,22,24,0.04); }
 .cs-badge {
@@ -47,6 +47,21 @@ body { margin: 0; background: var(--doc-bg); }
 .doc-head p { font-family: var(--font-normal); font-size: 16px; line-height: 1.55; color: var(--text-subtitle); margin: 0; max-width: 720px; }
 .doc-rule { height: 1px; background: var(--doc-line); margin: 24px 0 8px; }
 
+/* Header row — title/description plus the Copy for AI action */
+.doc-head-row { display: flex; align-items: flex-start; justify-content: space-between; gap: 20px; }
+.doc-head-text { min-width: 0; flex: 1; }
+.doc-copy-btn {
+  flex-shrink: 0; display: inline-flex; align-items: center; justify-content: center;
+  height: 34px; min-width: 152px; padding: 0 14px; margin-top: 2px;
+  border: 1px solid var(--doc-line); border-radius: var(--radius-md);
+  background: var(--doc-surface); cursor: pointer; white-space: nowrap;
+  font: 13px/1 var(--font-normal); color: var(--text-subtitle);
+  transition: background var(--duration-fast), border-color var(--duration-fast), color var(--duration-fast);
+}
+.doc-copy-btn:hover { background: rgba(20,22,24,0.04); color: var(--text-title); }
+.doc-copy-btn.is-copied { color: var(--text-success); border-color: var(--text-success); }
+@media (max-width: 640px) { .doc-head-row { flex-direction: column; } .doc-copy-btn { margin-top: 12px; } }
+
 .doc-section { padding-top: 28px; }
 .doc-section h2 { font-family: var(--font-bold); font-weight: 700; font-size: 18px; color: var(--text-title); margin: 0 0 12px; }
 .doc-bullets { margin: 0 0 18px; padding-left: 18px; }
@@ -62,6 +77,17 @@ pre.doc-code .c-kw { color: var(--c-kw); } pre.doc-code .c-str { color: var(--c-
 pre.doc-code .c-tag { color: var(--c-tag); } pre.doc-code .c-prop { color: var(--c-prop); }
 pre.doc-code .c-com { color: var(--c-com); }
 
+/* Do / Don't — paired correct/incorrect example cards */
+.doc-dodont { display: flex; gap: 16px; margin-bottom: 18px; }
+.doc-dodont-card { flex: 1; min-width: 0; border: 1px solid var(--doc-line); border-radius: var(--radius-lg); overflow: hidden; background: var(--doc-surface); }
+.doc-dodont-head { display: flex; align-items: center; gap: 8px; padding: 12px 16px; border-bottom: 1px solid var(--doc-line); font: 700 13px/1 var(--font-bold); }
+.doc-dodont-card.is-do .doc-dodont-head { color: var(--text-success); }
+.doc-dodont-card.is-dont .doc-dodont-head { color: var(--text-error); }
+.doc-dodont-icon { display: inline-flex; }
+.doc-dodont-preview { padding: 24px; display: flex; align-items: center; justify-content: center; min-height: 32px; }
+.doc-dodont-text { margin: 0; padding: 0 16px 16px; font-family: var(--font-normal); font-size: 13px; line-height: 1.55; color: var(--text-caption); }
+@media (max-width: 640px) { .doc-dodont { flex-direction: column; } }
+
 /* Tables */
 .doc-table { width: 100%; border-collapse: collapse; border: 1px solid var(--doc-line); border-radius: var(--radius-md); overflow: hidden; margin-bottom: 6px; }
 .doc-table th { text-align: left; padding: 11px 16px; font: 700 13px/1 var(--font-bold); color: var(--text-subtitle); background: var(--doc-surface); border-bottom: 1px solid var(--doc-line); }
@@ -70,6 +96,10 @@ pre.doc-code .c-com { color: var(--c-com); }
 .doc-table .mono-cell { font-family: var(--font-mono); color: var(--c-kw); }
 .doc-table .type-cell { font-family: var(--font-mono); font-size: 12.5px; color: var(--text-caption); }
 .prop-pill { font-family: var(--font-mono); font-size: 12.5px; background: rgba(20,22,24,0.05); padding: 2px 7px; border-radius: var(--radius-xs); color: var(--text-body); }
+
+/* Tokens used — colour swatch + token name pill */
+.token-cell { display: inline-flex; align-items: center; gap: 8px; }
+.token-swatch { width: 13px; height: 13px; border-radius: var(--radius-xs); border: 1px solid rgba(20,22,24,0.12); flex-shrink: 0; }
 
 /* Right rail — quick scroll navigation (scroll-spy) */
 .doc-toc { width: 180px; flex-shrink: 0; position: sticky; top: 0; align-self: flex-start; }

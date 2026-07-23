@@ -887,7 +887,7 @@ export default function ShowcasePage() {
       <div className="sc-band-content" style={{ ...bandPad({ paddingTop:84, paddingBottom:70 }), position:"relative", zIndex:1, textAlign:"center" }}>
         <p style={{ fontFamily:"var(--font-normal)", fontSize:11, fontWeight:700, letterSpacing:"0.10em",
           textTransform:"uppercase", color:"rgba(0,0,0,0.35)", margin:"0 0 16px" }}>SANDHATA DESIGN SYSTEM</p>
-        <h1 style={{ fontFamily:"var(--font-bold)", fontSize:48, fontWeight:700, lineHeight:1.1,
+        <h1 style={{ fontFamily:"var(--font-normal)", fontSize:48, fontWeight:400, lineHeight:1.1,
           letterSpacing:"-1.5px", color:"#0a0a14", margin:"0 0 16px" }}>
           The design system,{" "}<em style={{ fontStyle:"normal", color:"#d58b03" }}>alive.</em>
         </h1>
@@ -1332,7 +1332,7 @@ export default function ShowcasePage() {
         <div style={{ textAlign:"center", marginBottom:44 }}>
           <p style={{ fontFamily:"var(--font-normal)", fontSize:11, fontWeight:700, letterSpacing:"0.10em",
             textTransform:"uppercase", color:"rgba(0,0,0,0.35)", margin:"0 0 14px" }}>Multi-tenant Theming</p>
-          <h2 style={{ fontFamily:"var(--font-bold)", fontSize:38, fontWeight:700, color:"#0a0a14", letterSpacing:"-1px", margin:"0 0 14px" }}>
+          <h2 style={{ fontFamily:"var(--font-normal)", fontSize:38, fontWeight:400, color:"#0a0a14", letterSpacing:"-1px", margin:"0 0 14px" }}>
             One system.{" "}<span style={{ color:"#f68136" }}>Any brand.</span>
           </h2>
           <p style={{ fontFamily:"var(--font-normal)", fontSize:15, color:"rgba(0,0,0,0.52)", maxWidth:520, margin:"0 auto 32px", lineHeight:1.6 }}>
@@ -1453,7 +1453,7 @@ export default function ShowcasePage() {
                 letterSpacing:".14em", textTransform:"uppercase" as const, margin:"0 0 10px" }}>
                 {s.num} / Atomic Design
               </p>
-              <h2 style={{ fontFamily:"var(--font-bold)", fontSize:52, fontWeight:800, color:"#fff",
+              <h2 style={{ fontFamily:"var(--font-normal)", fontSize:52, fontWeight:400, color:"#fff",
                 margin:0, letterSpacing:"-2px", lineHeight:1 }}>
                 {s.name}
               </h2>

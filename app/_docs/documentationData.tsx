@@ -22,10 +22,10 @@ const docOverview = {
       id: "quick-start", title: "Quick start",
       bullets: [
         ["Link the stylesheet", "styles.css imports every token and font file"],
-        ["Load the bundle", "components live on window.SandhataDesignSystem_081a0e"],
+        ["Import from the barrel", "components are re-exported from @/components"],
         ["Tokens first", "prefer semantic aliases over raw scale steps"],
       ],
-      code: `<link rel="stylesheet" href="styles.css" />\n<script src="_ds_bundle.js"></script>\n\nconst { Button, Card } = window.SandhataDesignSystem_081a0e;\n\n<Button hierarchy="primary">Get started</Button>`,
+      code: `import { Button, Card } from "@/components";\n\n<Button hierarchy="primary">Get started</Button>`,
     },
     {
       id: "whats-included", title: "What's included",
