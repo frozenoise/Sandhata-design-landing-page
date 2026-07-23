@@ -1,15 +1,16 @@
 /* ============================================================
    Sandhata Design System — Typography tokens
-   Typeface: Akkurat (Light 300 / Regular 400 / Bold 700) + Mono.
+   Typeface: IBM Plex Sans (Light 300 / Regular 400 / Bold 700) + IBM Plex Mono.
+   Switched from Akkurat 2026-07-23 (see Figma file 1aC8QgJre333QRr4tUCNNt).
    Scale follows an 8-point rhythm. Values from Figma type tokens.
    ============================================================ */
 
 :root {
   /* ---- Families ------------------------------------------ */
-  --font-light:  "Akkurat-Light", "Akkurat", system-ui, sans-serif;
-  --font-normal: "Akkurat", system-ui, sans-serif;
-  --font-bold:   "Akkurat-Bold", "Akkurat", system-ui, sans-serif;
-  --font-mono:   "Akkurat-Mono", ui-monospace, "SF Mono", Menlo, monospace;
+  --font-light:  "IBM Plex Sans", system-ui, sans-serif;
+  --font-normal: "IBM Plex Sans", system-ui, sans-serif;
+  --font-bold:   "IBM Plex Sans", system-ui, sans-serif;
+  --font-mono:   "IBM Plex Mono", ui-monospace, "SF Mono", Menlo, monospace;
 
   /* ---- Weights ------------------------------------------- */
   --weight-light: 300;
@@ -17,7 +18,7 @@
   --weight-bold: 700;
 
   /* ---- Type scale (font-size / line-height / tracking) ---
-     Display — Akkurat Bold, tight tracking, for hero & marketing. */
+     Display — IBM Plex Sans Bold, tight tracking, for hero & marketing. */
   --display-large-size: 48px;
   --display-large-line: 64px;
   --display-large-tracking: -1px;

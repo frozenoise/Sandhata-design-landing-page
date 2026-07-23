@@ -9,11 +9,6 @@ body { background: #FEFAF7; overflow-x: hidden; font-family: var(--font-normal);
 /* ─── Tokens local ────────────────────────────────────────────── */
 :root {
   --blue: #0036DD; --blue-50: #EEF3FF; --page: #FEFAF7;
-  /* Override brand fonts with IBM Plex Sans */
-  --font-light:  'IBM Plex Sans', system-ui, sans-serif;
-  --font-normal: 'IBM Plex Sans', system-ui, sans-serif;
-  --font-bold:   'IBM Plex Sans', system-ui, sans-serif;
-  --font-mono:   'IBM Plex Mono', ui-monospace, monospace;
 }
 
 /* ── Section entrance animation ──────────────────────────────── */
@@ -76,7 +71,13 @@ body { background: #FEFAF7; overflow-x: hidden; font-family: var(--font-normal);
       rgba(255,228,196,0.10) 66%,   /* cream falloff */
       transparent 82%
     );
-  transform-origin: 50% 100%;
+  /* Centered (not bottom) pivot: with top/bottom flush against the section
+     (no vertical overhang, unlike the horizontal -20%/right:-20%), a
+     bottom-anchored pivot lets translateY(-8%) at the animation's peak lift
+     the div's bottom edge above the section's real bottom, exposing a flat
+     strip of the plain background there. A centered pivot keeps the bottom
+     edge flush (or past) the container through the whole cycle instead. */
+  transform-origin: 50% 50%;
   animation: auroraRise 4s ease-in-out infinite alternate;
 }
 /* faint concentric-arc texture from the bottom corners */
@@ -94,7 +95,7 @@ body { background: #FEFAF7; overflow-x: hidden; font-family: var(--font-normal);
 }
 
 .hero h1 {
-  font: 700 80px/1.2 var(--font-bold);
+  font: 400 80px/1.2 var(--font-normal);
   color: #000; margin: 0 auto;
   max-width: 760px; letter-spacing: -2px;
   position: relative; z-index: 2;
@@ -168,11 +169,42 @@ body { background: #FEFAF7; overflow-x: hidden; font-family: var(--font-normal);
 }
 .browser {
   position: relative; z-index: 1;
-  border: 10px solid #fff; border-radius: 26px; overflow: hidden;
+  padding: 10px; border-radius: 26px; overflow: hidden;
   background: #fff;
   box-shadow: 0 0 0 1px rgba(10,10,20,0.04),
               5px 5px 26px rgba(0,0,0,0.08);
 }
+/* Light beam travels around the frame border.
+   Large centered square so the conic arc reaches all four corners evenly.
+   z-index:-1 within .browser's stacking context = above its background,
+   below the opaque bar+video children that cover the content area. */
+.browser::before {
+  content: '';
+  position: absolute;
+  width: 200%; height: 200%;
+  top: 50%; left: 50%;
+  transform: translate(-50%, -50%) rotate(0turn);
+  z-index: -1;
+  pointer-events: none;
+  background: conic-gradient(
+    from 0deg,
+    transparent 0%,
+    transparent 75%,
+    rgba(160, 210, 255, 0.30) 78%,
+    rgba(220, 240, 255, 0.85) 80%,
+    rgba(255, 255, 255, 1.00) 82%,
+    rgba(220, 240, 255, 0.85) 84%,
+    rgba(160, 210, 255, 0.30) 86%,
+    transparent 89%,
+    transparent 100%
+  );
+  animation: beamSpin 3s linear infinite;
+}
+@keyframes beamSpin {
+  from { transform: translate(-50%, -50%) rotate(0turn); }
+  to   { transform: translate(-50%, -50%) rotate(1turn); }
+}
+@media (prefers-reduced-motion: reduce) { .browser::before { animation: none; } }
 .browser-bar {
   height: 40px; background: #ffffff;
   display: flex; align-items: center; padding: 0 16px; gap: 8px;
@@ -236,7 +268,7 @@ body { background: #FEFAF7; overflow-x: hidden; font-family: var(--font-normal);
 }
 
 .expect-h {
-  font: 900 46px/1.1 var(--font-bold); color: #0a0a14;
+  font: 400 46px/1.1 var(--font-normal); color: #0a0a14;
   letter-spacing: -1.5px; margin-bottom: 40px; max-width: 100%; text-align: center; white-space: nowrap;
 }
 .expect-body {
@@ -374,7 +406,7 @@ body { background: #FEFAF7; overflow-x: hidden; font-family: var(--font-normal);
   font: 700 11px/1 var(--font-bold); letter-spacing: 1.2px;
   color: #9aa0ac; text-transform: uppercase; margin-bottom: 16px; display: block;
 }
-.section-h { font: 900 42px/1.1 var(--font-bold); color: #0a0a14; letter-spacing: -1.5px; margin-bottom: 14px; }
+.section-h { font: 400 42px/1.1 var(--font-normal); color: #0a0a14; letter-spacing: -1.5px; margin-bottom: 14px; }
 .section-sub { font: 15px/1.6 var(--font-normal); color: #6b7280; max-width: 440px; margin: 0 auto; }
 
 .cc {

@@ -119,15 +119,15 @@ const docColour = {
 
 const docTypography = {
   id: "typography", name: "Typography",
-  description: "Akkurat throughout — Light for soft body and captions, Regular for UI, Bold for display and headings, Mono for code and numbers. The scale follows an 8-point rhythm.",
+  description: "IBM Plex throughout — Light for soft body and captions, Regular for UI, Bold for display and headings, Mono for code and numbers. The scale follows an 8-point rhythm.",
   sections: [
     {
       id: "families", title: "Families",
       bullets: [
-        ["Akkurat Bold", "display and headings, tight negative tracking"],
-        ["Akkurat Regular", "UI and body copy"],
-        ["Akkurat Light", "soft body, captions, secondary copy"],
-        ["Akkurat Mono", "code, tokens and tabular numbers"],
+        ["IBM Plex Sans Bold", "display and headings, tight negative tracking"],
+        ["IBM Plex Sans Regular", "UI and body copy"],
+        ["IBM Plex Sans Light", "soft body, captions, secondary copy"],
+        ["IBM Plex Mono", "code, tokens and tabular numbers"],
       ],
       demo: () => (<div style={{ display: "grid", gap: 14 }}>
         <div style={{ font: "700 32px/1.2 var(--font-bold)", letterSpacing: "-0.25px", color: "var(--text-title)" }}>Beautifully designed components</div>
