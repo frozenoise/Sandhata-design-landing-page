@@ -10,12 +10,33 @@ function SdCodeBlock({ code }: any) {
   return <pre className="doc-code" dangerouslySetInnerHTML={{ __html: sdHighlight(code) }} />;
 }
 
+function SdDemoRenderer({ fn }: { fn: () => React.ReactNode }) {
+  return <>{fn()}</>;
+}
+
 function SdExample({ section }: any) {
+  const hasDemo = !!section.demo;
+  const hasCode = !!section.code;
+  const [tab, setTab] = React.useState<"preview" | "code">("preview");
+  if (!hasDemo && !hasCode) return null;
   return (
     <div className="doc-example">
-      {section.demo && <div className="doc-preview">{section.demo()}</div>}
-      {section.demo && section.code && <div className="doc-divider" />}
-      {section.code && <SdCodeBlock code={section.code} />}
+      <div className="doc-example-header">
+        {hasDemo && hasCode ? (
+          <div className="doc-example-tabs">
+            <button className={"doc-tab-btn" + (tab === "preview" ? " on" : "")} onClick={() => setTab("preview")}>Preview</button>
+            <button className={"doc-tab-btn" + (tab === "code" ? " on" : "")} onClick={() => setTab("code")}>React</button>
+          </div>
+        ) : hasCode ? (
+          <span className="doc-tab-label">React</span>
+        ) : null}
+      </div>
+      {hasDemo && tab === "preview" && (
+        <div className="doc-preview">
+          <SdDemoRenderer fn={section.demo} />
+        </div>
+      )}
+      {hasCode && (tab === "code" || !hasDemo) && <SdCodeBlock code={section.code} />}
     </div>
   );
 }
@@ -50,6 +71,26 @@ const SdCrossIcon = () => (
   <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" /></svg>
 );
 
+/* Copy-for-AI split button icons — same 24x24/stroke-2 convention as the
+   Plus/Pencil/ArrowR/Search icons in data.tsx, sized down to sit inline
+   with 13px button text. */
+const SdCopyIcon = () => (
+  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <rect x="9" y="9" width="13" height="13" rx="2" />
+    <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" />
+  </svg>
+);
+const SdCopiedIcon = () => (
+  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <polyline points="20 6 9 17 4 12" />
+  </svg>
+);
+const SdChevronDownIcon = () => (
+  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <polyline points="6 9 12 15 18 9" />
+  </svg>
+);
+
 /* Paired correct/incorrect example — anatomy/accessibility reuse bullets/table,
    but nothing existing represents a side-by-side "Do this, not that" pair. */
 function SdDoDont({ pair }: any) {
@@ -64,7 +105,7 @@ function SdDoDont({ pair }: any) {
           <div className="doc-dodont-head">
             <span className="doc-dodont-icon">{icon}</span>{label}
           </div>
-          {item.demo && <div className="doc-dodont-preview">{item.demo()}</div>}
+          {item.demo && <div className="doc-dodont-preview"><SdDemoRenderer fn={item.demo} /></div>}
           {item.text && <p className="doc-dodont-text">{item.text}</p>}
         </div>
       ))}
@@ -175,23 +216,143 @@ function pageToMarkdown(page: any) {
   return parts.join("\n\n") + "\n";
 }
 
+/* Split button: main segment copies markdown to the clipboard (cross-fading
+   icon+label between "Copy for AI" and "Copied"); chevron segment opens a
+   small menu of export destinations. All three menu destinations reuse the
+   exact same pageToMarkdown(page) string — one canonical export, several
+   redirect targets. */
 function SdCopyForAI({ page }: any) {
   const [copied, setCopied] = React.useState(false);
-  const onClick = async () => {
-    const md = pageToMarkdown(page);
+  const [open, setOpen] = React.useState(false);
+  const groupRef = React.useRef<HTMLDivElement>(null);
+
+  const copyToClipboard = async (md: string) => {
     try {
       await navigator.clipboard.writeText(md);
     } catch {
       // Clipboard API unavailable (permissions/insecure context) — fail quietly,
       // no toast dependency to lean on here.
     }
+  };
+
+  const onCopyClick = async () => {
+    await copyToClipboard(pageToMarkdown(page));
     setCopied(true);
     setTimeout(() => setCopied(false), 1500);
   };
+
+  const onViewMarkdown = () => {
+    const blob = new Blob([pageToMarkdown(page)], { type: "text/markdown" });
+    const url = URL.createObjectURL(blob);
+    window.open(url, "_blank");
+    // Give the new tab time to actually load the blob before it's revoked.
+    setTimeout(() => URL.revokeObjectURL(url), 30000);
+    setOpen(false);
+  };
+
+  // Both chatgpt.com/?q= and claude.ai/new?q= accept an unofficial, undocumented
+  // query-string prefill param — not part of either platform's public API, so it
+  // could change or disappear without notice. Decided against silently-succeeds-
+  // but-looks-broken (clipboard-only landing on an empty input) after live testing
+  // confirmed chatgpt.com/?q= prefills AND auto-submits, while claude.ai/new?q=
+  // prefills the draft box only (no auto-submit) — that asymmetry is a platform
+  // difference, not a bug in this code.
+  //
+  // MAX_PREFILL_LENGTH guards the encoded string (not raw markdown) against
+  // unreasonably long URLs — browsers/servers commonly choke well before ~8k
+  // chars. 6000 comfortably covers a fully-documented single component page
+  // (e.g. Button's current doc set) while still falling back safely for
+  // anything longer, rather than risking a silently-truncated or rejected URL.
+  const MAX_PREFILL_LENGTH = 6000;
+
+  const onOpenInChatGPT = async () => {
+    const md = pageToMarkdown(page);
+    const encoded = encodeURIComponent(md);
+    if (encoded.length > MAX_PREFILL_LENGTH) {
+      // Too long to trust in a URL — fall back to the original clipboard-only behavior.
+      await copyToClipboard(md);
+      window.open("https://chatgpt.com/", "_blank", "noopener,noreferrer");
+      setOpen(false);
+      return;
+    }
+    // Copy is kept as a safety net even on the prefill path, in case the ?q=
+    // param stops working or the user wants to paste it again elsewhere.
+    await copyToClipboard(md);
+    window.open(`https://chatgpt.com/?q=${encoded}`, "_blank", "noopener,noreferrer");
+    setOpen(false);
+  };
+
+  const onOpenInClaude = async () => {
+    const md = pageToMarkdown(page);
+    const encoded = encodeURIComponent(md);
+    if (encoded.length > MAX_PREFILL_LENGTH) {
+      // Too long to trust in a URL — fall back to the original clipboard-only behavior.
+      await copyToClipboard(md);
+      window.open("https://claude.ai/new", "_blank", "noopener,noreferrer");
+      setOpen(false);
+      return;
+    }
+    // Copy is kept as a safety net even on the prefill path, in case the ?q=
+    // param stops working or the user wants to paste it again elsewhere.
+    await copyToClipboard(md);
+    window.open(`https://claude.ai/new?q=${encoded}`, "_blank", "noopener,noreferrer");
+    setOpen(false);
+  };
+
+  React.useEffect(() => {
+    if (!open) return;
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setOpen(false);
+    };
+    const onPointerDown = (e: PointerEvent) => {
+      if (groupRef.current && !groupRef.current.contains(e.target as Node)) setOpen(false);
+    };
+    document.addEventListener("keydown", onKeyDown);
+    document.addEventListener("pointerdown", onPointerDown);
+    return () => {
+      document.removeEventListener("keydown", onKeyDown);
+      document.removeEventListener("pointerdown", onPointerDown);
+    };
+  }, [open]);
+
   return (
-    <button type="button" className={"doc-copy-btn" + (copied ? " is-copied" : "")} onClick={onClick} title="Copy this page as Markdown for an AI assistant">
-      {copied ? "Copied" : "Copy for AI"}
-    </button>
+    <div className="doc-copy-group" ref={groupRef}>
+      <div className="doc-copy-pill">
+        <button
+          type="button"
+          className={"doc-copy-btn doc-copy-main" + (copied ? " is-copied" : "")}
+          onClick={onCopyClick}
+          title="Copy this page as Markdown for an AI assistant"
+        >
+          <span className="doc-copy-fade">
+            <span className={"doc-copy-state" + (!copied ? " is-visible" : "")}>
+              <SdCopyIcon />Copy for AI
+            </span>
+            <span className={"doc-copy-state" + (copied ? " is-visible" : "")}>
+              <SdCopiedIcon />Copied
+            </span>
+          </span>
+        </button>
+        <span className="doc-copy-divider" aria-hidden="true" />
+        <button
+          type="button"
+          className="doc-copy-btn doc-copy-chevron"
+          aria-haspopup="menu"
+          aria-expanded={open}
+          aria-label="More export options"
+          onClick={() => setOpen((o) => !o)}
+        >
+          <SdChevronDownIcon />
+        </button>
+      </div>
+      {open && (
+        <div className="doc-copy-menu" role="menu">
+          <button type="button" role="menuitem" className="doc-copy-menu-item" onClick={onViewMarkdown}>View as Markdown</button>
+          <button type="button" role="menuitem" className="doc-copy-menu-item" onClick={onOpenInChatGPT}>Open in ChatGPT</button>
+          <button type="button" role="menuitem" className="doc-copy-menu-item" onClick={onOpenInClaude}>Open in Claude</button>
+        </div>
+      )}
+    </div>
   );
 }
 
@@ -309,6 +470,7 @@ function SdSidebar({ groups, current, setCurrent, topItem, searchPlaceholder }: 
 function SdTopNav({ active }: any) {
   const tabs = [
     ["Components", "/components"],
+    ["Icons", "/icons"],
     ["Documentation", "/documentation"],
     ["Builder", "/builder"],
     ["Demo", "/demo"],

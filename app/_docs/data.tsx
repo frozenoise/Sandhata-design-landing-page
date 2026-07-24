@@ -14,6 +14,15 @@ const Pencil = () => (<svg width="16" height="16" viewBox="0 0 24 24" fill="none
 const ArrowR = () => (<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>);
 const Search = () => (<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>);
 
+// Nav icons used in Sidebar / Menu demos
+const IcHome     = (s=16) => (<svg width={s} height={s} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 11l9-8 9 8v10a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>);
+const IcChart    = (s=16) => (<svg width={s} height={s} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>);
+const IcUsers    = (s=16) => (<svg width={s} height={s} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>);
+const IcGrid     = (s=16) => (<svg width={s} height={s} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>);
+const IcSettings = (s=16) => (<svg width={s} height={s} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>);
+const IcLogout   = (s=16) => (<svg width={s} height={s} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>);
+const IcChevDn   = (s=14) => (<svg width={s} height={s} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="6 9 12 15 18 9"/></svg>);
+
 // A doc section can mix any of these shapes (bullets/table/note/demo+code,
 // or the doDont pair) — kept loose/optional throughout so TS doesn't try to
 // force every component's sections into one narrow discriminated union.
@@ -394,7 +403,7 @@ const DateRangePicker = {
         ],
       },
       demo: () => (
-        <div style={{ display:"flex", gap:8, alignItems:"center", maxWidth:420 }}>
+        <div style={{ display:"flex", gap:24, alignItems:"center", maxWidth:420 }}>
           {["Start date","End date"].map((lbl) => (
             <div key={lbl} style={{ flex:1 }}>
               <div style={{ font:"700 12px/1 var(--font-bold)", color:"var(--text-title)", marginBottom:6, letterSpacing:"0.4px" }}>{lbl}</div>
@@ -455,9 +464,12 @@ const TagDoc = {
   id:"tag-input", name:"Tag input", variants:"2 tones",
   description:"Removable chips / tags. Pass `onRemove` to render a dismiss button.",
   sections:[usage(
-    () => { const { Tag } = S(); return (
-      <div style={{ display:"flex", gap:8, flexWrap:"wrap" }}>
-        <Tag>Federalist</Tag><Tag tone="action" onRemove={() => {}}>Democratic-Republican</Tag><Tag onRemove={() => {}}>Whig</Tag>
+    () => { const { Tag } = S(); const [tags, setTags] = React.useState(["Federalist","Democratic-Republican","Whig"]); const [inp, setInp] = React.useState(""); const add = (e: React.KeyboardEvent<HTMLInputElement>) => { if (e.key === "Enter" && inp.trim()) { setTags(t => [...t, inp.trim()]); setInp(""); } }; return (
+      <div style={{ display:"flex", flexDirection:"column", gap:10 }}>
+        <div style={{ display:"flex", gap:8, flexWrap:"wrap", alignItems:"center" }}>
+          {tags.map((t,i) => <Tag key={i} onRemove={() => setTags(ts => ts.filter((_,j) => j !== i))}>{t}</Tag>)}
+        </div>
+        <input value={inp} onChange={e => setInp(e.target.value)} onKeyDown={add} placeholder="Type and press Enter to add a tag…" style={{ padding:"6px 10px", border:"1px solid var(--border-default)", borderRadius:"var(--radius-sm)", font:"14px/1 var(--font-normal)", color:"var(--text-title)", background:"var(--surface-page)", width:280, outline:"none" }} />
       </div>
     ); },
     `<Tag>Federalist</Tag>\n<Tag tone="action" onRemove={() => drop(id)}>Democratic-Republican</Tag>`
@@ -484,15 +496,44 @@ const UploadFiles = {
           ["Error message","Shown for oversized, wrong-type or failed uploads"],
         ],
       },
-      demo: () => (
-        <div style={{ border:"1.5px dashed var(--border-default)", borderRadius:"var(--radius-lg)", padding:"32px 24px", textAlign:"center", background:"var(--colour-neutral-50)", maxWidth:380 }}>
-          <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="var(--text-caption)" strokeWidth="1.5" strokeLinecap="round" style={{ marginBottom:12 }}><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
-          <div style={{ font:"14px/1.5 var(--font-normal)", color:"var(--text-body)" }}>
-            Drag files here or <span style={{ color:"var(--text-action)", cursor:"pointer" }}>browse</span>
+      demo: () => {
+        const inputRef = React.useRef<HTMLInputElement>(null);
+        const [files, setFiles] = React.useState<{name:string,size:number}[]>([]);
+        const [drag, setDrag] = React.useState(false);
+        const addFiles = (fl: FileList | null) => { if (!fl) return; setFiles(f => [...f, ...Array.from(fl).map(x => ({name:x.name, size:x.size}))]); };
+        return (
+          <div style={{ maxWidth:380 }}>
+            <div
+              onDrop={e => { e.preventDefault(); setDrag(false); addFiles(e.dataTransfer.files); }}
+              onDragOver={e => { e.preventDefault(); setDrag(true); }}
+              onDragLeave={() => setDrag(false)}
+              onClick={() => inputRef.current?.click()}
+              style={{ border:`1.5px dashed ${drag ? "var(--colour-primaryblue-500)" : "var(--border-default)"}`, borderRadius:"var(--radius-lg)", padding:"32px 24px", textAlign:"center", background: drag ? "var(--colour-primaryblue-50)" : "var(--colour-neutral-50)", cursor:"pointer", transition:"background 0.15s,border-color 0.15s" }}
+            >
+              <input ref={inputRef} type="file" multiple accept="image/*,.pdf" style={{ display:"none" }} onChange={e => { addFiles(e.target.files); e.target.value = ""; }} />
+              <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="var(--text-caption)" strokeWidth="1.5" strokeLinecap="round" style={{ marginBottom:12 }}><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+              <div style={{ font:"14px/1.5 var(--font-normal)", color:"var(--text-body)" }}>
+                Drag files here or <span style={{ color:"var(--text-action)", textDecoration:"underline" }}>browse</span>
+              </div>
+              <div style={{ font:"12px/1.4 var(--font-light)", color:"var(--text-caption)", marginTop:4 }}>PNG, JPG, PDF up to 10 MB</div>
+            </div>
+            {files.length > 0 && (
+              <div style={{ marginTop:8, border:"1px solid var(--border-subtle)", borderRadius:"var(--radius-md)", overflow:"hidden" }}>
+                {files.map((f,i) => (
+                  <div key={i} style={{ display:"flex", alignItems:"center", gap:8, padding:"8px 12px", borderBottom: i < files.length-1 ? "1px solid var(--border-subtle)" : "none", background:"var(--surface-page)" }}>
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--text-caption)" strokeWidth="2" strokeLinecap="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+                    <span style={{ flex:1, font:"13px/1 var(--font-normal)", color:"var(--text-title)", overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap" }}>{f.name}</span>
+                    <span style={{ font:"12px/1 var(--font-mono)", color:"var(--text-caption)" }}>{(f.size/1024).toFixed(0)} KB</span>
+                    <button onClick={e => { e.stopPropagation(); setFiles(fs => fs.filter((_,j) => j !== i)); }} style={{ border:"none", background:"none", cursor:"pointer", color:"var(--text-caption)", padding:0, display:"flex" }}>
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
-          <div style={{ font:"12px/1.4 var(--font-light)", color:"var(--text-caption)", marginTop:4 }}>PNG, JPG, PDF up to 10 MB</div>
-        </div>
-      ),
+        );
+      },
       code:`<UploadFiles\n  label="Drag files here or browse"\n  accept="image/*,.pdf"\n  maxSize={10 * 1024 * 1024}\n  multiple\n  onFiles={files => upload(files)}\n/>`,
     },
     {
@@ -617,12 +658,12 @@ const DataTable = {
       demo: () => {
         const cols = ["Name","Role","Status"];
         const rows = [["Alice Chen","Engineer","Active"],["Bob Okafor","Designer","Active"],["Carla Vega","Manager","Away"]];
-        const cellStyle: React.CSSProperties = { padding:"10px 14px", font:"13px/1.4 var(--font-normal)", color:"var(--text-body)", borderBottom:"1px solid var(--border-subtle)" };
-        const headStyle: React.CSSProperties = { padding:"10px 14px", font:"700 12px/1 var(--font-bold)", color:"var(--text-title)", borderBottom:"2px solid var(--border-default)", textAlign:"left", letterSpacing:"0.3px" };
+        const cellStyle: React.CSSProperties = { padding:"12px", font:"300 14px/20px var(--font-light)", color:"var(--text-body)", borderBottom:"1px solid var(--border-default)" };
+        const headStyle: React.CSSProperties = { padding:"12px", font:"400 12px/16px var(--font-normal)", color:"var(--text-title)", borderBottom:"1px solid var(--border-default)", textAlign:"left", letterSpacing:"0.3px", background:"var(--colour-primaryblue-50)" };
         return (
           <div style={{ overflowX:"auto" }}>
-            <table style={{ width:"100%", borderCollapse:"collapse", border:"1px solid var(--border-subtle)", borderRadius:"var(--radius-lg)", overflow:"hidden" }}>
-              <thead><tr style={{ background:"var(--colour-neutral-50)" }}>{cols.map(c => <th key={c} style={headStyle}>{c}</th>)}</tr></thead>
+            <table style={{ width:"100%", borderCollapse:"collapse", border:"1px solid var(--border-default)", borderRadius:"4px 4px 0 0", overflow:"hidden" }}>
+              <thead><tr>{cols.map(c => <th key={c} style={headStyle}>{c}</th>)}</tr></thead>
               <tbody>{rows.map((r,i) => <tr key={i} style={{ background:"var(--surface-page)" }}>{r.map((c,j) => <td key={j} style={cellStyle}>{c}</td>)}</tr>)}</tbody>
             </table>
           </div>
@@ -647,7 +688,7 @@ const DataTable = {
         rows:[
           ["Default","Neutral background"],
           ["Hover","Subtle neutral-50 tint"],
-          ["Selected","Blue-50 tint, checkbox checked"],
+          ["Selected","var(--background-highlight) tint (#7d61f1 / alternativepurple-400), checkbox checked"],
           ["Disabled","Muted text, checkbox non-interactive"],
           ["Loading","Skeleton shimmer rows while data fetches"],
         ],
@@ -692,6 +733,73 @@ const AdvancedDataTable = {
           ["Bulk action bar","Appears above the table when rows are selected — contains batch actions"],
         ],
       },
+      demo: () => {
+        const [expanded, setExpanded] = React.useState<string | null>(null);
+        const [selected, setSelected] = React.useState<string[]>([]);
+        const rows = [
+          { id:"r1", name:"Alice Chen", dept:"Engineering", status:"Active" },
+          { id:"r2", name:"Bob Okafor", dept:"Engineering", status:"Away" },
+          { id:"r3", name:"Carla Vega", dept:"Design", status:"Active" },
+        ];
+        const cols = ["","Name","Department","Status",""];
+        const thStyle: React.CSSProperties = { padding:12, font:"400 12px/16px var(--font-normal)", color:"var(--text-body)", textAlign:"left", borderBottom:"1px solid var(--border-default)", background:"var(--colour-primaryblue-50)", whiteSpace:"nowrap" };
+        const tdStyle: React.CSSProperties = { padding:12, font:"300 14px/20px var(--font-normal)", color:"var(--text-title)", borderBottom:"1px solid var(--border-default)" };
+        return (
+          <div style={{ overflowX:"auto" }}>
+            {/* Active filter chips */}
+            <div style={{ display:"flex", gap:8, marginBottom:8 }}>
+              <div style={{ display:"flex", alignItems:"center", gap:4, padding:"3px 10px", borderRadius:"var(--radius-pill)", background:"var(--colour-primaryblue-50)", border:"1px solid var(--colour-primaryblue-200)", font:"12px/1 var(--font-normal)", color:"var(--text-action)" }}>
+                Dept: Engineering <span style={{ marginLeft:4, cursor:"pointer" }}>×</span>
+              </div>
+            </div>
+            {/* Bulk action bar (shows when rows selected) */}
+            {selected.length > 0 && (
+              <div style={{ display:"flex", alignItems:"center", gap:12, padding:"8px 12px", background:"var(--colour-primaryblue-50)", borderRadius:"var(--radius-xl)", marginBottom:8, font:"13px/1 var(--font-normal)", color:"var(--text-action)" }}>
+                <span>{selected.length} selected</span>
+                <button style={{ padding:"4px 12px", borderRadius:"var(--radius-sm)", background:"var(--colour-primaryblue-500)", color:"#fff", border:"none", cursor:"pointer", font:"12px/1 var(--font-normal)" }}>Export</button>
+                <button style={{ padding:"4px 12px", borderRadius:"var(--radius-sm)", background:"var(--colour-error-500)", color:"#fff", border:"none", cursor:"pointer", font:"12px/1 var(--font-normal)" }}>Delete</button>
+              </div>
+            )}
+            <table style={{ width:"100%", borderCollapse:"collapse", borderRadius:"var(--radius-sm)", overflow:"hidden", border:"1px solid var(--border-default)" }}>
+              <thead>
+                <tr>{cols.map((c,i) => <th key={i} style={thStyle}>{c}</th>)}</tr>
+                {/* Filter row */}
+                <tr style={{ background:"var(--surface-secondary)" }}>
+                  <td style={{ ...tdStyle, padding:"6px 12px" }} />
+                  <td style={{ ...tdStyle, padding:"4px 8px" }}><input placeholder="Filter name…" style={{ width:"100%", padding:"4px 8px", border:"1px solid var(--border-default)", borderRadius:"var(--radius-sm)", font:"12px/1 var(--font-normal)", background:"var(--surface-page)" }} /></td>
+                  <td style={{ ...tdStyle, padding:"4px 8px" }}><select style={{ width:"100%", padding:"4px 8px", border:"1px solid var(--border-default)", borderRadius:"var(--radius-sm)", font:"12px/1 var(--font-normal)", background:"var(--surface-page)" }}><option>All</option><option>Engineering</option><option>Design</option></select></td>
+                  <td style={{ ...tdStyle, padding:"4px 8px" }} />
+                  <td style={{ ...tdStyle, padding:"4px 8px" }} />
+                </tr>
+                {/* Group header */}
+                <tr style={{ background:"var(--colour-neutral-100)" }}>
+                  <td colSpan={5} style={{ padding:"8px 12px", font:"400 12px/16px var(--font-normal)", color:"var(--text-caption)" }}>Engineering — 2 rows</td>
+                </tr>
+              </thead>
+              <tbody>
+                {rows.map(r => (
+                  <React.Fragment key={r.id}>
+                    <tr style={{ background: selected.includes(r.id) ? "var(--colour-primaryblue-50)" : "var(--surface-page)" }}>
+                      <td style={{ ...tdStyle, width:36 }}>
+                        <input type="checkbox" checked={selected.includes(r.id)} onChange={e => setSelected(s => e.target.checked ? [...s, r.id] : s.filter(x => x !== r.id))} />
+                      </td>
+                      <td style={tdStyle}>{r.name}</td>
+                      <td style={tdStyle}>{r.dept}</td>
+                      <td style={tdStyle}>{r.status}</td>
+                      <td style={{ ...tdStyle, width:36, cursor:"pointer", textAlign:"center" }} onClick={() => setExpanded(expanded === r.id ? null : r.id)}>
+                        <span style={{ display:"inline-block", transform: expanded === r.id ? "rotate(90deg)" : "none", transition:"transform 0.15s" }}>›</span>
+                      </td>
+                    </tr>
+                    {expanded === r.id && (
+                      <tr><td colSpan={5} style={{ padding:"12px 24px", background:"var(--colour-neutral-50)", font:"13px/1.5 var(--font-normal)", color:"var(--text-body)", borderBottom:"1px solid var(--border-default)" }}>Expanded detail panel for {r.name} — any content can go here: sub-tables, forms, charts.</td></tr>
+                    )}
+                  </React.Fragment>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        );
+      },
       code:`<AdvancedDataTable\n  columns={columns}\n  rows={data}\n  filterable\n  groupBy="department"\n  expandable\n  selectable\n  bulkActions={[\n    { label:"Export", onClick:exportSelected },\n    { label:"Delete", onClick:deleteSelected, tone:"danger" },\n  ]}\n/>`,
     },
     {
@@ -733,83 +841,82 @@ const AdvancedDataTable = {
 
 const Timeline = {
   id:"timeline", name:"Timeline", variants:"3 variants",
-  description:"A vertical timeline for displaying chronological events, activity feeds, and process steps.",
+  description:"A step navigation component — a vertical or horizontal list of labelled steps with directional separators. Used for wizards, process flows, and multi-step navigation.",
   sections:[
     {
       id:"anatomy", title:"Anatomy",
       table:{
         head:["Part","Role"],
         rows:[
-          ["Track","Vertical line connecting all timeline nodes"],
-          ["Node","Dot or icon marking the event position on the track"],
-          ["Date/time label","Timestamp shown beside the node"],
-          ["Title","Short event headline"],
-          ["Body","Optional supporting detail text or rich content"],
-          ["Connector line","Segment of the track between two nodes; dashed for pending events"],
+          ["Container","White panel with a right-side border track (vertical) or bottom border (horizontal)"],
+          ["Step item","Clickable row: label text (14px Regular) with 16px H / 8px V padding"],
+          ["Separator","24px chevron icon (↓ between steps, › at the active/next branch)"],
+          ["Active indicator","Step item highlighted with `background-active` fill and action-colour text"],
+          ["Hover state","Step item background shifts to `background-hover` (#f5f6f8)"],
         ],
       },
       demo: () => {
-        const items = [
-          { date:"10 Jul 2026", title:"Order placed", done:true },
-          { date:"12 Jul 2026", title:"Shipped", done:true },
-          { date:"14 Jul 2026", title:"Out for delivery", done:false },
-        ];
+        const steps = ["Overview","Details","Review","Confirm"];
+        const [active, setActive] = React.useState(1);
         return (
-          <div style={{ display:"flex", flexDirection:"column", gap:0, paddingLeft:8 }}>
-            {items.map((item, i) => (
-              <div key={i} style={{ display:"flex", gap:16, position:"relative" }}>
-                <div style={{ display:"flex", flexDirection:"column", alignItems:"center", flexShrink:0 }}>
-                  <div style={{ width:12, height:12, borderRadius:"50%", background: item.done ? "var(--colour-primaryblue-500)" : "var(--colour-neutral-300)", border:"2px solid var(--surface-page)", boxShadow:"0 0 0 2px " + (item.done ? "var(--colour-primaryblue-500)" : "var(--colour-neutral-300)"), marginTop:4 }} />
-                  {i < items.length - 1 && <div style={{ width:2, flex:1, minHeight:32, background: item.done ? "var(--colour-primaryblue-200)" : "var(--colour-neutral-200)", margin:"4px 0" }} />}
-                </div>
-                <div style={{ paddingBottom:i < items.length - 1 ? 20 : 0 }}>
-                  <div style={{ font:"11px/1 var(--font-mono)", color:"var(--text-caption)", marginBottom:3 }}>{item.date}</div>
-                  <div style={{ font:"700 13px/1.4 var(--font-bold)", color: item.done ? "var(--text-title)" : "var(--text-caption)" }}>{item.title}</div>
-                </div>
-              </div>
+          <div style={{ display:"flex", flexDirection:"column", background:"var(--surface-page)", borderRight:"1px solid var(--border-strong)", width:200 }}>
+            {steps.map((s, i) => (
+              <React.Fragment key={i}>
+                <button
+                  onClick={() => setActive(i)}
+                  style={{ display:"flex", alignItems:"center", padding:"8px 16px", background: i === active ? "var(--colour-neutral-300)" : "var(--surface-page)", border:"none", cursor:"pointer", font:`14px/16px var(--font-normal)`, color: i === active ? "var(--text-action)" : "var(--text-title)", textAlign:"left" }}
+                >
+                  {s}
+                </button>
+                {i < steps.length - 1 && (
+                  <div style={{ display:"flex", alignItems:"center", justifyContent:"center", width:24, height:24, alignSelf:"center", color:"var(--text-caption)", fontSize:16, lineHeight:1 }}>
+                    {i === active ? "›" : "↓"}
+                  </div>
+                )}
+              </React.Fragment>
             ))}
           </div>
         );
       },
-      code:`<Timeline\n  items={[\n    { date:"10 Jul 2026", title:"Order placed", body:"Payment confirmed." },\n    { date:"12 Jul 2026", title:"Shipped", icon:<TruckIcon/> },\n    { date:"14 Jul 2026", title:"Delivery expected" },\n  ]}\n/>`,
+      code:`<Timeline\n  steps={["Overview","Details","Review","Confirm"]}\n  activeIndex={1}\n  orientation="vertical"\n  onStepClick={i => setStep(i)}\n/>`,
     },
     {
       id:"variants", title:"Variants",
       bullets:[
-        ["Left-aligned","All content to the right of the track (default)"],
-        ["Right-aligned","All content to the left of the track"],
-        ["Alternating","Content alternates left/right on each node — used for history or process flows"],
+        ["Vertical (default)","Steps listed top-to-bottom; right-side border track; chevrons point downward (↓) between steps"],
+        ["Horizontal","Steps listed left-to-right; bottom border track; chevrons point right (›) between steps"],
+        ["With tooltip","Hovering a step shows a tooltip with the step description"],
       ],
     },
     {
-      id:"node-states", title:"Node states",
+      id:"states", title:"Item states",
       table:{
-        head:["State","Visual"],
+        head:["State","Background","Text"],
         rows:[
-          ["Complete","Filled blue dot or success icon; solid connector below"],
-          ["Current","Filled blue dot with a pulsing ring"],
-          ["Pending","Empty/outline dot; dashed connector below"],
-          ["Error","Red dot or error icon; red connector"],
+          ["Default","Surface page (white)","text-primary (#202225)"],
+          ["Hover","background-hover (#f5f6f8)","text-primary"],
+          ["Active / selected","background-active (#c0c7cf)","text-action (#0036dd) + › icon"],
+          ["Tooltip","Surface raised + tooltip label","—"],
         ],
       },
     },
     {
       id:"accessibility", title:"Accessibility",
       bullets:[
-        ["Role","Render as an ordered <ol> list — each item is an <li> with semantic date and title"],
-        ["Icons","Decorative node icons have aria-hidden=\"true\"; state-bearing icons carry an aria-label"],
-        ["Order","Visual order must match DOM order so screen readers narrate events chronologically"],
+        ["Role","Render as <nav> with aria-label; each step is a <button> or <a>"],
+        ["Active step","aria-current=\"step\" on the active item"],
+        ["Separators","Chevron icons are aria-hidden — they are decorative direction cues, not actions"],
       ],
     },
     {
       id:"do-dont", title:"Do / Don't",
       doDont:{
-        do:{ text:"Use clear date labels — relative timestamps ('3 days ago') are fine for activity feeds, but absolute dates are better for audit trails." },
-        dont:{ text:"Don't nest timelines — a single linear track per view is always clearer than branching or nested structures." },
+        do:{ text:"Use Timeline for sequential flows where order matters — onboarding wizards, checkout steps, or multi-stage forms." },
+        dont:{ text:"Don't use it as a general-purpose menu — Sidebar is the right component for non-sequential navigation." },
       },
     },
   ],
-  props:[["items","array","{ date, title, body?, icon?, state? }[] — state: complete | current | pending | error"],["orientation","enum","left, right, alternating"],["connector","enum","solid, dashed"]],
+  props:[["steps","array","Step label strings or { label, description? }[]"],["activeIndex","number","0-indexed active step"],["orientation","enum","vertical, horizontal"],["onStepClick","func","(index: number) => void"]],
 };
 
 const TabsDoc = {
@@ -845,26 +952,49 @@ const Sidebar = {
         ],
       },
       demo: () => {
+        const [active, setActive] = React.useState("analytics");
         const items = [
-          { icon:"▦", label:"Dashboard", active:true },
-          { icon:"↗", label:"Analytics" },
-          { icon:"⊞", label:"Components" },
-          { icon:"◈", label:"Settings" },
+          { id:"dashboard", label:"Dashboard", icon: IcHome(16) },
+          { id:"analytics", label:"Analytics", icon: IcChart(16), sub:["Overview","Traffic","Conversions"] },
+          { id:"users", label:"Users", icon: IcUsers(16) },
         ];
+        const iconColor = (id: string) => id === active ? "var(--text-action)" : "var(--text-caption)";
         return (
-          <div style={{ display:"flex", height:220, borderRadius:"var(--radius-lg)", overflow:"hidden", border:"1px solid var(--border-subtle)" }}>
-            <nav style={{ width:200, background:"var(--surface-raised)", borderRight:"1px solid var(--border-subtle)", display:"flex", flexDirection:"column", padding:"12px 0" }}>
-              <div style={{ padding:"0 16px 12px", font:"700 13px/1 var(--font-bold)", color:"var(--text-title)" }}>Sandhata</div>
-              <div style={{ padding:"4px 8px", font:"10px/1 var(--font-normal)", color:"var(--text-caption)", letterSpacing:"0.06em", textTransform:"uppercase" }}>Navigation</div>
-              {items.map((it, i) => (
-                <div key={i} style={{ display:"flex", alignItems:"center", gap:10, padding:"8px 16px", margin:"1px 0", background: it.active ? "var(--colour-primaryblue-50)" : "transparent", borderLeft: it.active ? "2px solid var(--colour-primaryblue-500)" : "2px solid transparent", cursor:"pointer" }}>
-                  <span style={{ fontSize:14, color: it.active ? "var(--colour-primaryblue-500)" : "var(--text-caption)" }}>{it.icon}</span>
-                  <span style={{ font:`${it.active ? "600" : "400"} 13px/1 var(--font-normal)`, color: it.active ? "var(--text-title)" : "var(--text-body)" }}>{it.label}</span>
+          <div style={{ display:"flex", height:320, borderRadius:"var(--radius-xl)", overflow:"hidden" }}>
+            <nav style={{ width:245, background:"var(--surface-page)", borderRight:"1px solid var(--border-strong)", display:"flex", flexDirection:"column", justifyContent:"space-between", flexShrink:0 }}>
+              <div>
+                <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", padding:16, borderBottom:"1px solid var(--border-subtle)" }}>
+                  <span style={{ font:"300 20px/28px var(--font-normal)", color:"var(--text-title)" }}>Workspace</span>
+                  <span style={{ color:"var(--text-caption)" }}>{IcGrid(16)}</span>
                 </div>
-              ))}
+                {items.map(it => (
+                  <div key={it.id}>
+                    <button onClick={() => setActive(it.id)} style={{ width:"100%", display:"flex", alignItems:"center", gap:8, padding:"8px 16px", background: it.id === active ? "var(--colour-neutral-300)" : "var(--surface-page)", borderLeft: it.id === active ? "2px solid var(--colour-primaryblue-500)" : "2px solid transparent", border:"none", cursor:"pointer" }}>
+                      <span style={{ color: iconColor(it.id), flexShrink:0, display:"flex" }}>{it.icon}</span>
+                      <span style={{ font:"300 16px/24px var(--font-normal)", color: it.id === active ? "var(--colour-primaryblue-600)" : "var(--text-title)", flex:1, textAlign:"left" }}>{it.label}</span>
+                      {it.sub && <span style={{ color:"var(--text-caption)", display:"flex", transform: it.id === active ? "rotate(180deg)" : "none", transition:"transform 0.2s" }}>{IcChevDn(14)}</span>}
+                    </button>
+                    {it.id === active && it.sub && it.sub.map((s, si) => (
+                      <div key={si} style={{ display:"flex", alignItems:"center", gap:8, padding:"6px 16px 6px 40px", background:"var(--surface-page)" }}>
+                        <span style={{ font:"300 14px/20px var(--font-normal)", color:"var(--text-body)" }}>{s}</span>
+                      </div>
+                    ))}
+                  </div>
+                ))}
+              </div>
+              <div style={{ borderTop:"1px solid var(--border-subtle)", padding:"8px 0" }}>
+                <div style={{ display:"flex", alignItems:"center", gap:8, padding:"8px 16px", cursor:"pointer" }}>
+                  <span style={{ color:"var(--text-caption)", display:"flex" }}>{IcSettings(16)}</span>
+                  <span style={{ font:"300 16px/24px var(--font-normal)", color:"var(--text-title)" }}>Settings</span>
+                </div>
+                <div style={{ display:"flex", alignItems:"center", gap:8, padding:"8px 16px", cursor:"pointer" }}>
+                  <span style={{ color:"var(--colour-error-600)", display:"flex" }}>{IcLogout(16)}</span>
+                  <span style={{ font:"300 16px/24px var(--font-normal)", color:"var(--colour-error-600)" }}>Logout</span>
+                </div>
+              </div>
             </nav>
-            <div style={{ flex:1, padding:20, background:"var(--surface-page)" }}>
-              <div style={{ font:"14px/1.5 var(--font-normal)", color:"var(--text-caption)" }}>Main content area</div>
+            <div style={{ flex:1, padding:24, background:"var(--surface-secondary)", display:"flex", alignItems:"center", justifyContent:"center" }}>
+              <span style={{ font:"14px/1.5 var(--font-normal)", color:"var(--text-caption)" }}>Page content</span>
             </div>
           </div>
         );
@@ -920,57 +1050,59 @@ const Sidebar = {
 
 const Menu = {
   id:"menu", name:"Menu", variants:"2 variants",
-  description:"A dropdown context menu with keyboard navigation, icons, separators, and nested sub-menus.",
+  description:"A sidebar navigation item — a single row with an icon, label, and optional expand arrow. Used inside the Sidebar component to build navigation groups with collapsible sub-menus.",
   sections:[
     {
       id:"anatomy", title:"Anatomy",
       table:{
         head:["Part","Role"],
         rows:[
-          ["Trigger","The button or element the user interacts with to open the menu"],
-          ["Menu panel","Floating container with a subtle shadow; aligns to the trigger"],
-          ["Menu item","Row with optional icon, label, and keyboard shortcut hint"],
-          ["Divider","Horizontal rule grouping related items"],
-          ["Sub-menu arrow","Trailing chevron indicating a nested panel will open"],
-          ["Checked state","Leading checkmark on selected items in a selection menu"],
-          ["Disabled item","Muted text; not keyboard-focusable"],
+          ["Icon","14px icon on the left of the label"],
+          ["Label","IBM Plex Sans Light 16px/24px text — the nav destination name"],
+          ["Arrow","14px trailing icon that rotates 180° when the item expands to show sub-items"],
+          ["Sub-items","Indented rows (24px left padding vs 16px) shown when the parent is expanded"],
+          ["Selected indicator","2px solid blue left border + background-active fill (#c0c7cf) + action text colour"],
         ],
       },
       demo: () => {
-        const items = [
-          { label:"Edit", shortcut:"⌘E" },
-          { label:"Duplicate", shortcut:"⌘D" },
-          null,
-          { label:"Export as PDF" },
-          { label:"Export as PNG" },
-          null,
-          { label:"Delete", danger:true },
-        ];
+        const [expanded, setExpanded] = React.useState(true);
+        const [selected, setSelected] = React.useState("sub1");
         return (
-          <div style={{ position:"relative", display:"inline-block" }}>
-            <div style={{ padding:"6px 14px", border:"1px solid var(--border-default)", borderRadius:"var(--radius-md)", font:"13px/1 var(--font-normal)", color:"var(--text-body)", background:"var(--surface-page)", cursor:"pointer", display:"inline-flex", alignItems:"center", gap:6 }}>
-              Actions <span style={{ fontSize:10 }}>▾</span>
+          <div style={{ width:245, background:"var(--surface-page)", border:"1px solid var(--border-subtle)", borderRadius:"var(--radius-xl)", overflow:"hidden" }}>
+            {/* Default item */}
+            <div style={{ display:"flex", alignItems:"center", gap:8, padding:"8px 16px", borderLeft:"2px solid transparent" }}>
+              <span style={{ color:"var(--text-caption)", display:"flex", flexShrink:0 }}>{IcHome(16)}</span>
+              <span style={{ font:"300 16px/24px var(--font-normal)", color:"var(--text-title)", flex:1 }}>Dashboard</span>
             </div>
-            <div style={{ position:"absolute", top:"calc(100% + 4px)", left:0, background:"var(--surface-raised)", border:"1px solid var(--border-subtle)", borderRadius:"var(--radius-md)", boxShadow:"0 4px 16px rgba(0,0,0,0.10)", minWidth:180, zIndex:10, padding:"4px 0" }}>
-              {items.map((it, i) =>
-                it === null
-                  ? <div key={i} style={{ height:1, background:"var(--border-subtle)", margin:"4px 0" }} />
-                  : <div key={i} style={{ display:"flex", justifyContent:"space-between", alignItems:"center", padding:"7px 14px", cursor:"pointer", color: it.danger ? "var(--colour-error-600)" : "var(--text-body)", font:"13px/1 var(--font-normal)" }}>
-                      <span>{it.label}</span>
-                      {it.shortcut && <span style={{ font:"11px/1 var(--font-mono)", color:"var(--text-caption)" }}>{it.shortcut}</span>}
-                    </div>
-              )}
+            {/* Expanded item */}
+            <button onClick={() => setExpanded(e => !e)} style={{ width:"100%", display:"flex", alignItems:"center", gap:8, padding:"8px 16px", background:"var(--colour-neutral-50)", border:"none", borderLeft:"2px solid transparent", cursor:"pointer" }}>
+              <span style={{ color:"var(--colour-primaryblue-600)", display:"flex", flexShrink:0 }}>{IcChart(16)}</span>
+              <span style={{ font:"300 16px/24px var(--font-normal)", color:"var(--colour-primaryblue-600)", flex:1, textAlign:"left" }}>Analytics</span>
+              <span style={{ color:"var(--text-caption)", display:"flex", transform: expanded ? "rotate(180deg)" : "none", transition:"transform 0.2s" }}>{IcChevDn(14)}</span>
+            </button>
+            {expanded && ["Overview","Traffic","Conversions"].map((s, i) => (
+              <button key={i} onClick={() => setSelected(`sub${i+1}`)} style={{ width:"100%", display:"flex", alignItems:"center", gap:8, padding:"8px 16px 8px 40px", background: selected === `sub${i+1}` ? "var(--colour-neutral-300)" : "var(--surface-page)", borderLeft: selected === `sub${i+1}` ? "2px solid var(--colour-primaryblue-500)" : "2px solid transparent", border:"none", cursor:"pointer" }}>
+                <span style={{ font:"300 14px/20px var(--font-normal)", color: selected === `sub${i+1}` ? "var(--text-action)" : "var(--text-body)" }}>{s}</span>
+              </button>
+            ))}
+            {/* Link item */}
+            <div style={{ display:"flex", alignItems:"center", gap:8, padding:"8px 16px", borderLeft:"2px solid transparent" }}>
+              <span style={{ color:"var(--text-caption)", display:"flex", flexShrink:0 }}>{IcUsers(16)}</span>
+              <span style={{ font:"300 16px/24px var(--font-normal)", color:"var(--text-title)" }}>Users</span>
             </div>
           </div>
         );
       },
-      code:`<Menu\n  trigger={<Button hierarchy="tertiary">Actions ▾</Button>}\n  items={[\n    { label:"Edit", shortcut:"⌘E", onClick: edit },\n    { label:"Duplicate", shortcut:"⌘D", onClick: duplicate },\n    { divider: true },\n    { label:"Delete", danger: true, onClick: remove },\n  ]}\n/>`,
+      code:`<Menu property1="Default">\n  <MenuIcon />\n  Menu\n</Menu>\n\n<Menu property1="Clicked / Expand">\n  <MenuIcon />\n  Menu\n  <SubMenu items={["Sub-Menu 1","Sub-Menu 2","Sub-Menu 3"]} />\n</Menu>`,
     },
     {
       id:"variants", title:"Variants",
       bullets:[
-        ["Default","Standard dropdown with icons and keyboard shortcuts"],
-        ["Selection","Checkmark items; one or many can be selected at once (radio or multi-check mode)"],
+        ["Default","White background, icon + label + arrow icon; not selected"],
+        ["Hover","Background shifts to background-hover (#f5f6f8)"],
+        ["Selected","background-active (#c0c7cf) + 2px blue left border + action-colour text"],
+        ["Clicked / Expand","Selected + reveals sub-item rows indented to 24px; arrow rotates 180°"],
+        ["Link","Label only, no arrow — used for simple flat nav links (e.g. Settings, Logout)"],
       ],
     },
     {
@@ -978,33 +1110,30 @@ const Menu = {
       table:{
         head:["Key","Action"],
         rows:[
-          ["Enter / Space","Open menu from trigger"],
-          ["↑ / ↓","Move focus through items"],
-          ["→ / Enter","Open sub-menu (if applicable)"],
-          ["← / Escape","Close sub-menu; Escape closes root menu"],
-          ["Home / End","Jump to first / last item"],
-          ["Type-ahead","Focus first item matching typed character(s)"],
+          ["Enter / Space","Toggle expansion on expandable items"],
+          ["↑ / ↓","Move focus between menu items"],
+          ["Tab","Move focus to next focusable element"],
         ],
       },
     },
     {
       id:"accessibility", title:"Accessibility",
       bullets:[
-        ["Role","Menu panel has role=\"menu\"; each item has role=\"menuitem\" (or \"menuitemcheckbox\" for selection menus)"],
-        ["Trigger","Has aria-haspopup=\"menu\" and aria-expanded"],
-        ["Disabled items","aria-disabled=\"true\"; still rendered in DOM for screen readers but skipped by keyboard navigation"],
-        ["Shortcut hints","Keyboard shortcut labels are aria-hidden — the shortcut itself is the accessible action"],
+        ["Role","Each menu item is a <button> (expandable) or <a> (link)"],
+        ["Expanded state","Expandable items have aria-expanded reflecting the open/closed state"],
+        ["Selected","Active route item has aria-current=\"page\""],
+        ["Sub-items","Hidden sub-items are removed from the DOM (not just visually hidden) when collapsed"],
       ],
     },
     {
       id:"do-dont", title:"Do / Don't",
       doDont:{
-        do:{ text:"Group related actions with dividers and keep the menu under 8 items — long flat lists are hard to scan." },
-        dont:{ text:"Don't use a menu for primary actions — use a Button or action bar so the action is always visible without a click." },
+        do:{ text:"Use Menu inside Sidebar to build grouped navigation — it is not a standalone floating dropdown." },
+        dont:{ text:"Don't put more than 3 sub-items under one Menu item; use a separate Sidebar group instead." },
       },
     },
   ],
-  props:[["items","array","{ label, icon?, shortcut?, onClick?, divider?, danger?, disabled?, items? }[]"],["trigger","node","Element that opens the menu"],["side","enum","bottom, top, left, right"],["align","enum","start, center, end"]],
+  props:[["property1","enum","Default, Hover, Selected, Clicked / Expand, Link"],["icon","node","14px icon on the leading edge"],["label","string","Nav item label"],["subItems","array","Sub-menu item labels (shown when expanded)"]],
 };
 
 const Pagination = {
@@ -1026,17 +1155,29 @@ const Pagination = {
         ],
       },
       demo: () => {
-        const pages = [1, 2, 3, null, 12];
-        const active = 2;
+        const [active, setActive] = React.useState(1);
+        const pages = [1, 2, 3, null, 10];
         return (
-          <div style={{ display:"flex", alignItems:"center", gap:4 }}>
-            <button disabled style={{ width:32, height:32, borderRadius:"var(--radius-md)", border:"1px solid var(--border-default)", background:"var(--surface-page)", color:"var(--text-caption)", cursor:"not-allowed", font:"13px/1 var(--font-normal)" }}>‹</button>
-            {pages.map((p, i) =>
-              p === null
-                ? <span key={i} style={{ width:32, textAlign:"center", color:"var(--text-caption)", font:"13px/1 var(--font-normal)" }}>…</span>
-                : <button key={i} style={{ width:32, height:32, borderRadius:"var(--radius-md)", border: p === active ? "none" : "1px solid var(--border-default)", background: p === active ? "var(--colour-primaryblue-500)" : "var(--surface-page)", color: p === active ? "#fff" : "var(--text-body)", font: p === active ? "600 13px/1 var(--font-bold)" : "13px/1 var(--font-normal)", cursor:"pointer" }}>{p}</button>
-            )}
-            <button style={{ width:32, height:32, borderRadius:"var(--radius-md)", border:"1px solid var(--border-default)", background:"var(--surface-page)", color:"var(--text-body)", cursor:"pointer", font:"13px/1 var(--font-normal)" }}>›</button>
+          <div style={{ display:"flex", alignItems:"center", gap:0, height:60, position:"relative" }}>
+            <button style={{ font:"12px/normal var(--font-normal)", color: active === 0 ? "var(--text-disabled)" : "var(--text-body)", background:"none", border:"none", cursor: active === 0 ? "not-allowed" : "pointer", padding:"0 4px" }}>First</button>
+            {/* prev chevron */}
+            <div style={{ display:"flex", alignItems:"center", justifyContent:"center", width:24, height:24, borderRadius:"var(--radius-xl)", background: active === 0 ? "transparent" : "transparent", cursor:"pointer" }}
+              onClick={() => setActive(a => Math.max(0, a-1))}>
+              <span style={{ font:"12px/1 var(--font-mono)", color: active === 0 ? "var(--text-disabled)" : "var(--text-body)", transform:"rotate(180deg)", display:"inline-block" }}>›</span>
+            </div>
+            <div style={{ display:"flex", alignItems:"center", gap:4 }}>
+              {pages.map((p, i) =>
+                p === null
+                  ? <span key={i} style={{ width:24, height:24, display:"flex", alignItems:"center", justifyContent:"center", font:"12px/16px var(--font-mono)", color:"var(--text-title)" }}>...</span>
+                  : <button key={i} onClick={() => setActive(i < 3 ? p-1 : 9)} style={{ width:24, height:24, borderRadius:"var(--radius-xl)", background: (i < 3 ? p-1 : 9) === active ? "var(--colour-neutral-200)" : "transparent", border:"none", cursor:"pointer", font:"12px/16px var(--font-mono)", color:"var(--text-title)", padding:"0 8px" }}>{p}</button>
+              )}
+            </div>
+            {/* next chevron */}
+            <div style={{ display:"flex", alignItems:"center", justifyContent:"center", width:24, height:24, cursor:"pointer" }}
+              onClick={() => setActive(a => Math.min(9, a+1))}>
+              <span style={{ font:"12px/1 var(--font-mono)", color: active === 9 ? "var(--text-disabled)" : "var(--text-body)" }}>›</span>
+            </div>
+            <button style={{ font:"12px/normal var(--font-normal)", color:"var(--text-body)", background:"none", border:"none", cursor:"pointer", padding:"0 4px" }}>Last</button>
           </div>
         );
       },
@@ -1100,11 +1241,12 @@ const AlertDoc = {
   id:"tooltip-alert", name:"Alert", variants:"4 tones",
   description:"Inline alert / banner with tone-based colour and icon. Pass `onClose` for a dismissible banner.",
   sections:[usage(
-    () => { const { Alert } = S(); return (
+    () => { const { Alert } = S(); const [show, setShow] = React.useState(true); return (
       <div style={{ display:"flex", flexDirection:"column", gap:10, maxWidth:460 }}>
         <Alert tone="success" title="Saved">Your changes were saved successfully.</Alert>
-        <Alert tone="warning" title="Heads up" onClose={() => {}}>Your trial ends in 3 days.</Alert>
-        <Alert tone="error">Something went wrong. Try again.</Alert>
+        {show && <Alert tone="warning" title="Heads up" onClose={() => setShow(false)}>Your trial ends in 3 days — click × to dismiss.</Alert>}
+        {!show && <div style={{ font:"12px/1 var(--font-normal)", color:"var(--text-caption)" }}>Alert dismissed. Reload to restore.</div>}
+        <Alert tone="error">Something went wrong. Please try again.</Alert>
       </div>
     ); },
     `<Alert tone="success" title="Saved">Your changes were saved.</Alert>\n<Alert tone="warning" title="Heads up" onClose={dismiss}>Trial ends soon.</Alert>`
@@ -1160,25 +1302,25 @@ const Accordion = {
       demo: () => {
         const [open, setOpen] = React.useState<string | null>("q1");
         const items = [
-          { id:"q1", title:"What is a design system?", body:"A design system is a collection of reusable components, guidelines, and standards that help teams build consistent digital products faster." },
-          { id:"q2", title:"How do I contribute?", body:"Open a pull request against the main branch. All components require anatomy docs, variants, accessibility notes, and a demo before merging." },
-          { id:"q3", title:"What token naming convention do you use?", body:"Tokens follow a three-layer model: Primitives → Alias → Component. Use alias tokens in components, never raw primitives." },
+          { id:"q1", title:"This is an Accordion", body:"This is the accordion text. It describes the section content in more detail using IBM Plex Sans Light at 16px." },
+          { id:"q2", title:"This is an Accordion", body:"This is the accordion text. Use accordions to progressively reveal secondary or optional content." },
         ];
         return (
-          <div style={{ maxWidth:480, border:"1px solid var(--border-subtle)", borderRadius:"var(--radius-lg)", overflow:"hidden" }}>
-            {items.map((it, i) => (
-              <div key={it.id} style={{ borderBottom: i < items.length - 1 ? "1px solid var(--border-subtle)" : "none" }}>
-                <button
-                  onClick={() => setOpen(open === it.id ? null : it.id)}
-                  style={{ width:"100%", display:"flex", justifyContent:"space-between", alignItems:"center", padding:"14px 18px", background:"transparent", border:"none", cursor:"pointer", font:"600 13px/1.4 var(--font-bold)", color:"var(--text-title)", textAlign:"left" }}
-                >
-                  {it.title}
-                  <span style={{ transform: open === it.id ? "rotate(180deg)" : "rotate(0deg)", transition:"transform 0.2s", color:"var(--text-caption)", flexShrink:0 }}>▾</span>
-                </button>
+          <div style={{ display:"flex", flexDirection:"column", gap:8, maxWidth:618 }}>
+            {items.map(it => (
+              <button
+                key={it.id}
+                onClick={() => setOpen(open === it.id ? null : it.id)}
+                style={{ width:"100%", background: open === it.id ? "var(--surface-page)" : "var(--surface-page)", border:"1px solid var(--border-default)", borderRadius:"var(--radius-xl)", padding:"20px 24px", cursor:"pointer", textAlign:"left", display:"flex", flexDirection:"column", gap: open === it.id ? 20 : 0 }}
+              >
+                <div style={{ display:"flex", alignItems:"center", gap:12 }}>
+                  <span style={{ width:24, height:24, display:"flex", alignItems:"center", justifyContent:"center", flexShrink:0, font:"300 24px/1 var(--font-normal)", color:"var(--text-title)" }}>{open === it.id ? "−" : "+"}</span>
+                  <span style={{ font:"300 20px/28px var(--font-normal)", color:"var(--text-title)", flex:1 }}>{it.title}</span>
+                </div>
                 {open === it.id && (
-                  <div style={{ padding:"0 18px 16px", font:"13px/1.6 var(--font-normal)", color:"var(--text-body)" }}>{it.body}</div>
+                  <div style={{ paddingLeft:32, font:"300 16px/24px var(--font-normal)", color:"var(--text-body)" }}>{it.body}</div>
                 )}
-              </div>
+              </button>
             ))}
           </div>
         );
@@ -1225,176 +1367,171 @@ const Accordion = {
 };
 
 const Drawer = {
-  id:"drawer", name:"Drawer", variants:"4 sides · 3 sizes",
-  description:"A panel that slides in from the edge of the screen — used for secondary navigation, forms, and detail views.",
+  id:"drawer", name:"Drawer", variants:"4 sides · Open=True",
+  description:"A resizable panel anchored to a screen edge — used for detail views, filter panels, and secondary content. A drag handle (dragger pill) marks the resizable edge. Content is an instance slot with 32px padding.",
   sections:[
     {
       id:"anatomy", title:"Anatomy",
       table:{
         head:["Part","Role"],
         rows:[
-          ["Backdrop","Dark overlay covering the rest of the screen; click to dismiss"],
-          ["Panel","The slide-in surface containing header, body, and footer"],
-          ["Header","Title + optional subtitle + close button (always present)"],
-          ["Body","Scrollable content area"],
-          ["Footer","Sticky action bar at the bottom of the panel (optional)"],
-          ["Close button","× icon button in the header; always accessible via Escape as well"],
+          ["Panel","White surface (background/background) anchored to an edge; padding 32px; gap 24px between dragger and content"],
+          ["Dragger","Pill-shaped resize handle: 64×8px (top/bottom) or 8×64px (left/right); background layer-accent-01 (#e9ebee); border-radius full (999px)"],
+          ["Instance slot","Content placeholder area — receives any component or layout (form, list, detail view)"],
         ],
       },
       demo: () => {
-        const [open, setOpen] = React.useState(false);
+        const [side, setSide] = React.useState<"right"|"bottom">("right");
         return (
-          <div>
-            <button
-              onClick={() => setOpen(true)}
-              style={{ padding:"8px 18px", background:"var(--colour-primaryblue-500)", color:"#fff", borderRadius:"var(--radius-md)", border:"none", cursor:"pointer", font:"600 13px/1 var(--font-bold)" }}
-            >Open Drawer</button>
-            {open && (
-              <div style={{ position:"fixed", inset:0, zIndex:50, display:"flex" }}>
-                <div style={{ flex:1, background:"rgba(0,0,0,0.45)" }} onClick={() => setOpen(false)} />
-                <div style={{ width:360, background:"var(--surface-page)", boxShadow:"-4px 0 24px rgba(0,0,0,0.14)", display:"flex", flexDirection:"column" }}>
-                  <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", padding:"18px 24px", borderBottom:"1px solid var(--border-subtle)" }}>
-                    <span style={{ font:"700 15px/1 var(--font-bold)", color:"var(--text-title)" }}>Edit profile</span>
-                    <button onClick={() => setOpen(false)} style={{ background:"none", border:"none", cursor:"pointer", color:"var(--text-caption)", font:"18px/1 var(--font-normal)" }}>✕</button>
-                  </div>
-                  <div style={{ flex:1, padding:24, font:"13px/1.6 var(--font-normal)", color:"var(--text-body)" }}>Drawer body content goes here. This area scrolls independently of the rest of the page.</div>
-                  <div style={{ padding:"14px 24px", borderTop:"1px solid var(--border-subtle)", display:"flex", gap:10, justifyContent:"flex-end" }}>
-                    <button onClick={() => setOpen(false)} style={{ padding:"8px 16px", borderRadius:"var(--radius-md)", border:"1px solid var(--border-default)", background:"var(--surface-page)", color:"var(--text-body)", cursor:"pointer", font:"13px/1 var(--font-normal)" }}>Cancel</button>
-                    <button style={{ padding:"8px 16px", borderRadius:"var(--radius-md)", border:"none", background:"var(--colour-primaryblue-500)", color:"#fff", cursor:"pointer", font:"600 13px/1 var(--font-bold)" }}>Save</button>
-                  </div>
+          <div style={{ position:"relative", height:260, border:"1px solid var(--border-subtle)", borderRadius:"var(--radius-xl)", overflow:"hidden", background:"var(--surface-secondary)", display:"flex", alignItems:"center", justifyContent:"center" }}>
+            <div style={{ display:"flex", gap:8 }}>
+              <button onClick={() => setSide("right")} style={{ padding:"6px 14px", borderRadius:"var(--radius-xl)", border:"1px solid var(--border-default)", background: side==="right" ? "var(--colour-primaryblue-500)" : "var(--surface-page)", color: side==="right" ? "#fff" : "var(--text-body)", cursor:"pointer", font:"12px/1 var(--font-normal)" }}>Right</button>
+              <button onClick={() => setSide("bottom")} style={{ padding:"6px 14px", borderRadius:"var(--radius-xl)", border:"1px solid var(--border-default)", background: side==="bottom" ? "var(--colour-primaryblue-500)" : "var(--surface-page)", color: side==="bottom" ? "#fff" : "var(--text-body)", cursor:"pointer", font:"12px/1 var(--font-normal)" }}>Bottom</button>
+            </div>
+            {/* Right drawer */}
+            {side === "right" && (
+              <div style={{ position:"absolute", top:0, right:0, bottom:0, width:220, background:"var(--surface-page)", display:"flex", alignItems:"center", gap:24, padding:32 }}>
+                <div style={{ width:8, height:64, background:"var(--colour-neutral-100)", borderRadius:999, flexShrink:0 }} />
+                <div style={{ flex:1, height:"100%", background:"#deb5ff33", borderRadius:"var(--radius-xl)", display:"flex", alignItems:"center", justifyContent:"center" }}>
+                  <span style={{ font:"12px/1.4 var(--font-normal)", color:"var(--text-caption)", textAlign:"center" }}>Instance slot</span>
                 </div>
+              </div>
+            )}
+            {/* Bottom drawer */}
+            {side === "bottom" && (
+              <div style={{ position:"absolute", left:0, right:0, bottom:0, height:120, background:"var(--surface-page)", display:"flex", flexDirection:"column", alignItems:"center", gap:24, padding:32 }}>
+                <div style={{ width:"100%", flex:1, background:"#deb5ff33", borderRadius:"var(--radius-xl)", display:"flex", alignItems:"center", justifyContent:"center" }}>
+                  <span style={{ font:"12px/1.4 var(--font-normal)", color:"var(--text-caption)" }}>Instance slot</span>
+                </div>
+                <div style={{ width:64, height:8, background:"var(--colour-neutral-100)", borderRadius:999, flexShrink:0 }} />
               </div>
             )}
           </div>
         );
       },
-      code:`<Drawer\n  open={open}\n  onClose={() => setOpen(false)}\n  side="right"\n  title="Edit profile"\n  size="Medium"\n  footer={<>\n    <Button hierarchy="secondary" onClick={close}>Cancel</Button>\n    <Button onClick={save}>Save</Button>\n  </>}\n>\n  {/* form content */}\n</Drawer>`,
+      code:`<Drawer align="Right" open="True">\n  {/* Instance slot — any content */}\n  <YourFormOrDetailView />\n</Drawer>`,
     },
     {
-      id:"variants", title:"Variants",
+      id:"variants", title:"Alignment variants",
       bullets:[
-        ["Right (default)","Slides in from the right — most common for detail panels and edit forms"],
-        ["Left","Slides in from the left — secondary navigation or filter panels"],
-        ["Top","Drops from the top — notifications or global messages on mobile"],
-        ["Bottom","Rises from the bottom — mobile action sheets and quick settings"],
+        ["Top","Panel drops from the top; horizontal dragger pill below the content; width: full viewport"],
+        ["Bottom (default)","Panel rises from the bottom; horizontal dragger pill above the content; width: full viewport"],
+        ["Left","Panel slides from the left; vertical dragger pill on the right edge; height: full viewport, width: 385px"],
+        ["Right","Panel slides from the right; vertical dragger pill on the left edge; height: full viewport, width: 385px"],
       ],
     },
     {
-      id:"sizes", title:"Sizes",
+      id:"dragger", title:"Dragger pill",
       table:{
-        head:["Size","Width (right/left)","Height (top/bottom)"],
+        head:["Alignment","Dragger size","Position"],
         rows:[
-          ["Small","320px","30vh"],
-          ["Medium","480px","50vh"],
-          ["Large","640px","80vh"],
+          ["Top / Bottom","64×8px (W×H)","Between content and the screen edge"],
+          ["Left / Right","8×64px (W×H)","Between content and the screen edge"],
         ],
       },
-    },
-    {
-      id:"keyboard", title:"Keyboard interaction",
-      table:{
-        head:["Key","Action"],
-        rows:[
-          ["Escape","Close the drawer"],
-          ["Tab","Cycle focus within the drawer (focus is trapped while open)"],
-          ["Shift+Tab","Reverse cycle within the drawer"],
-        ],
-      },
+      note:"The dragger pill is always background `layer-accent-01` (#e9ebee) with border-radius `full` (999px). On hover it shifts to `layer-hover-01` (#d5dbde).",
     },
     {
       id:"accessibility", title:"Accessibility",
       bullets:[
-        ["Role","Panel has role=\"dialog\" with aria-modal=\"true\" and aria-labelledby pointing to the header title"],
-        ["Focus trap","Focus is locked inside the drawer while it is open; returns to the trigger element on close"],
-        ["Scroll lock","Body scroll is disabled while the drawer is open to prevent disorienting background movement"],
+        ["Role","Panel has role=\"complementary\" or role=\"dialog\" depending on use case"],
+        ["Dragger","Dragger has role=\"separator\" with aria-orientation and aria-valuenow for resize value"],
+        ["Focus","When opened programmatically, move focus to the first interactive element inside the panel"],
       ],
     },
     {
       id:"do-dont", title:"Do / Don't",
       doDont:{
-        do:{ text:"Use a sticky footer for primary actions (Save, Apply) — users scroll long forms and should not have to scroll back up to submit." },
-        dont:{ text:"Don't nest drawers — if secondary actions are needed, use a modal or a new page instead of layering panels." },
+        do:{ text:"Use Bottom or Right alignment for detail views that supplement the main content — the user should be able to see both simultaneously." },
+        dont:{ text:"Don't use Drawer as a navigation panel — use Sidebar. Drawer is for contextual detail and secondary content that co-exists with the main view." },
       },
     },
   ],
-  props:[["open","boolean","Controlled open state"],["onClose","func","Close handler (Escape or backdrop click)"],["side","enum","left, right, top, bottom"],["size","enum","Small, Medium, Large"],["title","node","Header title"],["footer","node","Sticky footer content (actions)"]],
+  props:[["align","enum","Top, Bottom, Left, Right"],["open","enum","True (only Open=True variants exist; Open=False is TODO in design)"],["children","node","Instance slot content"]],
 };
 
 const Carousel = {
-  id:"carousel", name:"Carousel", variants:"2 variants",
-  description:"A horizontal scroll container with navigation arrows, dot indicators and optional auto-advance.",
+  id:"carousel", name:"Carousel", variants:"10 slide variants",
+  description:"A full-width image carousel with prev/next navigation controls positioned at the top-right. Slides are full-bleed images with border-radius large (16px). Up to 10 slide variants. AutoPlay and indicator controls are planned (TODO in design).",
   sections:[
     {
       id:"anatomy", title:"Anatomy",
       table:{
         head:["Part","Role"],
         rows:[
-          ["Track","Horizontal overflow container holding all slides"],
-          ["Slide","Individual content panel; typically card or image"],
-          ["Previous arrow","Circular icon button navigating to the prior slide"],
-          ["Next arrow","Circular icon button navigating to the next slide"],
-          ["Dot indicators","Row of dots below the track; filled dot marks the active slide"],
-          ["Auto-play indicator","Optional progress bar or animated dot showing time until next slide"],
+          ["Carousel root","Flex column, full width; gap 24px between control row and slide"],
+          ["Control row","Right-aligned row of prev/next icon buttons; sits ABOVE the slide area"],
+          ["Prev button","24×24px icon button; disabled state: `var(--button/button-disabled, #a9b5bf)` fill; active state: 2px secondary border"],
+          ["Next button","24×24px icon button; same styling as Prev, enabled when not on last slide"],
+          ["Slide container","overflow:clip, full width, height 665px; clips the active slide"],
+          ["Slide","Full-bleed image, border-radius `var(--radius/large, 16px)`; positioned absolutely and shifted by 1328px × slide index"],
         ],
       },
       demo: () => {
-        const [active, setActive] = React.useState(0);
-        const slides = [
-          { bg:"var(--colour-primaryblue-50)", label:"Slide 1 — Welcome" },
-          { bg:"var(--colour-success-50)", label:"Slide 2 — Features" },
-          { bg:"var(--colour-warning-50)", label:"Slide 3 — Pricing" },
-        ];
+        const [slide, setSlide] = React.useState(0);
+        const total = 3;
+        const colours = ["var(--colour-neutral-100)","var(--colour-neutral-200)","var(--colour-neutral-300)"];
         return (
-          <div style={{ maxWidth:400 }}>
-            <div style={{ position:"relative", borderRadius:"var(--radius-lg)", overflow:"hidden" }}>
-              <div style={{ background: slides[active].bg, height:140, display:"flex", alignItems:"center", justifyContent:"center", transition:"background 0.3s" }}>
-                <span style={{ font:"600 14px/1 var(--font-bold)", color:"var(--text-title)" }}>{slides[active].label}</span>
-              </div>
+          <div style={{ display:"flex", flexDirection:"column", gap:24, width:"100%" }}>
+            {/* Control row — top right */}
+            <div style={{ display:"flex", gap:12, justifyContent:"flex-end", alignItems:"center" }}>
               <button
-                onClick={() => setActive(a => (a - 1 + slides.length) % slides.length)}
-                style={{ position:"absolute", left:10, top:"50%", transform:"translateY(-50%)", width:28, height:28, borderRadius:"50%", background:"var(--surface-raised)", border:"1px solid var(--border-subtle)", cursor:"pointer", display:"flex", alignItems:"center", justifyContent:"center", font:"13px/1 var(--font-normal)", color:"var(--text-body)" }}
-              >‹</button>
+                disabled={slide === 0}
+                onClick={() => setSlide(s => s-1)}
+                style={{ width:24, height:24, borderRadius:"var(--radius-sm)", border: slide === 0 ? "none" : "2px solid var(--colour-primaryblue-50)", background: slide === 0 ? "var(--colour-neutral-400)" : "transparent", cursor: slide === 0 ? "not-allowed" : "pointer", display:"flex", alignItems:"center", justifyContent:"center" }}
+              >
+                <span style={{ font:"11px/1 var(--font-mono)", color: slide === 0 ? "var(--surface-page)" : "var(--text-body)", transform:"rotate(180deg)", display:"inline-block" }}>›</span>
+              </button>
               <button
-                onClick={() => setActive(a => (a + 1) % slides.length)}
-                style={{ position:"absolute", right:10, top:"50%", transform:"translateY(-50%)", width:28, height:28, borderRadius:"50%", background:"var(--surface-raised)", border:"1px solid var(--border-subtle)", cursor:"pointer", display:"flex", alignItems:"center", justifyContent:"center", font:"13px/1 var(--font-normal)", color:"var(--text-body)" }}
-              >›</button>
+                disabled={slide === total-1}
+                onClick={() => setSlide(s => s+1)}
+                style={{ width:24, height:24, borderRadius:"var(--radius-sm)", border: slide === total-1 ? "none" : "2px solid var(--colour-primaryblue-50)", background: slide === total-1 ? "var(--colour-neutral-400)" : "transparent", cursor: slide === total-1 ? "not-allowed" : "pointer", display:"flex", alignItems:"center", justifyContent:"center" }}
+              >
+                <span style={{ font:"11px/1 var(--font-mono)", color: slide === total-1 ? "var(--surface-page)" : "var(--text-body)" }}>›</span>
+              </button>
             </div>
-            <div style={{ display:"flex", justifyContent:"center", gap:6, marginTop:12 }}>
-              {slides.map((_, i) => (
-                <button key={i} onClick={() => setActive(i)} style={{ width: i === active ? 20 : 8, height:8, borderRadius:4, background: i === active ? "var(--colour-primaryblue-500)" : "var(--colour-neutral-300)", border:"none", cursor:"pointer", transition:"width 0.2s, background 0.2s", padding:0 }} />
-              ))}
+            {/* Slide */}
+            <div style={{ width:"100%", height:160, overflow:"hidden", borderRadius:16, position:"relative" }}>
+              <div style={{ display:"flex", position:"absolute", top:0, left:`-${slide * 100}%`, width:`${total * 100}%`, height:"100%", transition:"left 0.3s ease" }}>
+                {colours.map((c, i) => (
+                  <div key={i} style={{ width:`${100/total}%`, height:"100%", background:c, borderRadius:16, display:"flex", alignItems:"center", justifyContent:"center", flexShrink:0 }}>
+                    <span style={{ font:"12px/1 var(--font-mono)", color:"var(--text-caption)" }}>Slide {i+1}</span>
+                  </div>
+                ))}
+              </div>
             </div>
           </div>
         );
       },
-      code:`<Carousel\n  showArrows\n  showDots\n  autoPlay\n  interval={4000}\n  items={[\n    <Card>Slide 1</Card>,\n    <Card>Slide 2</Card>,\n    <Card>Slide 3</Card>,\n  ]}\n/>`,
+      code:`<Carousel slide="1" />\n{/* slide prop: "1"–"10" — controls which image is shown */}\n{/* TODO: AutoPlay and Indicators properties (not yet in design) */}`,
     },
     {
       id:"variants", title:"Variants",
       bullets:[
-        ["Single-slide","One full-width slide visible at a time (default) — best for hero banners, onboarding steps"],
-        ["Peek","Adjacent slides partially visible at the sides — signals there is more to scroll"],
+        ["Slides 1–10","Each slide variant (prop: slide=\"1\" to slide=\"10\") shows a different image in the active position"],
+        ["Prev disabled","On slide 1, the prev button renders as disabled (filled background-disabled, no border)"],
+        ["Next disabled","On the last slide, the next button renders as disabled"],
       ],
+      note:"AutoPlay and indicator controls (dots) are planned as a Type property in a future design update.",
     },
     {
       id:"accessibility", title:"Accessibility",
       bullets:[
-        ["Role","Track has role=\"region\" with aria-label (e.g. 'Image carousel, slide 1 of 3')"],
-        ["Live region","Slide change is announced via aria-live=\"polite\" on a visually hidden element"],
-        ["Arrows","Previous / Next buttons have descriptive aria-label ('Previous slide' / 'Next slide')"],
-        ["Auto-play","Must pause on hover, focus, or when prefers-reduced-motion is set. Provide a visible pause button."],
-        ["Dots","Each dot button has aria-label ('Go to slide N') and aria-current='true' on the active one"],
+        ["Region","Wrap in <section> with aria-label='Image carousel'"],
+        ["Live region","Active slide change is announced via aria-live='polite' on a visually hidden element"],
+        ["Prev/Next","Buttons have descriptive aria-label ('Previous slide' / 'Next slide'); aria-disabled on boundary slides"],
+        ["Reduced motion","Slide transition is instant when prefers-reduced-motion is set"],
       ],
     },
     {
       id:"do-dont", title:"Do / Don't",
       doDont:{
-        do:{ text:"Always provide arrows and dots together — arrows are faster for keyboard users, dots show position at a glance for pointer users." },
-        dont:{ text:"Don't use auto-play for anything other than visual content (images, hero banners) — rotating interactive content causes missed interactions and accessibility issues." },
+        do:{ text:"Use full-bleed images that have a consistent aspect ratio — the 665px height is fixed, so images should be cropped to fit at 16:9 or wider." },
+        dont:{ text:"Don't use the Carousel for interactive content (forms, lists, tables) — it is an image display component only." },
       },
     },
   ],
-  props:[["items","array","Slide content nodes (ReactNode[])"],["autoPlay","boolean","Auto-advance slides"],["interval","number","Auto-advance interval in ms (default 4000)"],["showDots","boolean","Show dot indicators"],["showArrows","boolean","Show prev / next arrow buttons"],["variant","enum","single, peek"]],
+  props:[["slide","enum","\"1\" – \"10\" — active slide index"],["autoPlay","boolean","TODO: not yet in design — do not implement"],["showDots","boolean","TODO: not yet in design — do not implement"]],
 };
 
 const GROUPS: any[] = [

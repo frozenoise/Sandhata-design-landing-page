@@ -109,6 +109,25 @@ body { background: #FEFAF7; overflow-x: hidden; font-family: var(--font-normal);
   margin-left: 1px; color: #F2C44A;
 }
 
+/* ── Hero heading: cursor-driven particle dispersion ─────────────
+   HeroParticleHeading (app/_home/HeroParticleHeading.tsx) renders a bare
+   <h1> inside .hero, so the type rules above still apply unchanged. These
+   rules style the extra structural elements it adds: the visually-hidden
+   accessible text, the canvas wrapper, and the sparkle overlay. */
+.hero-particle-srtext {
+  position: absolute; width: 1px; height: 1px;
+  padding: 0; margin: -1px; overflow: hidden;
+  clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0;
+}
+.hero-particle-wrap { position: relative; width: 100%; }
+.hero-particle-canvas { display: block; width: 100%; touch-action: none; }
+.hero-particle-sparkle {
+  position: absolute; display: block; color: #F2C44A; pointer-events: none;
+}
+@media (prefers-reduced-motion: reduce) {
+  .hero-particle-canvas { display: none; }
+}
+
 .hero-sub {
   font: 18px/1.4 var(--font-normal); color: #6b7280;
   max-width: 570px; margin: 24px auto 0; position: relative; z-index: 2;

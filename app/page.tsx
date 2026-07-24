@@ -4,6 +4,7 @@ import React from "react";
 import {
   Button, Badge, Alert, Spinner, Avatar, Tag, StatCard, Switch, Checkbox,
 } from "@/components";
+import HeroParticleHeading from "./_home/HeroParticleHeading";
 
 /* ── Icons ────────────────────────────────────────────────────── */
 const I = ({ d, size=16, sw=1.6 }) => (
@@ -13,14 +14,6 @@ const I = ({ d, size=16, sw=1.6 }) => (
   </svg>
 );
 const SunIco   = () => <I size={15} d={<><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></>}/>;
-const Sparkle = () => (
-  <svg className="hero-sparkle" width="0.62em" height="0.62em" viewBox="0 0 64 64" fill="currentColor" aria-hidden="true">
-    {/* large four-point star */}
-    <path d="M42 4c1.6 9.8 5.4 13.6 15.2 15.2C47.4 20.8 43.6 24.6 42 34.4 40.4 24.6 36.6 20.8 26.8 19.2 36.6 17.6 40.4 13.8 42 4z"/>
-    {/* small four-point star */}
-    <path d="M16 30c1 6.4 3.5 8.9 9.9 9.9-6.4 1-8.9 3.5-9.9 9.9-1-6.4-3.5-8.9-9.9-9.9 6.4-1 8.9-3.5 9.9-9.9z"/>
-  </svg>
-);
 const SearchIco = () => <I size={15} d={<><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></>}/>;
 const ArrowR   = () => <I size={14} d={<><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></>}/>;
 const ChevD    = () => <I size={14} d={<polyline points="6 9 12 15 18 9"/>} sw={2}/>;
@@ -597,9 +590,7 @@ export default function App() {
       {/* HERO */}
       <section className="hero">
         <div className="hero-aurora"/>
-        <h1>
-          The AI-ready design system built for&nbsp;<em>clarity<Sparkle/></em>
-        </h1>
+        <HeroParticleHeading/>
 
         <p className="hero-sub">
           Everything your team needs to ship consistent, accessible interfaces
