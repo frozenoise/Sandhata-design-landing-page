@@ -40,6 +40,15 @@ const TOKENS: Tok[] = [
 ];
 const SENTENCE_TEXT = "The AI-ready design system built for clarity";
 
+/* Below the hero's own tablet breakpoint (.hero h1 drops to 54px, then
+   36px at 640px — see app/globals.css) the particle sampling step can't
+   shrink enough to stay legible: live-tested at 36px the sampled sentence
+   degraded to an illegible blob rather than readable letters. Rather than
+   ship that, fall back to the plain static heading below 960px, same as
+   the reduced-motion path — a pragmatic width cutoff instead of chasing
+   per-breakpoint particle tuning for a heading that's this small anyway. */
+const MIN_PARTICLE_WIDTH = 960;
+
 class Particle {
   x: number; y: number; originX: number; originY: number;
   vx: number; vy: number; size: number; color: string;
@@ -127,14 +136,20 @@ export default function HeroParticleHeading() {
   const sparkleRef = useRef<HTMLSpanElement>(null);
   const [mode, setMode] = useState<"static" | "particles">("static");
 
-  /* prefers-reduced-motion → plain static heading, no animation at all.
-     Same pattern as .hero-aurora's reduced-motion guard in globals.css. */
+  /* prefers-reduced-motion → plain static heading, no animation at all
+     (same pattern as .hero-aurora's reduced-motion guard in globals.css).
+     Narrow viewports (< MIN_PARTICLE_WIDTH) get the same static fallback —
+     see the comment on that constant above. */
   useEffect(() => {
     const mq = window.matchMedia("(prefers-reduced-motion: reduce)");
-    const decide = () => setMode(mq.matches ? "static" : "particles");
+    const decide = () => setMode(mq.matches || window.innerWidth < MIN_PARTICLE_WIDTH ? "static" : "particles");
     decide();
     mq.addEventListener("change", decide);
-    return () => mq.removeEventListener("change", decide);
+    window.addEventListener("resize", decide);
+    return () => {
+      mq.removeEventListener("change", decide);
+      window.removeEventListener("resize", decide);
+    };
   }, []);
 
   useEffect(() => {
@@ -199,14 +214,18 @@ export default function HeroParticleHeading() {
         });
       });
 
-      // Sample rendered glyphs into particles. Step scales with font-size
-      // so the 54px/36px responsive breakpoints don't under-sample into an
-      // illegible blob, and stays denser than the reference's default
-      // (particleDensity 6) because Regular-weight strokes cover far fewer
-      // ink pixels than the reference's Bold — tuned live against 60fps in
-      // Chrome DevTools performance overlay at 80px/3-line desktop width.
-      const step = Math.max(1, Math.round((fontSizePx / 80) * 3 * dpr));
-      const particleSize = Math.max(0.8, 1.3 * (fontSizePx / 80));
+      // Sample rendered glyphs into particles — dense preset. Step scales
+      // with font-size so the 54px/36px responsive breakpoints don't
+      // under-sample into an illegible blob. Note: componentry.dev's docs
+      // page shows a "Fine Particles (High Density)" preview but doesn't
+      // publish its config (confirmed live — only the default preset's code
+      // is shown), and no "ParticleTypographyDense" export exists on that
+      // site; there's nothing to import here. This is our own dense preset:
+      // a smaller step than the earlier default (was 3x) and a smaller
+      // per-particle size so the finer sampling reads as crisp grain rather
+      // than overlapping blobs, re-verified live for legibility + 60fps.
+      const step = Math.max(1, Math.round((fontSizePx / 80) * 1.8 * dpr));
+      const particleSize = Math.max(0.6, 1.0 * (fontSizePx / 80));
       const imgData = ctx.getImageData(0, 0, canvas.width, canvas.height);
       particles = [];
       for (let py = 0; py < imgData.height; py += step) {

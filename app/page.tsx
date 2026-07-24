@@ -5,6 +5,7 @@ import {
   Button, Badge, Alert, Spinner, Avatar, Tag, StatCard, Switch, Checkbox,
 } from "@/components";
 import HeroParticleHeading from "./_home/HeroParticleHeading";
+import { PixelCanvasBackground } from "./_fx/PixelCanvasBackground";
 
 /* ── Icons ────────────────────────────────────────────────────── */
 const I = ({ d, size=16, sw=1.6 }) => (
@@ -640,6 +641,7 @@ export default function App() {
 
       {/* WHAT YOU CAN EXPECT */}
       <section className="expect">
+        <PixelCanvasBackground/>
         <div className="expect-card" data-reveal>
           <h2 className="expect-h">What you can expect</h2>
           <div className="expect-body">
@@ -795,6 +797,7 @@ export default function App() {
 
       {/* START BUILDING TODAY */}
       <section className="build" data-reveal>
+        <div className="build-prism" aria-hidden="true"/>
         <div className="build-inner">
           <h2 className="build-h">
             Start
