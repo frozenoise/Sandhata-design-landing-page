@@ -402,19 +402,28 @@ const DateRangePicker = {
           ["Clear button","Resets both fields"],
         ],
       },
-      demo: () => (
-        <div style={{ display:"flex", gap:24, alignItems:"center", maxWidth:420 }}>
-          {["Start date","End date"].map((lbl) => (
-            <div key={lbl} style={{ flex:1 }}>
-              <div style={{ font:"700 12px/1 var(--font-bold)", color:"var(--text-title)", marginBottom:6, letterSpacing:"0.4px" }}>{lbl}</div>
-              <div style={{ display:"flex", alignItems:"center", gap:8, height:38, padding:"0 10px", border:"1px solid var(--border-default)", borderRadius:"var(--radius-sm)", background:"var(--surface-page)" }}>
-                <span style={{ font:"14px/1 var(--font-normal)", color:"var(--text-caption)", flex:1 }}>DD / MM / YYYY</span>
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
-              </div>
+      demo: () => {
+        const [start, setStart] = React.useState("");
+        const [end, setEnd] = React.useState("");
+        const fieldStyle: React.CSSProperties = { height:38, padding:"0 10px", border:"1px solid var(--border-default)", borderRadius:"var(--radius-sm)", background:"var(--surface-page)", font:"14px/38px var(--font-normal)", color:"var(--text-title)", width:"100%", cursor:"pointer", outline:"none", boxSizing:"border-box" as const };
+        return (
+          <div style={{ display:"flex", flexDirection:"column", gap:16, maxWidth:440 }}>
+            <div style={{ display:"flex", gap:24 }}>
+              {([["Start date",start,setStart],["End date",end,setEnd]] as const).map(([lbl,val,set]) => (
+                <div key={lbl} style={{ flex:1 }}>
+                  <div style={{ font:"700 12px/1 var(--font-bold)", color:"var(--text-title)", marginBottom:6, letterSpacing:"0.4px" }}>{lbl}</div>
+                  <input type="date" value={val} onChange={e => set(e.target.value)} style={fieldStyle} />
+                </div>
+              ))}
             </div>
-          ))}
-        </div>
-      ),
+            {start && end && new Date(start) <= new Date(end) && (
+              <div style={{ font:"12px/1 var(--font-normal)", color:"var(--text-caption)", background:"var(--colour-primaryblue-50)", padding:"6px 10px", borderRadius:"var(--radius-sm)" }}>
+                {Math.round((new Date(end).getTime()-new Date(start).getTime())/86400000)+1} days selected
+              </div>
+            )}
+          </div>
+        );
+      },
       code:`<DateRangePicker\n  startLabel="Start date"\n  endLabel="End date"\n  value={{ start, end }}\n  onChange={({ start, end }) => setRange({ start, end })}\n/>`,
     },
     {
@@ -656,15 +665,26 @@ const DataTable = {
         ],
       },
       demo: () => {
+        const [hovered, setHovered] = React.useState<number | null>(null);
+        const [sortDir, setSortDir] = React.useState<"asc"|"desc">("asc");
         const cols = ["Name","Role","Status"];
-        const rows = [["Alice Chen","Engineer","Active"],["Bob Okafor","Designer","Active"],["Carla Vega","Manager","Away"]];
+        const allRows = [["Alice Chen","Engineer","Active"],["Bob Okafor","Designer","Active"],["Carla Vega","Manager","Away"]];
+        const rows = [...allRows].sort((a,b) => sortDir === "asc" ? a[0].localeCompare(b[0]) : b[0].localeCompare(a[0]));
         const cellStyle: React.CSSProperties = { padding:"12px", font:"300 14px/20px var(--font-light)", color:"var(--text-body)", borderBottom:"1px solid var(--border-default)" };
-        const headStyle: React.CSSProperties = { padding:"12px", font:"400 12px/16px var(--font-normal)", color:"var(--text-title)", borderBottom:"1px solid var(--border-default)", textAlign:"left", letterSpacing:"0.3px", background:"var(--colour-primaryblue-50)" };
+        const headStyle: React.CSSProperties = { padding:"12px", font:"400 12px/16px var(--font-normal)", color:"var(--text-title)", borderBottom:"1px solid var(--border-default)", textAlign:"left", letterSpacing:"0.3px", background:"var(--colour-primaryblue-50)", cursor:"pointer", userSelect:"none" as const };
         return (
           <div style={{ overflowX:"auto" }}>
+            <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", padding:"12px 16px", borderBottom:"1px solid var(--border-subtle)" }}>
+              <span style={{ font:"600 14px/1 var(--font-normal)", color:"var(--text-title)" }}>Team members</span>
+              <span style={{ font:"12px/1 var(--font-normal)", color:"var(--text-caption)" }}>{rows.length} records</span>
+            </div>
             <table style={{ width:"100%", borderCollapse:"collapse", border:"1px solid var(--border-default)", borderRadius:"4px 4px 0 0", overflow:"hidden" }}>
-              <thead><tr>{cols.map(c => <th key={c} style={headStyle}>{c}</th>)}</tr></thead>
-              <tbody>{rows.map((r,i) => <tr key={i} style={{ background:"var(--surface-page)" }}>{r.map((c,j) => <td key={j} style={cellStyle}>{c}</td>)}</tr>)}</tbody>
+              <thead><tr>{cols.map((c,ci) => <th key={c} style={headStyle} onClick={ci===0 ? () => setSortDir(d => d==="asc"?"desc":"asc") : undefined}>{c}{ci===0 ? <span style={{ marginLeft:4, fontSize:10 }}>{sortDir==="asc"?"↑":"↓"}</span> : null}</th>)}</tr></thead>
+              <tbody>{rows.map((r,i) => (
+                <tr key={i} style={{ background: hovered===i ? "var(--colour-neutral-50)" : "var(--surface-page)", transition:"background 0.1s", cursor:"pointer" }} onMouseEnter={() => setHovered(i)} onMouseLeave={() => setHovered(null)}>
+                  {r.map((c,j) => <td key={j} style={cellStyle}>{c}</td>)}
+                </tr>
+              ))}</tbody>
             </table>
           </div>
         );
@@ -1155,29 +1175,49 @@ const Pagination = {
         ],
       },
       demo: () => {
-        const [active, setActive] = React.useState(1);
-        const pages = [1, 2, 3, null, 10];
+        const TOTAL = 10;
+        const [page, setPage] = React.useState(1);
+        const getPages = (cur: number, tot: number) => {
+          const SIB = 2;
+          const left = Math.max(2, cur - SIB);
+          const right = Math.min(tot - 1, cur + SIB);
+          const result: (number|null)[] = [1];
+          if (left > 2) result.push(null);
+          for (let i = left; i <= right; i++) result.push(i);
+          if (right < tot - 1) result.push(null);
+          if (tot > 1) result.push(tot);
+          return result;
+        };
+        const pages = getPages(page, TOTAL);
+        const btnStyle = (p: number): React.CSSProperties => ({
+          minWidth:28, height:28, borderRadius:"var(--radius-xl)", background: p === page ? "var(--colour-neutral-200)" : "transparent",
+          border:"none", cursor:"pointer", font:`12px/28px var(--font-mono)`, color:"var(--text-title)", padding:"0 6px", fontVariantNumeric:"tabular-nums"
+        });
+        const navBtn = (disabled: boolean): React.CSSProperties => ({
+          width:28, height:28, borderRadius:"var(--radius-xl)", background:"transparent", border:"none",
+          cursor: disabled ? "not-allowed" : "pointer", display:"flex", alignItems:"center", justifyContent:"center",
+          color: disabled ? "var(--text-disabled)" : "var(--text-body)"
+        });
         return (
-          <div style={{ display:"flex", alignItems:"center", gap:0, height:60, position:"relative" }}>
-            <button style={{ font:"12px/normal var(--font-normal)", color: active === 0 ? "var(--text-disabled)" : "var(--text-body)", background:"none", border:"none", cursor: active === 0 ? "not-allowed" : "pointer", padding:"0 4px" }}>First</button>
-            {/* prev chevron */}
-            <div style={{ display:"flex", alignItems:"center", justifyContent:"center", width:24, height:24, borderRadius:"var(--radius-xl)", background: active === 0 ? "transparent" : "transparent", cursor:"pointer" }}
-              onClick={() => setActive(a => Math.max(0, a-1))}>
-              <span style={{ font:"12px/1 var(--font-mono)", color: active === 0 ? "var(--text-disabled)" : "var(--text-body)", transform:"rotate(180deg)", display:"inline-block" }}>›</span>
-            </div>
-            <div style={{ display:"flex", alignItems:"center", gap:4 }}>
-              {pages.map((p, i) =>
-                p === null
-                  ? <span key={i} style={{ width:24, height:24, display:"flex", alignItems:"center", justifyContent:"center", font:"12px/16px var(--font-mono)", color:"var(--text-title)" }}>...</span>
-                  : <button key={i} onClick={() => setActive(i < 3 ? p-1 : 9)} style={{ width:24, height:24, borderRadius:"var(--radius-xl)", background: (i < 3 ? p-1 : 9) === active ? "var(--colour-neutral-200)" : "transparent", border:"none", cursor:"pointer", font:"12px/16px var(--font-mono)", color:"var(--text-title)", padding:"0 8px" }}>{p}</button>
-              )}
-            </div>
-            {/* next chevron */}
-            <div style={{ display:"flex", alignItems:"center", justifyContent:"center", width:24, height:24, cursor:"pointer" }}
-              onClick={() => setActive(a => Math.min(9, a+1))}>
-              <span style={{ font:"12px/1 var(--font-mono)", color: active === 9 ? "var(--text-disabled)" : "var(--text-body)" }}>›</span>
-            </div>
-            <button style={{ font:"12px/normal var(--font-normal)", color:"var(--text-body)", background:"none", border:"none", cursor:"pointer", padding:"0 4px" }}>Last</button>
+          <div style={{ display:"flex", flexDirection:"column", gap:12 }}>
+            <nav aria-label="Pagination" style={{ display:"flex", alignItems:"center", gap:2 }}>
+              <button style={{ ...navBtn(page===1), font:"12px/1 var(--font-normal)", width:"auto", padding:"0 6px" }} disabled={page===1} onClick={() => setPage(1)}>First</button>
+              <button style={navBtn(page===1)} disabled={page===1} onClick={() => setPage(p => p-1)}>
+                <span style={{ transform:"rotate(180deg)", display:"inline-block", fontSize:14 }}>›</span>
+              </button>
+              <div style={{ display:"flex", alignItems:"center", gap:2 }}>
+                {pages.map((p, i) =>
+                  p === null
+                    ? <span key={`e${i}`} style={{ width:28, textAlign:"center", font:"12px/1 var(--font-mono)", color:"var(--text-caption)" }}>…</span>
+                    : <button key={p} onClick={() => setPage(p)} style={btnStyle(p)}>{p}</button>
+                )}
+              </div>
+              <button style={navBtn(page===TOTAL)} disabled={page===TOTAL} onClick={() => setPage(p => p+1)}>
+                <span style={{ fontSize:14 }}>›</span>
+              </button>
+              <button style={{ ...navBtn(page===TOTAL), font:"12px/1 var(--font-normal)", width:"auto", padding:"0 6px" }} disabled={page===TOTAL} onClick={() => setPage(TOTAL)}>Last</button>
+            </nav>
+            <div style={{ font:"12px/1 var(--font-normal)", color:"var(--text-caption)" }}>Showing {(page-1)*10+1}–{Math.min(page*10,100)} of 100 results</div>
           </div>
         );
       },
@@ -1259,7 +1299,12 @@ const TooltipDoc = {
   description:"Dark label shown on hover / focus of its child trigger.",
   sections:[usage(
     () => { const { Tooltip, Button:B } = S(); return (
-      <Tooltip label="This is a tooltip"><B hierarchy="tertiary">Hover me</B></Tooltip>
+      <div style={{ padding:"48px 32px 32px", display:"flex", gap:20, flexWrap:"wrap", alignItems:"center" }}>
+        <Tooltip label="Tooltip — top" side="top"><B hierarchy="tertiary">Top</B></Tooltip>
+        <Tooltip label="Tooltip — right" side="right"><B hierarchy="tertiary">Right</B></Tooltip>
+        <Tooltip label="Tooltip — bottom" side="bottom"><B hierarchy="tertiary">Bottom</B></Tooltip>
+        <Tooltip label="Tooltip — left" side="left"><B hierarchy="tertiary">Left</B></Tooltip>
+      </div>
     ); },
     `<Tooltip label="Copy to clipboard" side="top">\n  <IconButton icon={<Copy/>} ariaLabel="Copy" />\n</Tooltip>`
   )],
@@ -1388,22 +1433,53 @@ const Drawer = {
               <button onClick={() => setSide("right")} style={{ padding:"6px 14px", borderRadius:"var(--radius-xl)", border:"1px solid var(--border-default)", background: side==="right" ? "var(--colour-primaryblue-500)" : "var(--surface-page)", color: side==="right" ? "#fff" : "var(--text-body)", cursor:"pointer", font:"12px/1 var(--font-normal)" }}>Right</button>
               <button onClick={() => setSide("bottom")} style={{ padding:"6px 14px", borderRadius:"var(--radius-xl)", border:"1px solid var(--border-default)", background: side==="bottom" ? "var(--colour-primaryblue-500)" : "var(--surface-page)", color: side==="bottom" ? "#fff" : "var(--text-body)", cursor:"pointer", font:"12px/1 var(--font-normal)" }}>Bottom</button>
             </div>
-            {/* Right drawer */}
+            {/* Right drawer — user detail panel */}
             {side === "right" && (
-              <div style={{ position:"absolute", top:0, right:0, bottom:0, width:220, background:"var(--surface-page)", display:"flex", alignItems:"center", gap:24, padding:32 }}>
-                <div style={{ width:8, height:64, background:"var(--colour-neutral-100)", borderRadius:999, flexShrink:0 }} />
-                <div style={{ flex:1, height:"100%", background:"#deb5ff33", borderRadius:"var(--radius-xl)", display:"flex", alignItems:"center", justifyContent:"center" }}>
-                  <span style={{ font:"12px/1.4 var(--font-normal)", color:"var(--text-caption)", textAlign:"center" }}>Instance slot</span>
+              <div style={{ position:"absolute", top:0, right:0, bottom:0, width:260, background:"var(--surface-page)", display:"flex", flexDirection:"row" }}>
+                <div style={{ width:8, display:"flex", alignItems:"center", justifyContent:"center", flexShrink:0 }}>
+                  <div style={{ width:8, height:64, background:"var(--colour-neutral-200)", borderRadius:999 }} />
+                </div>
+                <div style={{ flex:1, padding:"24px 20px", display:"flex", flexDirection:"column", gap:16, overflowY:"auto" }}>
+                  <div style={{ display:"flex", alignItems:"center", gap:12 }}>
+                    <div style={{ width:40, height:40, borderRadius:"50%", background:"var(--colour-primaryblue-100)", display:"flex", alignItems:"center", justifyContent:"center", font:"600 16px/1 var(--font-normal)", color:"var(--colour-primaryblue-600)", flexShrink:0 }}>AC</div>
+                    <div>
+                      <div style={{ font:"600 14px/1.2 var(--font-normal)", color:"var(--text-title)" }}>Alice Chen</div>
+                      <div style={{ font:"12px/1 var(--font-normal)", color:"var(--text-caption)", marginTop:3 }}>alice@sandhata.io</div>
+                    </div>
+                  </div>
+                  <div style={{ borderTop:"1px solid var(--border-subtle)", paddingTop:12, display:"flex", flexDirection:"column", gap:8 }}>
+                    {[["Role","Senior Engineer"],["Team","Platform"],["Status","Active"],["Joined","Jan 2022"]].map(([k,v]) => (
+                      <div key={k} style={{ display:"flex", justifyContent:"space-between" }}>
+                        <span style={{ font:"12px/1 var(--font-normal)", color:"var(--text-caption)" }}>{k}</span>
+                        <span style={{ font:"12px/1 var(--font-normal)", color:"var(--text-title)" }}>{v}</span>
+                      </div>
+                    ))}
+                  </div>
+                  <div style={{ display:"flex", gap:8 }}>
+                    <button style={{ flex:1, padding:"7px 0", background:"var(--colour-primaryblue-500)", color:"#fff", border:"none", borderRadius:"var(--radius-sm)", font:"12px/1 var(--font-normal)", cursor:"pointer" }}>Edit</button>
+                    <button style={{ flex:1, padding:"7px 0", background:"transparent", color:"var(--colour-error-600)", border:"1px solid var(--colour-error-200)", borderRadius:"var(--radius-sm)", font:"12px/1 var(--font-normal)", cursor:"pointer" }}>Remove</button>
+                  </div>
                 </div>
               </div>
             )}
-            {/* Bottom drawer */}
+            {/* Bottom drawer — quick filters */}
             {side === "bottom" && (
-              <div style={{ position:"absolute", left:0, right:0, bottom:0, height:120, background:"var(--surface-page)", display:"flex", flexDirection:"column", alignItems:"center", gap:24, padding:32 }}>
-                <div style={{ width:"100%", flex:1, background:"#deb5ff33", borderRadius:"var(--radius-xl)", display:"flex", alignItems:"center", justifyContent:"center" }}>
-                  <span style={{ font:"12px/1.4 var(--font-normal)", color:"var(--text-caption)" }}>Instance slot</span>
+              <div style={{ position:"absolute", left:0, right:0, bottom:0, height:140, background:"var(--surface-page)", display:"flex", flexDirection:"column" }}>
+                <div style={{ padding:"16px 24px", flex:1, display:"flex", flexDirection:"column", gap:12 }}>
+                  <div style={{ font:"600 13px/1 var(--font-normal)", color:"var(--text-title)" }}>Filters</div>
+                  <div style={{ display:"flex", gap:8, flexWrap:"wrap" }}>
+                    {["Active","Pending","Archived"].map(f => (
+                      <button key={f} style={{ padding:"5px 12px", borderRadius:"var(--radius-pill)", border:"1px solid var(--border-default)", background:"var(--surface-page)", font:"12px/1 var(--font-normal)", color:"var(--text-body)", cursor:"pointer" }}>{f}</button>
+                    ))}
+                  </div>
+                  <div style={{ display:"flex", gap:8 }}>
+                    <button style={{ padding:"6px 16px", background:"var(--colour-primaryblue-500)", color:"#fff", border:"none", borderRadius:"var(--radius-sm)", font:"12px/1 var(--font-normal)", cursor:"pointer" }}>Apply</button>
+                    <button style={{ padding:"6px 16px", background:"transparent", color:"var(--text-caption)", border:"none", font:"12px/1 var(--font-normal)", cursor:"pointer" }}>Clear</button>
+                  </div>
                 </div>
-                <div style={{ width:64, height:8, background:"var(--colour-neutral-100)", borderRadius:999, flexShrink:0 }} />
+                <div style={{ display:"flex", justifyContent:"center", padding:"8px 0" }}>
+                  <div style={{ width:64, height:8, background:"var(--colour-neutral-200)", borderRadius:999 }} />
+                </div>
               </div>
             )}
           </div>

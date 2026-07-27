@@ -579,6 +579,7 @@ export default function App() {
         </a>
         <nav className="nav-links">
           <a className="nl" href="/components">Components</a>
+          <a className="nl" href="/icons">Icons</a>
           <a className="nl" href="/documentation">Documentation</a>
           <a className="nl" href="/builder">Builder</a>
           <a className="nl" href="/demo">Demo</a>
