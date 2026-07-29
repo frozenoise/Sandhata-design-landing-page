@@ -1,7 +1,7 @@
 "use client";
 
 import React from "react";
-import * as DS from "@/components";
+import * as DS from "@sandhata/spectra";
 
 // Sandhata docs — component documentation registry.
 // Each component: { id, name, description, variants, sections:[...], props:[...] }
@@ -84,7 +84,7 @@ const Button = {
         ],
       },
       demo: () => { const { Button:B } = S(); return <B hierarchy="primary" iconLeft={<Plus/>} iconRight={<ArrowR/>}>Button</B>; },
-      code:`import { Button } from "@/components";\n\nconst Example = () => (\n  <Button hierarchy="primary" iconLeft={<Plus/>}>Button</Button>\n);`,
+      code:`import { Button } from "@sandhata/spectra";\n\nconst Example = () => (\n  <Button hierarchy="primary" iconLeft={<Plus/>}>Button</Button>\n);`,
     },
     {
       id:"hierarchy", title:"Hierarchy",
@@ -254,77 +254,105 @@ const Textarea = {
 };
 
 const NumericalInput = {
-  id:"numerical-input", name:"Numerical input", variants:"7 variants · 5 states · 3 sizes",
-  description:"A number input with optional increment / decrement controls, min/max constraints and formatting.",
+  id:"numerical-input", name:"Numerical input", variants:"6 states",
+  description:"A compact spinner for precise numeric entry. Controls (−/+) and a chevron reveal on hover/focus; the chevron opens an incremental slider for large value jumps (±1, ±10, ±100, ±1000).",
   sections:[
     {
       id:"anatomy", title:"Anatomy",
       table:{
         head:["Part","Role"],
         rows:[
-          ["Label","Describes the expected value"],
-          ["Decrement button","Reduces the value by the step amount"],
-          ["Input field","Shows and accepts the numeric value directly"],
-          ["Increment button","Increases the value by the step amount"],
-          ["Unit label (optional)","Suffix indicating the unit (e.g. kg, %)"],
-          ["Helper text","Guidance shown beneath the field"],
-          ["Error message","Validation feedback — replaces helper text"],
+          ["Label","Tiny auxiliary text above the field (IBM Plex Sans 8px, uppercase)"],
+          ["Input container","30px tall, layer-01 bg, border-strong, radius 4px"],
+          ["Value","IBM Plex Mono 12px inside a white inner box (layer-02, radius 2px)"],
+          ["Decrement (−)","16×16 button, layer-03 bg — hidden at rest, appears on hover/focus/error"],
+          ["Increment (+)","16×16 button, layer-03 bg — hidden at rest, appears on hover/focus/error"],
+          ["Chevron","Down arrow (16px) at right edge — triggers incremental slider on click"],
+          ["Incremental slider","Vertical popup with snap points: ×1 / ×10 / ×100 / ×1000, tooltip shows current delta"],
         ],
       },
-      demo: () => (
-        <div style={{ maxWidth:260 }}>
-          <div style={{ font:"700 12px/1 var(--font-bold)", color:"var(--text-title)", marginBottom:6, letterSpacing:"0.4px" }}>Quantity</div>
-          <div style={{ display:"flex", alignItems:"stretch", border:"1px solid var(--border-default)", borderRadius:"var(--radius-sm)", overflow:"hidden", height:38 }}>
-            <button style={{ width:38, border:"none", borderRight:"1px solid var(--border-subtle)", background:"var(--colour-neutral-50)", cursor:"pointer", font:"18px/1 var(--font-normal)", color:"var(--text-body)", flexShrink:0 }}>−</button>
-            <input type="number" defaultValue={12} style={{ flex:1, border:"none", outline:"none", textAlign:"center", font:"14px/1 var(--font-normal)", color:"var(--text-body)", background:"transparent", minWidth:0 }} />
-            <button style={{ width:38, border:"none", borderLeft:"1px solid var(--border-subtle)", background:"var(--colour-neutral-50)", cursor:"pointer", font:"18px/1 var(--font-normal)", color:"var(--text-body)", flexShrink:0 }}>+</button>
+      demo: () => {
+        const [st, setSt] = React.useState<"default"|"hover"|"focus"|"disabled"|"error">("default");
+        const active = st==="hover"||st==="focus"||st==="error";
+        const borderColor =
+          st==="focus"    ? "var(--colour-primaryblue-500)" :
+          st==="error"    ? "var(--colour-error-600)" :
+          st==="disabled" ? "var(--border-default)" : "var(--border-strong)";
+        const labelColor = st==="error" ? "var(--colour-error-600)" : "var(--text-title)";
+        const valueColor =
+          st==="error"    ? "var(--colour-error-600)" :
+          st==="disabled" ? "var(--colour-neutral-300)" : "var(--text-body)";
+        return (
+          <div style={{display:"flex",flexDirection:"column",gap:20,alignItems:"flex-start"}}>
+            <div style={{display:"flex",gap:6,flexWrap:"wrap"}}>
+              {(["default","hover","focus","disabled","error"] as const).map(s=>(
+                <button key={s} onClick={()=>setSt(s)} style={{
+                  padding:"3px 10px",borderRadius:4,border:"1px solid",
+                  borderColor:st===s?"var(--colour-primaryblue-500)":"var(--border-default)",
+                  background:st===s?"var(--colour-primaryblue-50)":"transparent",
+                  color:st===s?"var(--colour-primaryblue-500)":"var(--text-caption)",
+                  font:"11px/1.4 var(--font-normal)",cursor:"pointer",textTransform:"capitalize"
+                }}>{s}</button>
+              ))}
+            </div>
+            <div style={{opacity:st==="disabled"?0.5:1}}>
+              <div style={{font:"400 8px/1.2 var(--font-normal)",letterSpacing:"0.5px",textTransform:"uppercase",color:labelColor,paddingBottom:4}}>Label</div>
+              <div style={{display:"flex",alignItems:"center",gap:active?8:0,height:30,width:117,padding:4,background:"var(--layer-01)",border:`1px solid ${borderColor}`,borderRadius:4,boxSizing:"border-box",transition:"border-color 0.15s"}}>
+                <div style={{display:"flex",flex:"1 0 0",height:"100%",alignItems:"center",justifyContent:active?"space-between":"center",padding:2,background:"var(--layer-02)",borderRadius:2}}>
+                  <div style={{width:16,height:16,display:"flex",alignItems:"center",justifyContent:"center",background:"var(--layer-03)",borderRadius:2,opacity:active?1:0,font:"13px/1 var(--font-normal)",color:valueColor,cursor:"pointer",flexShrink:0,userSelect:"none"}}>−</div>
+                  <span style={{font:"400 12px/16px var(--font-mono)",color:valueColor,textAlign:"center",flex:1}}>10</span>
+                  <div style={{width:16,height:16,display:"flex",alignItems:"center",justifyContent:"center",background:"var(--layer-03)",borderRadius:2,opacity:active?1:0,font:"13px/1 var(--font-normal)",color:valueColor,cursor:"pointer",flexShrink:0,userSelect:"none"}}>+</div>
+                </div>
+                <div style={{width:16,height:16,display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0,opacity:active?1:0,transition:"opacity 0.15s"}}>
+                  <svg width="8" height="5" viewBox="0 0 8 5" fill="none"><path d="M1 1L4 4L7 1" stroke={valueColor} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
+                </div>
+              </div>
+            </div>
           </div>
-          <div style={{ font:"12px/1.4 var(--font-light)", color:"var(--text-caption)", marginTop:5 }}>Min 1 · Max 100</div>
-        </div>
-      ),
-      code:`<NumericalInput label="Quantity" value={qty} onChange={setQty} min={1} max={100} step={1} />`,
-    },
-    {
-      id:"variants", title:"Variants",
-      bullets:[
-        ["Default","Input field flanked by decrement and increment buttons"],
-        ["With unit","Suffix label appended inside the field (kg, %, px)"],
-        ["Without steppers","Plain number field — no ± buttons"],
-        ["Read-only","Non-interactive display of a numeric value"],
-      ],
-      code:`<NumericalInput label="Weight" value={70} unit="kg" />\n<NumericalInput label="Opacity" value={100} unit="%" min={0} max={100} />`,
+        );
+      },
     },
     {
       id:"states", title:"States",
       table:{
-        head:["State","Description"],
+        head:["State","Border","Controls"],
         rows:[
-          ["Default","Neutral border"],
-          ["Focus","Blue border, 3px focus ring"],
-          ["Filled","Value present, neutral border"],
-          ["Disabled","Muted colours, non-interactive, cursor not-allowed"],
-          ["Error","Red border, error message shown below"],
+          ["Default","border-strong (#98a3ad)","−/+ and chevron are opacity 0"],
+          ["Hover","border-strong","−/+ and chevron reveal"],
+          ["Focus","primaryblue-500 (brand blue)","−/+ and chevron reveal"],
+          ["Disabled","border-default, 50% opacity","No controls, cursor not-allowed"],
+          ["Error","error-600 (#aa1400), label turns red","−/+ and chevron reveal in red"],
+          ["Menu open","border-strong, chevron flips to ^","Incremental slider popup visible"],
         ],
       },
     },
     {
+      id:"incremental-slider", title:"Incremental slider",
+      bullets:[
+        ["Trigger","Click the chevron to open; click again to close"],
+        ["Snap points","±1 · ±10 · ±100 · ±1000 — drag the knob or click a label to jump"],
+        ["Tooltip","Follows the knob; shows the current delta (+1, +10, etc.)"],
+        ["Placement","Popup floats to the right of the input; scrolls if viewport is tight"],
+      ],
+    },
+    {
       id:"accessibility", title:"Accessibility",
       bullets:[
-        ["Role","Native <input type=\"number\"> — spinner role is implicit"],
-        ["Keyboard","↑ / ↓ increment and decrement by step; Home / End jump to min / max"],
-        ["Labels","Label associated via htmlFor; unit suffix linked via aria-describedby"],
-        ["Range announcement","min and max attributes let screen readers announce the allowed range"],
+        ["Role","Use role=\"spinbutton\" with aria-valuenow, aria-valuemin, aria-valuemax"],
+        ["Keyboard","↑ / ↓ step by 1; Shift+↑/↓ step by 10; Home / End jump to min / max"],
+        ["Labels","Label associated via htmlFor or aria-labelledby"],
+        ["Slider","Incremental slider: role=\"slider\" with aria-orientation=\"vertical\""],
       ],
     },
     {
       id:"do-dont", title:"Do / Don't",
       doDont:{
-        do:{ text:"Always set explicit min, max, and step so the control can validate and screen readers can announce the range." },
-        dont:{ text:"Don't use a numerical input for free-form text entry — use a plain text input instead." },
+        do:{ text:"Use the incremental slider for fields where users frequently need large jumps (e.g. temperature, budget, zoom level)." },
+        dont:{ text:"Don't use this for free-form text or non-numeric values — use a standard Input instead." },
       },
     },
   ],
-  props:[["label","string","Field label"],["value","number","Current value"],["min","number","Minimum allowed"],["max","number","Maximum allowed"],["step","number","Increment step"],["unit","string","Unit suffix (e.g. kg, %)"],["onChange","func","Change handler"],["disabled","boolean","Non-interactive"],["error","string","Error message"],["helper","string","Helper text"],["size","enum","Small, Medium, Large"]],
+  props:[["label","string","Field label (auxiliary scale, uppercase)"],["value","number","Current value"],["min","number","Minimum allowed"],["max","number","Maximum allowed"],["step","number","Base step for ↑/↓ keyboard"],["onChange","func","Change handler (receives new number)"],["disabled","boolean","Non-interactive, 50% opacity"],["error","string","Error message, turns label and border red"]],
 };
 
 const SelectDoc = {

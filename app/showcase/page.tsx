@@ -6,7 +6,7 @@ import {
   Button, Badge, Alert, Input, Select, Textarea,
   Switch, Checkbox, Radio, StatCard, Tooltip,
   Tag, Avatar, Card, Spinner, Tabs,
-} from "@/components";
+} from "@sandhata/spectra";
 
 /* ── Token ramp helper ─────────────────────────────────────── */
 const ramp = (base: string): React.CSSProperties => ({

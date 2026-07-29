@@ -25,7 +25,7 @@ const docOverview = {
         ["Import from the barrel", "components are re-exported from @/components"],
         ["Tokens first", "prefer semantic aliases over raw scale steps"],
       ],
-      code: `import { Button, Card } from "@/components";\n\n<Button hierarchy="primary">Get started</Button>`,
+      code: `import { Button, Card } from "@sandhata/spectra";\n\n<Button hierarchy="primary">Get started</Button>`,
     },
     {
       id: "whats-included", title: "What's included",

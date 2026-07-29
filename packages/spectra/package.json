@@ -1,0 +1,30 @@
+{
+  "name": "@sandhata/spectra",
+  "version": "0.1.0",
+  "description": "One token set. Every client's brand. Zero forking.",
+  "license": "UNLICENSED",
+  "sideEffects": ["*.css"],
+  "main": "./src/index.js",
+  "module": "./src/index.js",
+  "exports": {
+    ".": {
+      "default": "./src/index.js"
+    }
+  },
+  "files": [
+    "dist",
+    "src"
+  ],
+  "scripts": {
+    "build": "tsup",
+    "dev": "tsup --watch"
+  },
+  "peerDependencies": {
+    "react": ">=18",
+    "react-dom": ">=18"
+  },
+  "devDependencies": {
+    "tsup": "^8.0.0",
+    "typescript": "^5"
+  }
+}

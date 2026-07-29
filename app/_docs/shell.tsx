@@ -1,17 +1,107 @@
 "use client";
 
 import React from "react";
-import { sdHighlight } from "./highlight";
+import { sdHighlightLines } from "./highlight";
 
 // Sandhata docs — shared shell: top nav (page links), sidebar, doc page with
 // right-rail quick scroll navigation (scroll-spy). Loaded before each page's app.
 
-function SdCodeBlock({ code }: any) {
-  return <pre className="doc-code" dangerouslySetInnerHTML={{ __html: sdHighlight(code) }} />;
+/* Generic file/code icon for the code-block header — matches shadcn's
+   rehype-pretty-code figcaption convention (an icon that stands in for "this
+   is a code file"), not a per-language icon set — that would need a real
+   language→icon map for a highlighter we're deliberately not swapping in. */
+const SdCodeFileIcon = () => (
+  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+    <path d="M14 2v6h6" />
+  </svg>
+);
+
+/* None of the call sites in data.tsx/documentationData.tsx pass a language —
+   the samples aren't tied to real files, so there's nothing to read a language
+   off of except the snippet's own shape. This is a lightweight heuristic, not
+   a parser: JSX/keyword hits win first, then CSS-shaped selector/declaration
+   patterns, then a plain-text fallback, else default to "tsx" (the large
+   majority of samples in this doc set). Good enough for a header label; not
+   meant to be authoritative. */
+function inferCodeLanguage(code: string): string {
+  const s = String(code).trim();
+  if (/<!--/.test(s)) return "html";
+  if (/\b(import|export|const|let|return|function|useState)\b/.test(s)) return "tsx";
+  if (/^<[A-Za-z]/.test(s)) return "tsx";
+  if (/^[.:#]/.test(s) || /^[a-zA-Z][a-zA-Z0-9-]*\s*\{/.test(s) || /^[a-zA-Z-]+\s*:\s*[^;{]+;/.test(s)) return "css";
+  if (!/[<>{};]/.test(s)) return "text";
+  return "tsx";
 }
 
+/* Code block chrome, rebuilt to match ui.shadcn.com's real rehype-pretty-code
+   markup (figure > figcaption[icon + language] > pre), adapted to this
+   codebase's own tokens instead of Tailwind/zinc. The copy button lives
+   outside the scrolling <pre> (absolutely positioned within the relative
+   .doc-code-body), hidden until the parent .doc-example is hovered or the
+   button itself gets keyboard focus — same reveal contract as shadcn's, same
+   icon-swap-on-copy pattern as SdCopyForAI's SdCopyIcon/SdCopiedIcon. The
+   highlighter underneath is unchanged: still the hand-rolled sdHighlight()
+   regex tokenizer, not real Shiki — swapping that engine is a bigger,
+   separate change than "make the chrome match". Each line renders through
+   sdHighlightLines() into its own <span class="doc-code-line">, which owns
+   a CSS counter (see docs.css) that draws the muted line number as
+   generated ::before content — never a real DOM text node, so it can't be
+   selected/copied as code text no matter what. */
+function SdCodeBlock({ code, language }: { code: string; language?: string }) {
+  const [copied, setCopied] = React.useState(false);
+  const lang = language || inferCodeLanguage(code);
+  const timeoutRef = React.useRef<ReturnType<typeof setTimeout>>();
+
+  const onCopy = async () => {
+    try {
+      await navigator.clipboard.writeText(code);
+      setCopied(true);
+      clearTimeout(timeoutRef.current);
+      timeoutRef.current = setTimeout(() => setCopied(false), 1500);
+    } catch {
+      // Clipboard API unavailable (permissions/insecure context) — fail quietly.
+    }
+  };
+
+  return (
+    <figure className="doc-code-figure">
+      <figcaption className="doc-code-caption" data-language={lang}>
+        <SdCodeFileIcon />
+        {lang}
+      </figcaption>
+      <div className="doc-code-body">
+        <pre className="doc-code" data-language={lang}>
+          <code className="doc-code-lines" dangerouslySetInnerHTML={{ __html: sdHighlightLines(code) }} />
+        </pre>
+        <button
+          type="button"
+          className={"doc-code-copy" + (copied ? " is-copied" : "")}
+          onClick={onCopy}
+          aria-label={copied ? "Copied to clipboard" : "Copy code"}
+          title={copied ? "Copied" : "Copy code"}
+        >
+          {copied ? <SdCopiedIcon /> : <SdCopyIcon />}
+        </button>
+      </div>
+    </figure>
+  );
+}
+
+/* fn is rendered AS a component (<Demo/>), never called directly (fn()).
+   Demo functions in data.tsx/documentationData.tsx often call React hooks
+   (useState, etc.) — calling fn() inline would run those hooks against
+   whatever component happens to be rendering at that point (this one),
+   not their own instance. Since different demos call different numbers of
+   hooks, navigating between two pages whose demos have different hook
+   counts would violate the Rules of Hooks and crash intermittently —
+   exactly the bug this fixes. Rendering fn as a component type instead
+   gives each demo its own Fiber/hook state that mounts and unmounts
+   cleanly when the page (and therefore the demo function reference)
+   changes. */
 function SdDemoRenderer({ fn }: { fn: () => React.ReactNode }) {
-  return <>{fn()}</>;
+  const Demo = fn as React.ComponentType;
+  return <Demo />;
 }
 
 function SdExample({ section }: any) {
@@ -21,22 +111,20 @@ function SdExample({ section }: any) {
   if (!hasDemo && !hasCode) return null;
   return (
     <div className="doc-example">
-      <div className="doc-example-header">
-        {hasDemo && hasCode ? (
+      {hasDemo && hasCode && (
+        <div className="doc-example-header">
           <div className="doc-example-tabs">
             <button className={"doc-tab-btn" + (tab === "preview" ? " on" : "")} onClick={() => setTab("preview")}>Preview</button>
             <button className={"doc-tab-btn" + (tab === "code" ? " on" : "")} onClick={() => setTab("code")}>React</button>
           </div>
-        ) : hasCode ? (
-          <span className="doc-tab-label">React</span>
-        ) : null}
-      </div>
+        </div>
+      )}
       {hasDemo && tab === "preview" && (
         <div className="doc-preview">
           <SdDemoRenderer fn={section.demo} />
         </div>
       )}
-      {hasCode && (tab === "code" || !hasDemo) && <SdCodeBlock code={section.code} />}
+      {hasCode && (tab === "code" || !hasDemo) && <SdCodeBlock code={section.code} language={section.language} />}
     </div>
   );
 }

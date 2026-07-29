@@ -115,14 +115,83 @@ body { margin: 0; background: var(--doc-bg); }
 .doc-tab-btn { border: none; background: transparent; cursor: pointer; padding: 4px 12px; border-radius: var(--radius-sm); font: 13px/1 var(--font-normal); color: var(--text-caption); }
 .doc-tab-btn:hover { background: rgba(20,22,24,0.06); color: var(--text-body); }
 .doc-tab-btn.on { background: rgba(20,22,24,0.08); color: var(--text-title); font-weight: 600; }
-.doc-tab-label { font: 600 12px/1 var(--font-mono); color: var(--text-caption); letter-spacing: 0.3px; text-transform: uppercase; }
 .doc-preview { padding: 28px 24px; overflow: visible; }
 .doc-divider { height: 1px; background: var(--doc-line); }
-pre.doc-code { margin: 0; padding: 18px 22px; background: var(--doc-code-bg); color: var(--text-body); font: 12.5px/1.7 var(--font-mono); overflow-x: auto; white-space: pre; border-radius: 0 0 calc(var(--radius-lg) - 1px) calc(var(--radius-lg) - 1px); }
-pre.doc-code:only-child { border-radius: calc(var(--radius-lg) - 1px); }
+
+/* Code block chrome — figure > figcaption (icon + language) > pre, matching
+   ui.shadcn.com's rehype-pretty-code structure. .doc-example-header (tabs)
+   already owns the top corners when it's rendered above this; when the code
+   block is the only thing in .doc-example, its own figcaption takes the top
+   corners instead — mirrors the old pre.doc-code:only-child rule. */
+.doc-code-figure { margin: 0; }
+.doc-example > .doc-code-figure:first-child .doc-code-caption { border-radius: var(--radius-lg) var(--radius-lg) 0 0; }
+.doc-code-caption {
+  display: flex; align-items: center; gap: 8px;
+  height: 40px; padding: 0 16px;
+  border-bottom: 1px solid var(--doc-line);
+  background: var(--doc-surface);
+  font: 600 12px/1 var(--font-mono); letter-spacing: 0.3px;
+  color: var(--text-caption);
+}
+.doc-code-caption svg { opacity: 0.7; flex-shrink: 0; }
+.doc-code-body { position: relative; overflow: hidden; border-radius: 0 0 calc(var(--radius-lg) - 1px) calc(var(--radius-lg) - 1px); }
+pre.doc-code {
+  margin: 0; padding: 14px 16px; background: var(--doc-code-bg); color: var(--text-body);
+  font: 12.5px/1.7 var(--font-mono); overflow-x: auto; white-space: pre;
+  scrollbar-width: none;
+}
+pre.doc-code::-webkit-scrollbar { display: none; }
 pre.doc-code .c-kw { color: var(--c-kw); } pre.doc-code .c-str { color: var(--c-str); }
 pre.doc-code .c-tag { color: var(--c-tag); } pre.doc-code .c-prop { color: var(--c-prop); }
 pre.doc-code .c-com { color: var(--c-com); }
+
+/* Line-number gutter — Base UI docs reference: a muted, right-aligned digit
+   column with a small gap before the code starts. The number is drawn by
+   ::before reading a CSS counter incremented per .doc-code-line, so it is
+   generated content, never a real character in the DOM — it cannot become
+   part of a selection or a copy/paste, on top of the copy button already
+   sending the original `code` string rather than scraped DOM text. Sized in
+   `ch` (this font is monospace, so 1ch == 1 digit's width) instead of a
+   fixed px column, so the gutter keeps its proportions if the highlighter
+   or font ever changes. --c-com (already this block's muted/comment tone,
+   tuned for --doc-code-bg) is reused rather than --text-caption or a new
+   hex, since this label lives on the code surface, not the page/doc chrome. */
+code.doc-code-lines { display: block; counter-reset: sd-line; }
+.doc-code-line {
+  display: block;
+  position: relative;
+  padding-left: 3.25ch;
+  min-height: 1.7em; /* keeps blank source lines the same height as a text line */
+}
+.doc-code-line::before {
+  counter-increment: sd-line;
+  content: counter(sd-line);
+  position: absolute;
+  left: 0;
+  width: 2.25ch;
+  text-align: right;
+  color: var(--c-com);
+  user-select: none;
+}
+
+.doc-code-copy {
+  position: absolute; top: 10px; right: 12px;
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 30px; height: 30px;
+  border: 1px solid var(--doc-line); border-radius: var(--radius-md);
+  background: var(--doc-surface); color: var(--icon-secondary);
+  cursor: pointer; opacity: 0;
+  transition: opacity var(--duration-fast) var(--ease-standard),
+              background var(--duration-fast) var(--ease-standard),
+              color var(--duration-fast) var(--ease-standard);
+}
+.doc-example:hover .doc-code-copy,
+.doc-code-copy:focus-visible { opacity: 1; }
+.doc-code-copy:hover { background: rgba(20,22,24,0.06); color: var(--text-title); }
+.doc-code-copy.is-copied { opacity: 1; color: var(--text-success); border-color: var(--text-success); }
+/* Hover can't reveal what a touch device never hovers — keep it visible there. */
+@media (hover: none) { .doc-code-copy { opacity: 1; } }
+@media (prefers-reduced-motion: reduce) { .doc-code-copy { transition: opacity 1ms linear; } }
 
 /* Do / Don't — paired correct/incorrect example cards */
 .doc-dodont { display: flex; gap: 16px; margin-bottom: 18px; }

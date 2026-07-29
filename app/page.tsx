@@ -3,7 +3,7 @@
 import React from "react";
 import {
   Button, Badge, Alert, Spinner, Avatar, Tag, StatCard, Switch, Checkbox,
-} from "@/components";
+} from "@sandhata/spectra";
 import HeroParticleHeading from "./_home/HeroParticleHeading";
 import { PixelCanvasBackground } from "./_fx/PixelCanvasBackground";
 

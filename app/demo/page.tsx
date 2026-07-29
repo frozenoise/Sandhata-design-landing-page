@@ -4,7 +4,7 @@ import React from "react";
 import "../_docs/docs.css";
 import "../_demo/demo.css";
 import { SdTopNav } from "../_docs/shell";
-import { Input } from "@/components";
+import { Input } from "@sandhata/spectra";
 import {
   LineChartInteractive, AreaChartInteractive, RadarInteractive, DemoCalendar, DateField,
 } from "../_demo/InteractiveCharts";

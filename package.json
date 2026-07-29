@@ -2,6 +2,7 @@
   "name": "sandhata-design-system",
   "version": "1.0.0",
   "private": true,
+  "workspaces": ["packages/*"],
   "scripts": {
     "dev": "next dev",
     "build": "next build",
@@ -9,6 +10,7 @@
     "lint": "next lint"
   },
   "dependencies": {
+    "@sandhata/spectra": "*",
     "@anthropic-ai/sdk": "^0.104.2",
     "@iconify-json/solar": "^1.2.5",
     "@iconify/react": "^6.0.2",

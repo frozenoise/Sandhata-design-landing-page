@@ -1,8 +1,18 @@
+import path from "path";
+import { fileURLToPath } from "url";
+
+const __dirname = fileURLToPath(new URL(".", import.meta.url));
+
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   reactStrictMode: true,
-  // The design-system primitives live in /components as .jsx with sibling .d.ts.
-  // transpilePackages not needed since they're local source imported directly.
+  webpack: (config) => {
+    config.resolve.alias["@sandhata/spectra"] = path.resolve(
+      __dirname,
+      "packages/spectra/src/index.js"
+    );
+    return config;
+  },
 };
 
 export default nextConfig;

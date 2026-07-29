@@ -4,7 +4,7 @@ import React from "react";
 import {
   Button, Badge, Alert, Spinner, Avatar, Tag, StatCard, Card,
   Input, Textarea, Select, Switch, Checkbox, Radio, Tabs, Tooltip, IconButton,
-} from "@/components";
+} from "@sandhata/spectra";
 
 /* A generated UI is a tree of these nodes. Only whitelisted component types
    are ever rendered — the model can never inject arbitrary code/markup. */
