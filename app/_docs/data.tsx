@@ -22,6 +22,11 @@ const IcGrid     = (s=16) => (<svg width={s} height={s} viewBox="0 0 24 24" fill
 const IcSettings = (s=16) => (<svg width={s} height={s} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>);
 const IcLogout   = (s=16) => (<svg width={s} height={s} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>);
 const IcChevDn   = (s=14) => (<svg width={s} height={s} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="6 9 12 15 18 9"/></svg>);
+// Menu trigger's leading glyph — a plain outlined circle/dot, matching the
+// simple ring shape visible in Figma's rendered screenshot of the component
+// (no confirmed vector source for a more detailed icon, so this is the
+// deliberately-safe reading rather than a guessed glyph).
+const IcCircle   = (s=14) => (<svg width={s} height={s} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="8"/></svg>);
 
 // A doc section can mix any of these shapes (bullets/table/note/demo+code,
 // or the doDont pair) — kept loose/optional throughout so TS doesn't try to
@@ -1097,93 +1102,184 @@ const Sidebar = {
 };
 
 const Menu = {
-  id:"menu", name:"Menu", variants:"2 variants",
-  description:"A sidebar navigation item — a single row with an icon, label, and optional expand arrow. Used inside the Sidebar component to build navigation groups with collapsible sub-menus.",
+  id:"menu", name:"Menu", variants:"4 states · 2 layouts",
+  description:"A bordered dropdown-trigger button — icon, label, and chevron — that opens a panel of options below it. Figma's own component description frames it precisely: \"Secondary menu pattern for nested navigation, 4 layout variants.\" It's a trigger for a small options panel, not a sidebar navigation row — see Sidebar for primary, multi-level navigation.",
   sections:[
     {
       id:"anatomy", title:"Anatomy",
       table:{
         head:["Part","Role"],
         rows:[
-          ["Icon","14px icon on the left of the label"],
-          ["Label","IBM Plex Sans Light 16px/24px text — the nav destination name"],
-          ["Arrow","14px trailing icon that rotates 180° when the item expands to show sub-items"],
-          ["Sub-items","Indented rows (24px left padding vs 16px) shown when the parent is expanded"],
-          ["Selected indicator","2px solid blue left border + background-active fill (#c0c7cf) + action text colour"],
+          ["Icon","14px leading glyph identifying the trigger (a plain circle in the source file)"],
+          ["Label","IBM Plex Sans Light 16px/24px — \"Menu\" by default, or any short trigger label"],
+          ["Chevron","14px trailing icon; rotates 180° while the dropdown is open"],
+          ["Dropdown panel","210px-wide bordered panel anchored below the trigger, holding the option list"],
+          ["Option row","One selectable row per option; the row under keyboard/mouse focus is highlighted"],
         ],
       },
       demo: () => {
-        const [expanded, setExpanded] = React.useState(true);
-        const [selected, setSelected] = React.useState("sub1");
+        // Self-contained demo — all hooks declared unconditionally at the top
+        // so SdDemoRenderer (app/_docs/shell.tsx) can mount this fn as its
+        // own component without tripping the Rules of Hooks when navigating
+        // between docs pages.
+        const options = ["Option 1","Option 2","Option 3","Option 4","Option 5","Option 6"];
+        const [open, setOpen] = React.useState(false);
+        const [hover, setHover] = React.useState(false);
+        const [selected, setSelected] = React.useState<string | null>(null);
+        const [activeIndex, setActiveIndex] = React.useState(0);
+        const rootRef = React.useRef<HTMLDivElement>(null);
+
+        React.useEffect(() => {
+          if (!open) return;
+          const onDocDown = (e: MouseEvent) => {
+            if (rootRef.current && !rootRef.current.contains(e.target as Node)) setOpen(false);
+          };
+          const onKey = (e: KeyboardEvent) => {
+            if (e.key === "Escape") setOpen(false);
+            else if (e.key === "ArrowDown") { e.preventDefault(); setActiveIndex(i => Math.min(i + 1, options.length - 1)); }
+            else if (e.key === "ArrowUp") { e.preventDefault(); setActiveIndex(i => Math.max(i - 1, 0)); }
+            else if (e.key === "Enter") { setSelected(options[activeIndex]); setOpen(false); }
+          };
+          document.addEventListener("mousedown", onDocDown);
+          document.addEventListener("keydown", onKey);
+          return () => {
+            document.removeEventListener("mousedown", onDocDown);
+            document.removeEventListener("keydown", onKey);
+          };
+        }, [open, activeIndex]);
+
+        // property1 state resolution: Clicked (open) > Selected (has a value,
+        // panel closed) > Hover > Default — matches the 4 states in Figma.
+        const isActionColoured = open || !!selected;
+        const bg = open || selected ? "var(--colour-neutral-100)" /* Figma Layer/Accent/Layer-accent-01 #e9ebee — exact match, no semantic alias for this specific layer name */
+          : hover ? "var(--background-hover)" /* Figma Background/Background-hover #f5f6f8 — exact */
+          : "var(--surface-page)"; /* Figma Background/Background #ffffff — exact */
+
         return (
-          <div style={{ width:245, background:"var(--surface-page)", border:"1px solid var(--border-subtle)", borderRadius:"var(--radius-xl)", overflow:"hidden" }}>
-            {/* Default item */}
-            <div style={{ display:"flex", alignItems:"center", gap:8, padding:"8px 16px", borderLeft:"2px solid transparent" }}>
-              <span style={{ color:"var(--text-caption)", display:"flex", flexShrink:0 }}>{IcHome(16)}</span>
-              <span style={{ font:"300 16px/24px var(--font-normal)", color:"var(--text-title)", flex:1 }}>Dashboard</span>
-            </div>
-            {/* Expanded item */}
-            <button onClick={() => setExpanded(e => !e)} style={{ width:"100%", display:"flex", alignItems:"center", gap:8, padding:"8px 16px", background:"var(--colour-neutral-50)", border:"none", borderLeft:"2px solid transparent", cursor:"pointer" }}>
-              <span style={{ color:"var(--colour-primaryblue-600)", display:"flex", flexShrink:0 }}>{IcChart(16)}</span>
-              <span style={{ font:"300 16px/24px var(--font-normal)", color:"var(--colour-primaryblue-600)", flex:1, textAlign:"left" }}>Analytics</span>
-              <span style={{ color:"var(--text-caption)", display:"flex", transform: expanded ? "rotate(180deg)" : "none", transition:"transform 0.2s" }}>{IcChevDn(14)}</span>
+          <div ref={rootRef} style={{ position:"relative", display:"inline-block" }}>
+            <button
+              type="button"
+              aria-haspopup="menu"
+              aria-expanded={open}
+              onMouseEnter={() => setHover(true)}
+              onMouseLeave={() => setHover(false)}
+              onClick={() => setOpen(o => { const next = !o; if (next) setActiveIndex(0); return next; })}
+              style={{
+                display:"flex", alignItems:"center", gap:8,
+                padding:"8px 16px", background:bg, border:"none",
+                borderRadius:"var(--radius-sm)" /* Figma radius/small 4px — exact */,
+                boxShadow:"var(--shadow-md)" /* closest token to Figma's Elevation/2 — Medium (Dropdown): 0 4px 4px rgba(0,0,0,.1), 0 2px 2px rgba(0,0,0,.06) — approximated (softer/wider than --shadow-md, no exact token for that spread) */,
+                cursor:"pointer", font:"300 16px/24px var(--font-normal)",
+                color: isActionColoured ? "var(--text-action)" /* Figma Text/Text-action #0036dd — exact */ : "var(--text-title)" /* Figma Text/Text-primary #202225 — exact */,
+              }}
+            >
+              <span style={{ display:"flex", color: isActionColoured ? "var(--text-action)" : "var(--text-caption)" }}>{IcCircle(14)}</span>
+              <span>Menu</span>
+              <span style={{ display:"flex", transform: open ? "rotate(180deg)" : "none", transition:"transform .15s var(--ease-standard, ease)", color: isActionColoured ? "var(--text-action)" : "var(--text-caption)" }}>{IcChevDn(14)}</span>
             </button>
-            {expanded && ["Overview","Traffic","Conversions"].map((s, i) => (
-              <button key={i} onClick={() => setSelected(`sub${i+1}`)} style={{ width:"100%", display:"flex", alignItems:"center", gap:8, padding:"8px 16px 8px 40px", background: selected === `sub${i+1}` ? "var(--colour-neutral-300)" : "var(--surface-page)", borderLeft: selected === `sub${i+1}` ? "2px solid var(--colour-primaryblue-500)" : "2px solid transparent", border:"none", cursor:"pointer" }}>
-                <span style={{ font:"300 14px/20px var(--font-normal)", color: selected === `sub${i+1}` ? "var(--text-action)" : "var(--text-body)" }}>{s}</span>
-              </button>
-            ))}
-            {/* Link item */}
-            <div style={{ display:"flex", alignItems:"center", gap:8, padding:"8px 16px", borderLeft:"2px solid transparent" }}>
-              <span style={{ color:"var(--text-caption)", display:"flex", flexShrink:0 }}>{IcUsers(16)}</span>
-              <span style={{ font:"300 16px/24px var(--font-normal)", color:"var(--text-title)" }}>Users</span>
-            </div>
+            {open && (
+              <div role="menu" aria-label="Menu options" style={{
+                position:"absolute", top:46, left:0, width:210,
+                background:"var(--surface-page)",
+                border:"1px solid var(--border-subtle)" /* Figma Border/border-subtle-00 #d5dbde — exact */,
+                borderRadius:"var(--radius-sm)", boxShadow:"var(--shadow-md)",
+                padding:4, zIndex:10,
+              }}>
+                {options.map((opt, i) => (
+                  <div
+                    key={opt}
+                    role="menuitem"
+                    tabIndex={-1}
+                    onMouseEnter={() => setActiveIndex(i)}
+                    onClick={() => { setSelected(opt); setOpen(false); }}
+                    style={{
+                      padding:"4px 8px", font:"300 12px/20px var(--font-normal)",
+                      background: i === activeIndex ? "var(--background-hover)" : "transparent",
+                      color: i === activeIndex ? "var(--colour-primaryblue-600)" /* Figma Text/Text-action-hover #012bb6 — exact */ : "var(--text-title)",
+                      borderRadius:"var(--radius-xs)", cursor:"pointer",
+                    }}
+                  >{opt}</div>
+                ))}
+              </div>
+            )}
           </div>
         );
       },
-      code:`<Menu property1="Default">\n  <MenuIcon />\n  Menu\n</Menu>\n\n<Menu property1="Clicked / Expand">\n  <MenuIcon />\n  Menu\n  <SubMenu items={["Sub-Menu 1","Sub-Menu 2","Sub-Menu 3"]} />\n</Menu>`,
+      code:`<Menu\n  label="Menu"\n  icon\n  dropdown\n  options={["Option 1","Option 2","Option 3","Option 4","Option 5","Option 6"]}\n  onSelect={(opt) => setValue(opt)}\n/>`,
     },
     {
       id:"variants", title:"Variants",
       bullets:[
-        ["Default","White background, icon + label + arrow icon; not selected"],
+        ["Default","White background, 4px radius, soft two-layer drop shadow; icon + label + chevron"],
         ["Hover","Background shifts to background-hover (#f5f6f8)"],
-        ["Selected","background-active (#c0c7cf) + 2px blue left border + action-colour text"],
-        ["Clicked / Expand","Selected + reveals sub-item rows indented to 24px; arrow rotates 180°"],
-        ["Link","Label only, no arrow — used for simple flat nav links (e.g. Settings, Logout)"],
+        ["Clicked","Background becomes layer-accent-01 (#e9ebee), label + icons turn action blue, dropdown panel opens below"],
+        ["Selected","Same background and text colour as Clicked, but the panel is closed — a value has already been chosen and the trigger is back at rest"],
       ],
+      demo: () => {
+        // Static illustrative layout — the interactive open/close behaviour
+        // lives in the Anatomy example above; this just shows how the same
+        // trigger sits inside Figma's horizontal-nav-bar layout variant.
+        const linkStyle: React.CSSProperties = { font:"300 14px/20px var(--font-normal)", color:"var(--text-title)", padding:"8px 12px", cursor:"pointer" };
+        return (
+          <div style={{
+            display:"flex", alignItems:"center", gap:4, padding:"8px 12px",
+            background:"var(--surface-page)",
+            borderRadius:"var(--radius-xl)" /* approximates Figma's radius/large 16px on the top-right/bottom-right corners — 12px is the largest radius token in this system */,
+            boxShadow:"var(--shadow-md)",
+          }}>
+            <span style={linkStyle}>Home</span>
+            <span style={linkStyle}>Products</span>
+            <span style={linkStyle}>Solutions</span>
+            <div style={{ flex:1 }} />
+            <div style={{ display:"flex", alignItems:"center", gap:8, padding:"8px 16px", background:"var(--colour-neutral-100)", borderRadius:"var(--radius-sm)" }}>
+              <span style={{ display:"flex", color:"var(--text-action)" }}>{IcCircle(14)}</span>
+              <span style={{ font:"300 16px/24px var(--font-normal)", color:"var(--text-action)" }}>Menu</span>
+              <span style={{ display:"flex", color:"var(--text-action)" }}>{IcChevDn(14)}</span>
+            </div>
+          </div>
+        );
+      },
+      code:`<nav className="menu-bar">\n  <a>Home</a>\n  <a>Products</a>\n  <a>Solutions</a>\n  <Menu label="Menu" icon dropdown options={[...]} />\n</nav>`,
     },
     {
       id:"keyboard", title:"Keyboard interaction",
       table:{
         head:["Key","Action"],
         rows:[
-          ["Enter / Space","Toggle expansion on expandable items"],
-          ["↑ / ↓","Move focus between menu items"],
-          ["Tab","Move focus to next focusable element"],
+          ["Enter / Space","Opens the dropdown when the trigger is focused (native <button> behaviour)"],
+          ["Escape","Closes the dropdown"],
+          ["↑ / ↓","Move the highlighted option within the open dropdown"],
+          ["Enter (while open)","Selects the highlighted option and closes the dropdown"],
         ],
       },
     },
     {
       id:"accessibility", title:"Accessibility",
       bullets:[
-        ["Role","Each menu item is a <button> (expandable) or <a> (link)"],
-        ["Expanded state","Expandable items have aria-expanded reflecting the open/closed state"],
-        ["Selected","Active route item has aria-current=\"page\""],
-        ["Sub-items","Hidden sub-items are removed from the DOM (not just visually hidden) when collapsed"],
+        ["Trigger","Native <button> with aria-haspopup=\"menu\" and aria-expanded reflecting the open state"],
+        ["Panel","role=\"menu\" on the dropdown container"],
+        ["Options","role=\"menuitem\" on each row; the row under keyboard/mouse focus is visually highlighted"],
+        ["Dismissal","Closes on Escape or on a click outside the trigger/panel"],
+        ["Scope note","This docs demo moves a highlighted index with the arrow keys rather than real DOM focus per row — simple and sufficient here, but a production implementation should follow the full WAI-ARIA menu-button pattern (roving tabindex or real focus moves) rather than copying this simplification verbatim"],
       ],
     },
     {
       id:"do-dont", title:"Do / Don't",
       doDont:{
-        do:{ text:"Use Menu inside Sidebar to build grouped navigation — it is not a standalone floating dropdown." },
-        dont:{ text:"Don't put more than 3 sub-items under one Menu item; use a separate Sidebar group instead." },
+        do:{ text:"Use Menu for a secondary or nested navigation menu with a handful of options — a page-level \"more actions\" trigger, a filter, or a sub-section switcher." },
+        dont:{ text:"Don't use Menu as a replacement for Sidebar's primary navigation — it's a single dropdown trigger with an option list, not a multi-level nav tree." },
       },
     },
   ],
-  props:[["property1","enum","Default, Hover, Selected, Clicked / Expand, Link"],["icon","node","14px icon on the leading edge"],["label","string","Nav item label"],["subItems","array","Sub-menu item labels (shown when expanded)"]],
+  props:[
+    ["label","string","Trigger text (defaults to \"Menu\")"],
+    ["icon","boolean","Show the 14px leading icon"],
+    ["dropdown","boolean","Whether the trigger opens a dropdown panel at all — false renders a plain nav link with no chevron, for use in the horizontal-nav-bar layout"],
+    ["options","string[]","Option labels rendered in the dropdown panel"],
+    ["property1","enum","Default, Hover, Clicked, Selected — visual state, normally derived from interaction rather than set directly"],
+    ["onSelect","func","(option: string) => void — called when an option row is chosen"],
+  ],
 };
-
 const Pagination = {
   id:"pagination", name:"Pagination", variants:"2 variants",
   description:"Page navigation control with previous / next buttons, numbered pages, and a per-page selector.",
