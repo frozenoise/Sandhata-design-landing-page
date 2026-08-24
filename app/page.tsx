@@ -6,6 +6,7 @@ import {
 } from "@sandhata/spectra";
 import HeroParticleHeading from "./_home/HeroParticleHeading";
 import { PixelCanvasBackground } from "./_fx/PixelCanvasBackground";
+import { ThemeToggle } from "./_docs/ThemeToggle";
 
 /* ── Icons ────────────────────────────────────────────────────── */
 const I = ({ d, size=16, sw=1.6 }) => (
@@ -585,6 +586,7 @@ export default function App() {
           <a className="nl" href="/demo">Demo</a>
           <a className="nl" href="/showcase">Showcase</a>
         </nav>
+        <ThemeToggle className="nav-theme-btn" />
       </header>
 
 <div>
@@ -637,6 +639,37 @@ export default function App() {
             ))}
           </div>
           <hr className="stats-line"/>
+        </div>
+      </section>
+
+      {/* ECOSYSTEM */}
+      <section className="eco" data-reveal>
+        <div className="eco-inner">
+          <div className="eco-head">
+            <span className="section-tag">Ecosystem</span>
+            <h2 className="eco-h">One package, every workflow</h2>
+            <p className="eco-sub">Install from your package manager of choice, or use Spectra components directly inside Figma Make.</p>
+          </div>
+          <div className="eco-cards">
+            <div className="cc eco-card">
+              <div className="eco-logo eco-logo-npm">npm</div>
+              <div className="eco-card-name">npm</div>
+              <div className="eco-card-desc">Publish and install via the npm registry under the <code>@sandhata</code> scope.</div>
+              <div className="eco-snippet">npm install @sandhata/spectra</div>
+            </div>
+            <div className="cc eco-card">
+              <div className="eco-logo eco-logo-bun">bun</div>
+              <div className="eco-card-name">Bun</div>
+              <div className="eco-card-desc">Native workspace support — link the package locally with zero extra config.</div>
+              <div className="eco-snippet">bun add @sandhata/spectra</div>
+            </div>
+            <div className="cc eco-card">
+              <div className="eco-logo eco-logo-figma"><FigmaIco/></div>
+              <div className="eco-card-name">Figma Make Kit</div>
+              <div className="eco-card-desc">Drop Spectra components into Figma Make and build full UIs without leaving the browser.</div>
+              <span className="eco-soon">Coming soon</span>
+            </div>
+          </div>
         </div>
       </section>
 
@@ -820,7 +853,7 @@ export default function App() {
               },
               {
                 n:"2", cls:"n2", title:"Build",
-                body:"Install the npm package in your repository. Import the exact same components you used in Figma straight into your codebase.",
+                body:"Install @sandhata/spectra via npm or Bun. Import the exact same components you used in Figma straight into your codebase.",
               },
               {
                 n:"3", cls:"n3", title:"Ship",
