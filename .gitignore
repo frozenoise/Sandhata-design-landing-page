@@ -10,8 +10,11 @@ next-env.d.ts
 .env
 .env*.local
 
-# local Claude config (may contain machine-specific settings)
+# local AI-tool config (may contain machine-specific settings)
 .claude/
+.codex/
+.windsurf/
+skills-lock.json
 
 # markdown (notes, guides, prompt docs) — but keep the project README + handoff
 *.md
@@ -25,3 +28,5 @@ npm-debug.log*
 
 # misc local
 _ds_bundle.js.map
+
+/app/generated/prisma

@@ -25,12 +25,19 @@ const LAYOUT = new Set(["Stack", "Row", "Grid", "Text", "Heading", "Spacer", "Di
 
 function layoutStyle(type: string, props: Record<string, any> = {}): React.CSSProperties {
   const gap = props.gap ?? 12;
+  const sizing: React.CSSProperties = {
+    width:     props.width,
+    maxWidth:  props.maxWidth,
+    minWidth:  props.minWidth,
+    height:    props.height,
+    maxHeight: props.maxHeight,
+  };
   switch (type) {
-    case "Stack": return { display: "flex", flexDirection: "column", gap, alignItems: props.align, ...props.style };
-    case "Row":   return { display: "flex", flexDirection: "row", gap, alignItems: props.align ?? "center", flexWrap: props.wrap ? "wrap" : "nowrap", justifyContent: props.justify, ...props.style };
-    case "Grid":  return { display: "grid", gridTemplateColumns: `repeat(${props.columns ?? 2}, 1fr)`, gap, ...props.style };
-    case "Box":   return { padding: props.padding ?? 0, ...props.style };
-    default:      return { ...props.style };
+    case "Stack": return { display: "flex", flexDirection: "column", gap, alignItems: props.align, ...sizing, ...props.style };
+    case "Row":   return { display: "flex", flexDirection: "row", gap, alignItems: props.align ?? "center", flexWrap: props.wrap ? "wrap" : "nowrap", justifyContent: props.justify, ...sizing, ...props.style };
+    case "Grid":  return { display: "grid", gridTemplateColumns: props.columns ? `repeat(${props.columns}, 1fr)` : props.templateColumns ?? `repeat(2, 1fr)`, gap, ...sizing, ...props.style };
+    case "Box":   return { padding: props.padding ?? 0, ...sizing, ...props.style };
+    default:      return { ...sizing, ...props.style };
   }
 }
 

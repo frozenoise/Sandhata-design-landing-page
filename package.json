@@ -2,7 +2,9 @@
   "name": "sandhata-design-system",
   "version": "1.0.0",
   "private": true,
-  "workspaces": ["packages/*"],
+  "workspaces": [
+    "packages/*"
+  ],
   "scripts": {
     "dev": "next dev",
     "build": "next build",
@@ -10,15 +12,22 @@
     "lint": "next lint"
   },
   "dependencies": {
-    "@sandhata/spectra": "*",
     "@anthropic-ai/sdk": "^0.104.2",
+    "@auth/prisma-adapter": "^2.11.3",
     "@iconify-json/solar": "^1.2.5",
     "@iconify/react": "^6.0.2",
+    "@prisma/adapter-pg": "^7.9.1",
+    "@prisma/client": "^7.9.1",
+    "@sandhata/spectra": "*",
     "@types/three": "^0.185.1",
     "@vercel/analytics": "^2.0.1",
+    "jszip": "^3.10.1",
     "lenis": "^1.3.25",
     "motion": "^12.41.0",
     "next": "14.2.18",
+    "next-auth": "^5.0.0-beta.32",
+    "pg": "^8.23.0",
+    "prisma": "^7.9.1",
     "react": "18.3.1",
     "react-dom": "18.3.1",
     "three": "^0.185.1"
