@@ -9,18 +9,30 @@ export const Sparkle = () => (
   </svg>
 );
 
-const BASE_COLOR   = "#000";
 const ACCENT_COLOR = "#d58b03";
 type Tok = { text: string; color: string; noBreak?: boolean; isClarity?: boolean };
-const TOKENS: Tok[] = [
-  { text: "The",      color: BASE_COLOR },
-  { text: "AI-ready", color: BASE_COLOR },
-  { text: "design",   color: BASE_COLOR },
-  { text: "system",   color: BASE_COLOR },
-  { text: "built",    color: BASE_COLOR },
-  { text: "for",      color: BASE_COLOR },
-  { text: "clarity",  color: ACCENT_COLOR, noBreak: true, isClarity: true },
-];
+
+/** Read the current hero text color from the CSS token (theme-aware). */
+function getBaseColor(): string {
+  if (typeof document === "undefined") return "#0a0a14";
+  return (
+    getComputedStyle(document.documentElement)
+      .getPropertyValue("--hero-text-color")
+      .trim() || "#0a0a14"
+  );
+}
+
+function buildTokens(baseColor: string): Tok[] {
+  return [
+    { text: "The",      color: baseColor },
+    { text: "AI-ready", color: baseColor },
+    { text: "design",   color: baseColor },
+    { text: "system",   color: baseColor },
+    { text: "built",    color: baseColor },
+    { text: "for",      color: baseColor },
+    { text: "clarity",  color: ACCENT_COLOR, noBreak: true, isClarity: true },
+  ];
+}
 const SENTENCE_TEXT    = "The AI-ready design system built for clarity";
 const MIN_PARTICLE_WIDTH = 960;
 const ENTRANCE_LERP      = 0.08;   // exponential decay — no overshoot possible
@@ -164,6 +176,7 @@ export default function HeroParticleHeading() {
 
     sCtx.font = `400 ${fs}px ${ff}`;
     const spW   = measureWord(sCtx, " ", ls);
+    const TOKENS = buildTokens(getBaseColor());
     const lines = layoutLines(sCtx, TOKENS, cssW, ls, spW);
     const cssH  = lines.length * lh;
 
@@ -285,6 +298,7 @@ export default function HeroParticleHeading() {
       const dpr = window.devicePixelRatio || 1;
       ctx.font = `400 ${fs}px ${ff}`;
       const spW   = measureWord(ctx, " ", ls);
+      const TOKENS = buildTokens(getBaseColor());
       const lines = layoutLines(ctx, TOKENS, cssWidth, ls, spW);
       cssHeight = lines.length * lh;
 

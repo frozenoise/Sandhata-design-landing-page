@@ -2,6 +2,7 @@
 
 import React from "react";
 import { sdHighlightLines } from "./highlight";
+import { ThemeToggle } from "./ThemeToggle";
 
 // Sandhata docs — shared shell: top nav (page links), sidebar, doc page with
 // right-rail quick scroll navigation (scroll-spy). Loaded before each page's app.
@@ -572,6 +573,7 @@ function SdTopNav({ active }: any) {
           <a key={label} className={active === label ? "on" : ""} href={href}>{label}</a>
         ))}
       </nav>
+      <ThemeToggle />
     </header>
   );
 }

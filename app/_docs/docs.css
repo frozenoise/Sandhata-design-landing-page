@@ -8,6 +8,26 @@
   --doc-code-bg: #F6F7F9;     /* cool light code surface */
   --c-kw: #0036DD; --c-str: rgb(0,122,72); --c-tag: #2A3F6C; --c-prop: rgb(96,45,234); --c-com: #98A3AD;
 }
+
+/* ── Dark theme overrides for doc tokens ─────────────────────── */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --doc-bg: #0f1117;
+    --doc-surface: #161b22;
+    --doc-line: #21262d;
+    --doc-active: rgba(0, 54, 221, 0.18);
+    --doc-code-bg: #0d1117;
+    --c-kw: #79b8ff; --c-str: #85e89d; --c-tag: #b392f0; --c-prop: #b392f0; --c-com: #6a737d;
+  }
+}
+[data-theme="dark"] {
+  --doc-bg: #0f1117;
+  --doc-surface: #161b22;
+  --doc-line: #21262d;
+  --doc-active: rgba(0, 54, 221, 0.18);
+  --doc-code-bg: #0d1117;
+  --c-kw: #79b8ff; --c-str: #85e89d; --c-tag: #b392f0; --c-prop: #b392f0; --c-com: #6a737d;
+}
 body { margin: 0; background: var(--doc-bg); }
 .doc-root { display: flex; flex-direction: column; height: 100vh; }
 
@@ -18,6 +38,19 @@ body { margin: 0; background: var(--doc-bg); }
 .doc-topnav a { display: flex; align-items: center; height: 36px; padding: 0 16px; border: none; border-radius: var(--radius-md); background: transparent; cursor: pointer; font: 15px/1 var(--font-normal); color: var(--text-subtitle); text-decoration: none; }
 .doc-topnav a:hover { background: rgba(20,22,24,0.05); }
 .doc-topnav a.on { background: rgba(20,22,24,0.08); color: var(--text-title); }
+[data-theme="dark"] .doc-topnav a.on,
+:root:not([data-theme="light"]) .doc-topnav a.on { background: rgba(255,255,255,0.1); }
+[data-theme="dark"] .doc-topnav a:hover,
+:root:not([data-theme="light"]) .doc-topnav a:hover { background: rgba(255,255,255,0.07); }
+
+.doc-theme-btn {
+  flex-shrink: 0; margin-left: 8px;
+  width: 32px; height: 32px; border: 1px solid var(--doc-line); border-radius: var(--radius-sm);
+  background: var(--doc-bg); color: var(--text-caption); cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  transition: border-color .12s, color .12s, background .12s;
+}
+.doc-theme-btn:hover { border-color: var(--colour-primaryblue-300); color: var(--colour-primaryblue-500); }
 
 .doc-body { display: flex; flex: 1; overflow: hidden; }
 

@@ -9,6 +9,8 @@ body { background: #FEFAF7; overflow-x: hidden; font-family: var(--font-normal);
 /* ─── Tokens local ────────────────────────────────────────────── */
 :root {
   --blue: #0036DD; --blue-50: #EEF3FF; --page: #FEFAF7;
+  --hero-text-color: #0a0a14;
+  --hero-sub-color: #6b7280;
 }
 
 /* ── Section entrance animation ──────────────────────────────── */
@@ -46,6 +48,14 @@ body { background: #FEFAF7; overflow-x: hidden; font-family: var(--font-normal);
   transition: background .12s, color .12s;
 }
 .nl:hover { background: rgba(10,10,20,0.05); }
+.nav-theme-btn {
+  flex-shrink: 0; margin-left: 8px;
+  width: 36px; height: 36px; border: 1px solid rgba(0,0,0,0.12); border-radius: 6px;
+  background: transparent; color: #555; cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  transition: border-color .12s, color .12s, background .12s;
+}
+.nav-theme-btn:hover { background: rgba(10,10,20,0.06); border-color: rgba(0,0,0,0.22); }
 
 /* ─── Hero ───────────────────────────────────────────────────── */
 /* Aurora fills the hero; a cream "cut" layer (with the gradient rule line
@@ -96,7 +106,7 @@ body { background: #FEFAF7; overflow-x: hidden; font-family: var(--font-normal);
 
 .hero h1 {
   font: 400 80px/1.2 var(--font-normal);
-  color: #000; margin: 0 auto;
+  color: var(--hero-text-color, #0a0a14); margin: 0 auto;
   max-width: 760px; letter-spacing: -2px;
   position: relative; z-index: 2;
 }
@@ -129,7 +139,7 @@ body { background: #FEFAF7; overflow-x: hidden; font-family: var(--font-normal);
 }
 
 .hero-sub {
-  font: 18px/1.4 var(--font-normal); color: #6b7280;
+  font: 18px/1.4 var(--font-normal); color: var(--hero-sub-color, #6b7280);
   max-width: 570px; margin: 24px auto 0; position: relative; z-index: 2;
 }
 .hero-actions {
@@ -1040,6 +1050,258 @@ button, a[href], input, .acc-btn, .nl { transition: background .2s ease, color .
 @keyframes sep-grad {
   0%, 100% { background-position: 0% 50%; }
   50%       { background-position: 100% 50%; }
+}
+
+/* ══════════════════════════════════════════════════════════════
+   DARK MODE — Landing page overrides.
+   Semantic tokens (--text-*, --surface-*, etc.) update automatically
+   via tokens/colors.css [data-theme="dark"]. These rules fix the
+   hardcoded hex values that can't reference tokens.
+   ══════════════════════════════════════════════════════════════ */
+
+[data-theme="dark"] body,
+:root:not([data-theme="light"]) body { background: #0d1117; color: #e6edf3; }
+
+[data-theme="dark"],
+:root:not([data-theme="light"]) { --page: #0d1117; --hero-text-color: #e6edf3; --hero-sub-color: #9ca3af; }
+
+[data-theme="dark"] .nav,
+:root:not([data-theme="light"]) .nav {
+  background: rgba(13, 17, 23, 0.82);
+  border-bottom-color: rgba(255, 255, 255, 0.08);
+  box-shadow: 0 2px 24px rgba(0, 0, 0, 0.4);
+}
+[data-theme="dark"] .nl,
+:root:not([data-theme="light"]) .nl { color: #e6edf3; }
+[data-theme="dark"] .nl:hover,
+:root:not([data-theme="light"]) .nl:hover { background: rgba(255,255,255,0.07); }
+[data-theme="dark"] .nav-theme-btn,
+:root:not([data-theme="light"]) .nav-theme-btn { border-color: rgba(255,255,255,0.15); color: #aaa; }
+[data-theme="dark"] .nav-theme-btn:hover,
+:root:not([data-theme="light"]) .nav-theme-btn:hover { background: rgba(255,255,255,0.07); }
+
+[data-theme="dark"] .hero,
+:root:not([data-theme="light"]) .hero { background: #0d1117; }
+
+[data-theme="dark"] .hero-aurora,
+:root:not([data-theme="light"]) .hero-aurora {
+  background: radial-gradient(180% 95% at 50% 112%,
+    rgba(120,60,160,0.28)  0%,
+    rgba(60,40,120,0.26)  20%,
+    rgba(0,54,221,0.18)   42%,
+    rgba(0,30,90,0.10)    64%,
+    transparent 82%
+  );
+}
+
+[data-theme="dark"] .sec-alt,
+:root:not([data-theme="light"]) .sec-alt { background: #161b22; }
+
+/* ── Landing section headings + text — hardcoded colour overrides ── */
+[data-theme="dark"] .expect-h,
+[data-theme="dark"] .section-h,
+[data-theme="dark"] .eco-h,
+[data-theme="dark"] .sec-label,
+[data-theme="dark"] .stat-val,
+[data-theme="dark"] .rtu-card-h,
+[data-theme="dark"] .rtu-card-foot,
+[data-theme="dark"] .rtu-stat strong,
+[data-theme="dark"] .tp-title,
+[data-theme="dark"] .wp-title,
+[data-theme="dark"] .wc-lbl,
+[data-theme="dark"] .figp-title,
+[data-theme="dark"] .figp-lbl,
+:root:not([data-theme="light"]) .expect-h,
+:root:not([data-theme="light"]) .section-h,
+:root:not([data-theme="light"]) .eco-h,
+:root:not([data-theme="light"]) .sec-label,
+:root:not([data-theme="light"]) .stat-val,
+:root:not([data-theme="light"]) .rtu-card-h,
+:root:not([data-theme="light"]) .rtu-card-foot,
+:root:not([data-theme="light"]) .rtu-stat strong,
+:root:not([data-theme="light"]) .tp-title,
+:root:not([data-theme="light"]) .wp-title,
+:root:not([data-theme="light"]) .wc-lbl,
+:root:not([data-theme="light"]) .figp-title,
+:root:not([data-theme="light"]) .figp-lbl { color: #e6edf3; }
+
+/* Expect card + panel (hardcoded white backgrounds) */
+[data-theme="dark"] .expect-card,
+:root:not([data-theme="light"]) .expect-card {
+  background: #161b22;
+  border-color: rgba(255,255,255,0.08);
+  box-shadow: 0 4px 24px rgba(0,0,0,0.4), 0 1px 2px rgba(0,0,0,0.2);
+}
+[data-theme="dark"] .expect-panel,
+:root:not([data-theme="light"]) .expect-panel {
+  background: #0d1117;
+  border-color: rgba(255,255,255,0.07);
+}
+
+/* Accordion button + body text */
+[data-theme="dark"] .acc-btn,
+:root:not([data-theme="light"]) .acc-btn { color: #c9d1d9; }
+[data-theme="dark"] .acc-btn .chev,
+:root:not([data-theme="light"]) .acc-btn .chev { color: rgba(201,209,217,0.35); }
+[data-theme="dark"] .acc-item,
+:root:not([data-theme="light"]) .acc-item { border-bottom-color: rgba(255,255,255,0.08); }
+[data-theme="dark"] .acc-body,
+:root:not([data-theme="light"]) .acc-body { color: #8b949e; }
+
+/* Build section (dark-bg section — words stay legible against #09090f bg) */
+[data-theme="dark"] .build-h,
+:root:not([data-theme="light"]) .build-h { color: #e6edf3; }
+[data-theme="dark"] .bstep-h,
+[data-theme="dark"] .bstep-p,
+:root:not([data-theme="light"]) .bstep-h,
+:root:not([data-theme="light"]) .bstep-p { color: #e6edf3; }
+[data-theme="dark"] .build-btn-ghost,
+:root:not([data-theme="light"]) .build-btn-ghost {
+  color: #c9d1d9; border-color: rgba(201,209,217,0.35);
+}
+[data-theme="dark"] .build-btn-ghost:hover,
+:root:not([data-theme="light"]) .build-btn-ghost:hover { background: rgba(255,255,255,0.06); }
+
+/* Eco section cards */
+[data-theme="dark"] .eco-item,
+:root:not([data-theme="light"]) .eco-item { background: #161b22; border-color: rgba(255,255,255,0.08); }
+[data-theme="dark"] .eco-item-name,
+:root:not([data-theme="light"]) .eco-item-name { color: #c9d1d9; }
+[data-theme="dark"] .eco-item-sub,
+:root:not([data-theme="light"]) .eco-item-sub { color: #8b949e; }
+[data-theme="dark"] .eco-card,
+:root:not([data-theme="light"]) .eco-card {
+  background: #161b22; border-color: rgba(255,255,255,0.08);
+  box-shadow: 0 1px 4px rgba(0,0,0,0.3);
+}
+[data-theme="dark"] .eco-card-name,
+:root:not([data-theme="light"]) .eco-card-name { color: #e6edf3; }
+[data-theme="dark"] .eco-card-desc,
+:root:not([data-theme="light"]) .eco-card-desc { color: #8b949e; }
+
+/* Build section — replace light prism with a deep dark gradient */
+[data-theme="dark"] .build,
+:root:not([data-theme="light"]) .build { background: #090912; }
+[data-theme="dark"] .build-prism,
+:root:not([data-theme="light"]) .build-prism {
+  background:
+    radial-gradient(55% 55% at 18% 18%, rgba(86,54,246,0.25) 0%, transparent 70%),
+    radial-gradient(50% 50% at 85% 22%, rgba(180,60,160,0.20) 0%, transparent 70%),
+    radial-gradient(60% 55% at 50% 95%, rgba(246,129,54,0.15) 0%, transparent 70%),
+    radial-gradient(45% 45% at 92% 88%, rgba(86,54,246,0.18) 0%, transparent 70%),
+    #090912;
+}
+
+/* RTU inline panels */
+[data-theme="dark"] .rtu-card,
+:root:not([data-theme="light"]) .rtu-card { background: #161b22; border-color: rgba(255,255,255,0.08); }
+[data-theme="dark"] .rtu-stat,
+:root:not([data-theme="light"]) .rtu-stat { border-left-color: rgba(255,255,255,0.08); }
+[data-theme="dark"] .rtu-stat.on,
+:root:not([data-theme="light"]) .rtu-stat.on { background: rgba(255,255,255,0.04); }
+[data-theme="dark"] .rtu-search input,
+:root:not([data-theme="light"]) .rtu-search input {
+  background: #0d1117; border-color: rgba(255,255,255,0.1); color: #c9d1d9;
+}
+
+/* Section separators */
+[data-theme="dark"] .section-sep,
+:root:not([data-theme="light"]) .section-sep {
+  background: linear-gradient(to right, transparent 0%, rgba(255,255,255,0.08) 20%, rgba(255,255,255,0.08) 80%, transparent 100%);
+}
+
+/* Light mode explicit override for the prefers-color-scheme: dark case */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) body { background: #0d1117; color: #e6edf3; }
+  :root:not([data-theme="light"]) { --page: #0d1117; --hero-text-color: #e6edf3; --hero-sub-color: #9ca3af; }
+
+  :root:not([data-theme="light"]) .nav {
+    background: rgba(13, 17, 23, 0.82);
+    border-bottom-color: rgba(255, 255, 255, 0.08);
+    box-shadow: 0 2px 24px rgba(0, 0, 0, 0.4);
+  }
+  :root:not([data-theme="light"]) .nl { color: #e6edf3; }
+  :root:not([data-theme="light"]) .nl:hover { background: rgba(255,255,255,0.07); }
+  :root:not([data-theme="light"]) .nav-theme-btn { border-color: rgba(255,255,255,0.15); color: #aaa; }
+  :root:not([data-theme="light"]) .nav-theme-btn:hover { background: rgba(255,255,255,0.07); }
+
+  :root:not([data-theme="light"]) .hero { background: #0d1117; }
+  :root:not([data-theme="light"]) .hero-aurora {
+    background: radial-gradient(180% 95% at 50% 112%,
+      rgba(120,60,160,0.28)  0%,
+      rgba(60,40,120,0.26)  20%,
+      rgba(0,54,221,0.18)   42%,
+      rgba(0,30,90,0.10)    64%,
+      transparent 82%
+    );
+  }
+  :root:not([data-theme="light"]) .sec-alt { background: #161b22; }
+
+  :root:not([data-theme="light"]) .expect-h,
+  :root:not([data-theme="light"]) .section-h,
+  :root:not([data-theme="light"]) .eco-h,
+  :root:not([data-theme="light"]) .sec-label,
+  :root:not([data-theme="light"]) .stat-val,
+  :root:not([data-theme="light"]) .rtu-card-h,
+  :root:not([data-theme="light"]) .rtu-card-foot,
+  :root:not([data-theme="light"]) .rtu-stat strong,
+  :root:not([data-theme="light"]) .tp-title,
+  :root:not([data-theme="light"]) .wp-title,
+  :root:not([data-theme="light"]) .wc-lbl,
+  :root:not([data-theme="light"]) .figp-title,
+  :root:not([data-theme="light"]) .figp-lbl { color: #e6edf3; }
+
+  :root:not([data-theme="light"]) .expect-card {
+    background: #161b22;
+    border-color: rgba(255,255,255,0.08);
+    box-shadow: 0 4px 24px rgba(0,0,0,0.4), 0 1px 2px rgba(0,0,0,0.2);
+  }
+  :root:not([data-theme="light"]) .expect-panel {
+    background: #0d1117;
+    border-color: rgba(255,255,255,0.07);
+  }
+  :root:not([data-theme="light"]) .acc-btn { color: #c9d1d9; }
+  :root:not([data-theme="light"]) .acc-btn .chev { color: rgba(201,209,217,0.35); }
+  :root:not([data-theme="light"]) .acc-item { border-bottom-color: rgba(255,255,255,0.08); }
+  :root:not([data-theme="light"]) .acc-body { color: #8b949e; }
+
+  :root:not([data-theme="light"]) .build-h { color: #e6edf3; }
+  :root:not([data-theme="light"]) .bstep-h,
+  :root:not([data-theme="light"]) .bstep-p { color: #e6edf3; }
+  :root:not([data-theme="light"]) .build-btn-ghost {
+    color: #c9d1d9; border-color: rgba(201,209,217,0.35);
+  }
+  :root:not([data-theme="light"]) .build-btn-ghost:hover { background: rgba(255,255,255,0.06); }
+
+  :root:not([data-theme="light"]) .eco-item { background: #161b22; border-color: rgba(255,255,255,0.08); }
+  :root:not([data-theme="light"]) .eco-item-name { color: #c9d1d9; }
+  :root:not([data-theme="light"]) .eco-item-sub { color: #8b949e; }
+  :root:not([data-theme="light"]) .eco-card {
+    background: #161b22; border-color: rgba(255,255,255,0.08);
+    box-shadow: 0 1px 4px rgba(0,0,0,0.3);
+  }
+  :root:not([data-theme="light"]) .eco-card-name { color: #e6edf3; }
+  :root:not([data-theme="light"]) .eco-card-desc { color: #8b949e; }
+  :root:not([data-theme="light"]) .build { background: #090912; }
+  :root:not([data-theme="light"]) .build-prism {
+    background:
+      radial-gradient(55% 55% at 18% 18%, rgba(86,54,246,0.25) 0%, transparent 70%),
+      radial-gradient(50% 50% at 85% 22%, rgba(180,60,160,0.20) 0%, transparent 70%),
+      radial-gradient(60% 55% at 50% 95%, rgba(246,129,54,0.15) 0%, transparent 70%),
+      radial-gradient(45% 45% at 92% 88%, rgba(86,54,246,0.18) 0%, transparent 70%),
+      #090912;
+  }
+
+  :root:not([data-theme="light"]) .rtu-card { background: #161b22; border-color: rgba(255,255,255,0.08); }
+  :root:not([data-theme="light"]) .rtu-stat { border-left-color: rgba(255,255,255,0.08); }
+  :root:not([data-theme="light"]) .rtu-stat.on { background: rgba(255,255,255,0.04); }
+  :root:not([data-theme="light"]) .rtu-search input {
+    background: #0d1117; border-color: rgba(255,255,255,0.1); color: #c9d1d9;
+  }
+
+  :root:not([data-theme="light"]) .section-sep {
+    background: linear-gradient(to right, transparent 0%, rgba(255,255,255,0.08) 20%, rgba(255,255,255,0.08) 80%, transparent 100%);
+  }
 }
 
 /* ── Atomic design section ── */
