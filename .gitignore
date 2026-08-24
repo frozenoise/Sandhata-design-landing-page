@@ -20,6 +20,8 @@ skills-lock.json
 *.md
 !/readme.md
 !/HANDOFF.md
+!/packages/spectra/README.md
+!/packages/spectra-tokens/README.md
 
 # os / editor cruft
 .DS_Store
@@ -30,3 +32,6 @@ npm-debug.log*
 _ds_bundle.js.map
 
 /app/generated/prisma
+
+# workspace package build output (generated, not source)
+packages/*/dist
