@@ -310,6 +310,40 @@ body { background: #FEFAF7; overflow-x: hidden; font-family: var(--font-normal);
   max-width: 1200px; margin: 0 auto;
 }
 
+/* ─── Ecosystem ──────────────────────────────────────────────── */
+/* Base structural/light styles — the dark-mode colour overrides for these
+   classes already existed further down, but nothing defined the light-mode
+   card grid itself, so this section rendered as unstyled stacked text. */
+.eco { padding: 72px 40px 80px; background: var(--page); }
+.eco-inner { max-width: 1160px; margin: 0 auto; }
+.eco-head { text-align: center; margin-bottom: 44px; }
+.eco-h { font: 400 42px/1.1 var(--font-normal); color: #0a0a14; letter-spacing: -1.5px; margin-bottom: 14px; }
+.eco-sub { font: 15px/1.6 var(--font-normal); color: #6b7280; max-width: 480px; margin: 0 auto; }
+.eco-cards { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; }
+.eco-card { display: flex; flex-direction: column; align-items: flex-start; text-align: left; }
+.eco-logo {
+  width: 40px; height: 40px; border-radius: 10px; flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center;
+  font: 700 13px/1 var(--font-bold); color: #fff;
+  margin-bottom: 14px;
+}
+.eco-logo-npm   { background: #cb3837; }
+.eco-logo-bun   { background: #14151a; }
+.eco-logo-figma { background: #0a0a14; }
+.eco-card-name { font: 700 16px/1.2 var(--font-bold); color: #0a0a14; }
+.eco-card-desc { font: 13px/1.55 var(--font-normal); color: #6b7280; margin-top: 6px; margin-bottom: 16px; }
+.eco-snippet {
+  width: 100%; box-sizing: border-box; margin-top: auto;
+  font: 12px/1 var(--font-mono); color: #0a0a14;
+  background: #f4f5f7; border: 1px solid rgba(10,10,20,0.06);
+  border-radius: 8px; padding: 10px 12px;
+}
+.eco-soon {
+  font: 700 11px/1 var(--font-bold); color: #9aa0ac;
+  background: #f4f5f7; border-radius: 6px; padding: 6px 10px;
+  margin-top: auto;
+}
+
 /* ─── What you can expect ────────────────────────────────────── */
 .expect {
   position: relative; overflow: hidden;
@@ -833,6 +867,10 @@ button, a[href], input, .acc-btn, .nl { transition: background .2s ease, color .
   .stat-cell + .stat-cell { border-left: none; border-top: 1px solid rgba(10,10,20,0.09); padding-top: 24px; }
   .stat-val { font-size: 40px; }
 
+  /* Ecosystem */
+  .eco { padding: 40px 16px 60px; }
+  .eco-cards { grid-template-columns: 1fr; }
+
   /* Expect */
   .expect { padding: 40px 16px; }
   .expect-card { padding: 24px 16px; }
@@ -1163,12 +1201,6 @@ button, a[href], input, .acc-btn, .nl { transition: background .2s ease, color .
 :root:not([data-theme="light"]) .build-btn-ghost:hover { background: rgba(255,255,255,0.06); }
 
 /* Eco section cards */
-[data-theme="dark"] .eco-item,
-:root:not([data-theme="light"]) .eco-item { background: #161b22; border-color: rgba(255,255,255,0.08); }
-[data-theme="dark"] .eco-item-name,
-:root:not([data-theme="light"]) .eco-item-name { color: #c9d1d9; }
-[data-theme="dark"] .eco-item-sub,
-:root:not([data-theme="light"]) .eco-item-sub { color: #8b949e; }
 [data-theme="dark"] .eco-card,
 :root:not([data-theme="light"]) .eco-card {
   background: #161b22; border-color: rgba(255,255,255,0.08);
@@ -1273,9 +1305,6 @@ button, a[href], input, .acc-btn, .nl { transition: background .2s ease, color .
   }
   :root:not([data-theme="light"]) .build-btn-ghost:hover { background: rgba(255,255,255,0.06); }
 
-  :root:not([data-theme="light"]) .eco-item { background: #161b22; border-color: rgba(255,255,255,0.08); }
-  :root:not([data-theme="light"]) .eco-item-name { color: #c9d1d9; }
-  :root:not([data-theme="light"]) .eco-item-sub { color: #8b949e; }
   :root:not([data-theme="light"]) .eco-card {
     background: #161b22; border-color: rgba(255,255,255,0.08);
     box-shadow: 0 1px 4px rgba(0,0,0,0.3);
