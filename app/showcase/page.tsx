@@ -1347,30 +1347,33 @@ export default function ShowcasePage() {
   );
 
   const themesBand = (
-    <section id="sc-theming" style={{ background:"#ffffff" }}>
+    <section id="sc-theming" style={{ background:"var(--surface-raised)" }}>
       <div className="sc-band-content" style={{ ...bandPad({ paddingTop:56, paddingBottom:56 }) }}>
         <div style={{ textAlign:"center", marginBottom:44 }}>
           <p style={{ fontFamily:"var(--font-normal)", fontSize:11, fontWeight:700, letterSpacing:"0.10em",
-            textTransform:"uppercase", color:"rgba(0,0,0,0.35)", margin:"0 0 14px" }}>Multi-tenant Theming</p>
-          <h2 style={{ fontFamily:"var(--font-normal)", fontSize:38, fontWeight:400, color:"#0a0a14", letterSpacing:"-1px", margin:"0 0 14px" }}>
+            textTransform:"uppercase", color:"var(--text-caption)", margin:"0 0 14px" }}>Multi-tenant Theming</p>
+          <h2 style={{ fontFamily:"var(--font-normal)", fontSize:38, fontWeight:400, color:"var(--text-title)", letterSpacing:"-1px", margin:"0 0 14px" }}>
             One system.{" "}<span style={{ color:"#f68136" }}>Any brand.</span>
           </h2>
-          <p style={{ fontFamily:"var(--font-normal)", fontSize:15, color:"rgba(0,0,0,0.52)", maxWidth:520, margin:"0 auto 32px", lineHeight:1.6 }}>
+          <p style={{ fontFamily:"var(--font-normal)", fontSize:15, color:"var(--text-body)", maxWidth:520, margin:"0 auto 32px", lineHeight:1.6 }}>
             The same components re-skinned per client by overriding one token ramp. Each client gets a bespoke dashboard layout. Zero forked code.
           </p>
         </div>
 
-        {/* Brand tab selector */}
+        {/* Brand tab selector — this row is the showcase's own chrome (follows
+            the surface/theme tokens); the dashboard card below it is a fixed
+            "real client screenshot" (LIGHT_RESETS, deliberately always light)
+            and shouldn't follow suit. */}
         <div style={{ display:"flex", gap:8, marginBottom:32, justifyContent:"center" }}>
           {CLIENT_THEMES.map(t=>(
             <button key={t.id} onClick={()=>setBrandTab(t.id)}
-              onMouseEnter={e=>{if(brandTab!==t.id)(e.currentTarget as HTMLButtonElement).style.background="rgba(0,0,0,0.08)";}}
-              onMouseLeave={e=>{if(brandTab!==t.id)(e.currentTarget as HTMLButtonElement).style.background="rgba(0,0,0,0.05)";}}
+              onMouseEnter={e=>{if(brandTab!==t.id)(e.currentTarget as HTMLButtonElement).style.background="var(--border-default)";}}
+              onMouseLeave={e=>{if(brandTab!==t.id)(e.currentTarget as HTMLButtonElement).style.background="var(--surface-secondary)";}}
               style={{
                 padding:"9px 20px", borderRadius:"var(--radius-pill)", border:"none", cursor:"pointer",
                 fontFamily:"var(--font-normal)", fontSize:13, fontWeight:600,
-                background: brandTab===t.id ? t.brandColor : "rgba(0,0,0,0.05)",
-                color: brandTab===t.id ? "#fff" : "rgba(0,0,0,0.55)",
+                background: brandTab===t.id ? t.brandColor : "var(--surface-secondary)",
+                color: brandTab===t.id ? "#fff" : "var(--text-body)",
                 transition:"background .18s, color .18s",
               }}>{t.name}</button>
           ))}

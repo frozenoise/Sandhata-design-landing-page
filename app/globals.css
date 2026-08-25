@@ -1198,7 +1198,11 @@ button, a[href], input, .acc-btn, .nl { transition: background .2s ease, color .
 
 /* RTU inline panels */
 [data-theme="dark"] .rtu-card,
-:root:not([data-theme="light"]) .rtu-card { background: #161b22; border-color: rgba(255,255,255,0.08); }
+:root:not([data-theme="light"]) .rtu-card,
+[data-theme="dark"] .rtu-line,
+:root:not([data-theme="light"]) .rtu-line,
+[data-theme="dark"] .rtu-table,
+:root:not([data-theme="light"]) .rtu-table { background: #161b22; border-color: rgba(255,255,255,0.08); }
 [data-theme="dark"] .rtu-stat,
 :root:not([data-theme="light"]) .rtu-stat { border-left-color: rgba(255,255,255,0.08); }
 [data-theme="dark"] .rtu-stat.on,
@@ -1207,6 +1211,26 @@ button, a[href], input, .acc-btn, .nl { transition: background .2s ease, color .
 :root:not([data-theme="light"]) .rtu-search input {
   background: #0d1117; border-color: rgba(255,255,255,0.1); color: #c9d1d9;
 }
+/* Interactive Line Chart + Component Directory table cards share .cc's
+   plain white background — .rtu-card already got a dark override above,
+   but .rtu-line/.rtu-table (and everything inside the table) never did,
+   so .rtu-card-h's own (correctly dark) text rendered white-on-white. */
+[data-theme="dark"] .rtu-tbl th,
+:root:not([data-theme="light"]) .rtu-tbl th { background: rgba(255,255,255,0.04); color: #c9d1d9; }
+[data-theme="dark"] .rtu-tbl td,
+:root:not([data-theme="light"]) .rtu-tbl td { color: #c9d1d9; border-bottom-color: rgba(255,255,255,0.07); }
+[data-theme="dark"] .rtu-tbl tbody tr:hover,
+:root:not([data-theme="light"]) .rtu-tbl tbody tr:hover { background: rgba(255,255,255,0.03); }
+[data-theme="dark"] .rtu-x,
+:root:not([data-theme="light"]) .rtu-x { color: #8b949e; }
+[data-theme="dark"] .rtu-cancel,
+:root:not([data-theme="light"]) .rtu-cancel { color: #c9d1d9; }
+[data-theme="dark"] .rtu-cancel:hover,
+:root:not([data-theme="light"]) .rtu-cancel:hover { color: #e6edf3; background: rgba(255,255,255,0.06); }
+[data-theme="dark"] .rtu-prev,
+:root:not([data-theme="light"]) .rtu-prev { background: transparent; border-color: rgba(255,255,255,0.15); color: #c9d1d9; }
+[data-theme="dark"] .rtu-prev:hover,
+:root:not([data-theme="light"]) .rtu-prev:hover { background: rgba(255,255,255,0.06); border-color: rgba(255,255,255,0.25); color: #e6edf3; }
 
 /* Section separators */
 [data-theme="dark"] .section-sep,
@@ -1284,12 +1308,22 @@ button, a[href], input, .acc-btn, .nl { transition: background .2s ease, color .
       #090912;
   }
 
-  :root:not([data-theme="light"]) .rtu-card { background: #161b22; border-color: rgba(255,255,255,0.08); }
+  :root:not([data-theme="light"]) .rtu-card,
+  :root:not([data-theme="light"]) .rtu-line,
+  :root:not([data-theme="light"]) .rtu-table { background: #161b22; border-color: rgba(255,255,255,0.08); }
   :root:not([data-theme="light"]) .rtu-stat { border-left-color: rgba(255,255,255,0.08); }
   :root:not([data-theme="light"]) .rtu-stat.on { background: rgba(255,255,255,0.04); }
   :root:not([data-theme="light"]) .rtu-search input {
     background: #0d1117; border-color: rgba(255,255,255,0.1); color: #c9d1d9;
   }
+  :root:not([data-theme="light"]) .rtu-tbl th { background: rgba(255,255,255,0.04); color: #c9d1d9; }
+  :root:not([data-theme="light"]) .rtu-tbl td { color: #c9d1d9; border-bottom-color: rgba(255,255,255,0.07); }
+  :root:not([data-theme="light"]) .rtu-tbl tbody tr:hover { background: rgba(255,255,255,0.03); }
+  :root:not([data-theme="light"]) .rtu-x { color: #8b949e; }
+  :root:not([data-theme="light"]) .rtu-cancel { color: #c9d1d9; }
+  :root:not([data-theme="light"]) .rtu-cancel:hover { color: #e6edf3; background: rgba(255,255,255,0.06); }
+  :root:not([data-theme="light"]) .rtu-prev { background: transparent; border-color: rgba(255,255,255,0.15); color: #c9d1d9; }
+  :root:not([data-theme="light"]) .rtu-prev:hover { background: rgba(255,255,255,0.06); border-color: rgba(255,255,255,0.25); color: #e6edf3; }
 
   :root:not([data-theme="light"]) .section-sep {
     background: linear-gradient(to right, transparent 0%, rgba(255,255,255,0.08) 20%, rgba(255,255,255,0.08) 80%, transparent 100%);
