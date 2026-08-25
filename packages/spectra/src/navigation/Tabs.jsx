@@ -25,7 +25,7 @@ export function Tabs({ tabs = [], value, onChange, style = {} }) {
               fontWeight: active ? 700 : 400,
               fontSize: "var(--body-medium-size)",
               color: active ? "var(--colour-primaryblue-600)" : "var(--text-caption)",
-              transition: "color var(--duration-fast)",
+              transition: "color var(--duration-fast-02)",
             }}
           >
             {t.icon && <span style={{ display: "inline-flex" }}>{t.icon}</span>}

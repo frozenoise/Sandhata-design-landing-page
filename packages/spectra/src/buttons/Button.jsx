@@ -88,7 +88,7 @@ export function Button({
         borderRadius: "var(--radius-md)",
         cursor: disabled ? "not-allowed" : "pointer",
         opacity: disabled ? 0.45 : 1,
-        transition: "background var(--duration-fast) var(--ease-standard), box-shadow var(--duration-fast)",
+        transition: "background var(--duration-fast-02) var(--ease-standard-productive), box-shadow var(--duration-fast-02)",
         whiteSpace: "nowrap",
         ...style,
       }}

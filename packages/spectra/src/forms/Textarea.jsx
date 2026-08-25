@@ -27,7 +27,7 @@ export function Textarea({
           background: disabled ? "var(--surface-disabled)" : "var(--field-02)",
           border: `1px solid ${borderColor}`, borderRadius: "var(--radius-sm)",
           outline: "none", boxSizing: "border-box",
-          transition: "border-color var(--duration-fast), box-shadow var(--duration-fast)",
+          transition: "border-color var(--duration-fast-02), box-shadow var(--duration-fast-02)",
         }}
         onFocus={(e) => { if (!error) e.currentTarget.style.borderColor = "var(--border-action)"; e.currentTarget.style.boxShadow = "var(--shadow-focus)"; }}
         onBlur={(e) => { e.currentTarget.style.borderColor = borderColor; e.currentTarget.style.boxShadow = "none"; }}

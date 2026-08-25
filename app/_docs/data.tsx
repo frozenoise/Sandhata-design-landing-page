@@ -173,8 +173,8 @@ const Button = {
         { name:"--body-small-size", role:"Label font size when size=\"small\"" },
         { name:"--body-medium-size", role:"Label font size when size=\"medium\" (default)" },
         { name:"--body-large-size", role:"Label font size when size=\"large\"" },
-        { name:"--duration-fast", role:"Background / box-shadow transition duration" },
-        { name:"--ease-standard", role:"Transition easing curve" },
+        { name:"--duration-fast-02", role:"Background / box-shadow transition duration" },
+        { name:"--ease-standard-productive", role:"Transition easing curve" },
       ],
     },
     {
@@ -1175,7 +1175,7 @@ const Menu = {
             >
               <span style={{ display:"flex", color: isActionColoured ? "var(--text-action)" : "var(--text-caption)" }}>{IcCircle(14)}</span>
               <span>Menu</span>
-              <span style={{ display:"flex", transform: open ? "rotate(180deg)" : "none", transition:"transform .15s var(--ease-standard, ease)", color: isActionColoured ? "var(--text-action)" : "var(--text-caption)" }}>{IcChevDn(14)}</span>
+              <span style={{ display:"flex", transform: open ? "rotate(180deg)" : "none", transition:"transform .15s var(--ease-standard-productive, ease)", color: isActionColoured ? "var(--text-action)" : "var(--text-caption)" }}>{IcChevDn(14)}</span>
             </button>
             {open && (
               <div role="menu" aria-label="Menu options" style={{

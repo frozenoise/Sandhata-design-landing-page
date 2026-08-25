@@ -41,7 +41,7 @@ export function IconButton({
         borderRadius: "var(--radius-md)",
         cursor: disabled ? "not-allowed" : "pointer",
         opacity: disabled ? 0.45 : 1,
-        transition: "background var(--duration-fast) var(--ease-standard)",
+        transition: "background var(--duration-fast-02) var(--ease-standard-productive)",
         ...style,
       }}
       onMouseEnter={(e) => { if (!disabled) e.currentTarget.style.background = p.hover; }}

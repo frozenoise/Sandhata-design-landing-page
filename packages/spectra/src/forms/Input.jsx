@@ -47,7 +47,7 @@ export function Input({
             border: `1px solid ${borderColor}`,
             borderRadius: "var(--radius-sm)",
             outline: "none",
-            transition: "border-color var(--duration-fast), box-shadow var(--duration-fast)",
+            transition: "border-color var(--duration-fast-02), box-shadow var(--duration-fast-02)",
             cursor: disabled ? "not-allowed" : "text",
             boxSizing: "border-box",
           }}

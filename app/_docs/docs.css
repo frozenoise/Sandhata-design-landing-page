@@ -103,14 +103,14 @@ body { margin: 0; background: var(--doc-bg); }
   display: inline-flex; align-items: center; justify-content: center;
   border: none; background: transparent; cursor: pointer; white-space: nowrap;
   font: 13px/1 var(--font-normal); color: var(--text-subtitle);
-  transition: background var(--duration-fast), color var(--duration-fast);
+  transition: background var(--duration-fast-02), color var(--duration-fast-02);
 }
 .doc-copy-btn:hover { background: rgba(20,22,24,0.04); color: var(--text-title); }
 .doc-copy-main { min-width: 152px; padding: 0 14px; }
 .doc-copy-main.is-copied { color: var(--text-success); }
 .doc-copy-chevron { width: 34px; padding: 0; color: var(--icon-secondary); }
 .doc-copy-chevron[aria-expanded="true"] { background: rgba(20,22,24,0.04); color: var(--text-title); }
-.doc-copy-chevron svg { transition: transform var(--duration-fast) var(--ease-standard); }
+.doc-copy-chevron svg { transition: transform var(--duration-fast-02) var(--ease-standard-productive); }
 .doc-copy-chevron[aria-expanded="true"] svg { transform: rotate(180deg); }
 .doc-copy-divider { align-self: center; width: 1px; height: 18px; background: var(--doc-line); }
 
@@ -121,11 +121,11 @@ body { margin: 0; background: var(--doc-bg); }
   grid-column: 1; grid-row: 1;
   display: inline-flex; align-items: center; gap: 6px;
   opacity: 0; transform: translateY(3px); pointer-events: none;
-  transition: opacity var(--duration-fast) var(--ease-standard), transform var(--duration-fast) var(--ease-standard);
+  transition: opacity var(--duration-fast-02) var(--ease-standard-productive), transform var(--duration-fast-02) var(--ease-standard-productive);
 }
 .doc-copy-state.is-visible { opacity: 1; transform: translateY(0); }
 @media (prefers-reduced-motion: reduce) {
-  .doc-copy-state { transition: opacity var(--duration-fast) linear; transform: none; }
+  .doc-copy-state { transition: opacity var(--duration-fast-02) linear; transform: none; }
 }
 
 /* Export-destinations menu */
@@ -225,9 +225,9 @@ code.doc-code-lines { display: block; counter-reset: sd-line; }
   border: 1px solid var(--doc-line); border-radius: var(--radius-md);
   background: var(--doc-surface); color: var(--icon-secondary);
   cursor: pointer; opacity: 0;
-  transition: opacity var(--duration-fast) var(--ease-standard),
-              background var(--duration-fast) var(--ease-standard),
-              color var(--duration-fast) var(--ease-standard);
+  transition: opacity var(--duration-fast-02) var(--ease-standard-productive),
+              background var(--duration-fast-02) var(--ease-standard-productive),
+              color var(--duration-fast-02) var(--ease-standard-productive);
 }
 .doc-example:hover .doc-code-copy,
 .doc-code-copy:focus-visible { opacity: 1; }
@@ -275,7 +275,7 @@ code.doc-code-lines { display: block; counter-reset: sd-line; }
   text-align: left; padding: 18px 16px;
   border: 1px solid var(--doc-line); border-radius: var(--radius-lg);
   background: var(--doc-surface); cursor: pointer;
-  transition: box-shadow var(--duration-fast), border-color var(--duration-fast);
+  transition: box-shadow var(--duration-fast-02), border-color var(--duration-fast-02);
 }
 .all-card:hover { box-shadow: var(--shadow-sm); border-color: var(--colour-primaryblue-200); }
 .all-card-name { font-family: var(--font-bold); font-weight: 700; font-size: 14px; color: var(--text-title); margin-bottom: 6px; }

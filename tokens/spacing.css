@@ -48,13 +48,24 @@
   --shadow-focus: 0 0 0 3px rgba(96, 45, 234, 0.35);
   --shadow-action: 0 1px 2px rgba(0, 54, 221, 0.3);
 
-  /* ---- Motion -------------------------------------------- */
-  --ease-standard: cubic-bezier(0.2, 0, 0, 1); /* @kind other */
-  --ease-entrance: cubic-bezier(0, 0, 0.2, 1); /* @kind other */
-  --ease-exit: cubic-bezier(0.4, 0, 1, 1); /* @kind other */
-  --duration-fast: 120ms; /* @kind other */
-  --duration-base: 200ms; /* @kind other */
-  --duration-slow: 320ms; /* @kind other */
+  /* ---- Motion ---------------------------------------------
+     Realigned 2026-08-25 to Figma's Motion collection (a Carbon-style
+     productive/expressive scale) — the old 3-step --duration-fast/base/slow
+     + --ease-standard/entrance/exit didn't match Figma's 6-step scale even
+     approximately, and Figma's was decided as the reference. Every real
+     consumer repointed to these names; nothing aliases the old ones. */
+  --duration-fast-01: 70ms; /* @kind other */
+  --duration-fast-02: 110ms; /* @kind other */
+  --duration-moderate-01: 150ms; /* @kind other */
+  --duration-moderate-02: 240ms; /* @kind other */
+  --duration-slow-01: 400ms; /* @kind other */
+  --duration-slow-02: 700ms; /* @kind other */
+  --ease-standard-productive: cubic-bezier(0.2, 0, 0.38, 0.9); /* @kind other */
+  --ease-standard-expressive: cubic-bezier(0.4, 0.14, 0.3, 1); /* @kind other */
+  --ease-entrance-productive: cubic-bezier(0, 0, 0.38, 0.9); /* @kind other */
+  --ease-entrance-expressive: cubic-bezier(0, 0, 0.3, 1); /* @kind other */
+  --ease-exit-productive: cubic-bezier(0.2, 0, 1, 0.9); /* @kind other */
+  --ease-exit-expressive: cubic-bezier(0.4, 0.14, 1, 1); /* @kind other */
 
   /* ---- Layout -------------------------------------------- */
   --container-max: 1320px;

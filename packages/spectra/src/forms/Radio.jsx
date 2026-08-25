@@ -12,7 +12,7 @@ export function Radio({ label, checked = false, disabled = false, name, value, o
         width: 18, height: 18, flexShrink: 0, borderRadius: "var(--radius-pill)",
         background: "var(--field-02)",
         border: `1px solid ${checked ? "var(--colour-primaryblue-500)" : "var(--border-default)"}`,
-        transition: "all var(--duration-fast)",
+        transition: "all var(--duration-fast-02)",
       }}>
         <input type="radio" name={name} value={value} checked={checked} disabled={disabled} onChange={onChange}
           style={{ position: "absolute", inset: 0, opacity: 0, margin: 0, cursor: "inherit" }} {...rest} />
