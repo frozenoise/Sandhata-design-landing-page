@@ -6,10 +6,12 @@
 export { Button } from "./buttons/Button.jsx";
 export { IconButton } from "./buttons/IconButton.jsx";
 
+export { Accordion } from "./data-display/Accordion.jsx";
 export { Avatar } from "./data-display/Avatar.jsx";
 export { Badge } from "./data-display/Badge.jsx";
 export { Card } from "./data-display/Card.jsx";
 export { StatCard } from "./data-display/StatCard.jsx";
+export { Table } from "./data-display/Table.jsx";
 export { Tag } from "./data-display/Tag.jsx";
 
 export { Alert } from "./feedback/Alert.jsx";
@@ -23,4 +25,9 @@ export { Select } from "./forms/Select.jsx";
 export { Switch } from "./forms/Switch.jsx";
 export { Textarea } from "./forms/Textarea.jsx";
 
+export { Menu } from "./navigation/Menu.jsx";
+export { Sidebar } from "./navigation/Sidebar.jsx";
 export { Tabs } from "./navigation/Tabs.jsx";
+
+export { Drawer } from "./overlay/Drawer.jsx";
+export { Modal } from "./overlay/Modal.jsx";
