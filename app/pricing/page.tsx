@@ -14,7 +14,7 @@ export default function PricingPage() {
           <a className="nl" href="/components">Components</a>
           <a className="nl" href="/documentation">Documentation</a>
           <a className="nl" href="/builder">Builder</a>
-          <a className="nl" href="/demo">Demo</a>
+          <a className="nl" href="/showcase">Showcase</a>
         </nav>
       </header>
 

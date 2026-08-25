@@ -7,6 +7,7 @@ import {
 import HeroParticleHeading from "./_home/HeroParticleHeading";
 import { PixelCanvasBackground } from "./_fx/PixelCanvasBackground";
 import Grainient from "./_fx/Grainient";
+import { Bend } from "./_fx/Bend";
 import { ThemeToggle } from "./_docs/ThemeToggle";
 
 /* ── Icons ────────────────────────────────────────────────────── */
@@ -628,13 +629,12 @@ export default function App() {
           <a className="nl" href="/icons">Icons</a>
           <a className="nl" href="/documentation">Documentation</a>
           <a className="nl" href="/builder">Builder</a>
-          <a className="nl" href="/demo">Demo</a>
           <a className="nl" href="/showcase">Showcase</a>
         </nav>
         <ThemeToggle className="nav-theme-btn" />
       </header>
 
-<div>
+<Bend zone={220} angle={78} rounding={140} perspective={900} direction="out">
 
       {/* HERO */}
       <section className="hero">
@@ -671,8 +671,8 @@ export default function App() {
         </p>
 
         <div className="hero-actions">
-          <button className="btn-primary" onClick={()=>location.href="/demo"}>
-            View Demo
+          <button className="btn-primary" onClick={()=>location.href="/showcase"}>
+            View Showcase
           </button>
         </div>
 
@@ -968,7 +968,7 @@ export default function App() {
               </div>
             </div>
             {[
-              { h:"Product", links:[["Features","#"],["Pricing","/pricing"],["Demo","/demo"]] },
+              { h:"Product", links:[["Features","#"],["Pricing","/pricing"],["Showcase","/showcase"]] },
               { h:"Support", links:[["Documentation","/documentation"],["Contact Us","#"]] },
               { h:"Legal",   links:[["Privacy Policy","#"],["Terms & Condition","#"]] },
             ].map(col => (
@@ -984,7 +984,7 @@ export default function App() {
         </div>
       </footer>
 
-      </div>
+      </Bend>
     </div>
   );
 }

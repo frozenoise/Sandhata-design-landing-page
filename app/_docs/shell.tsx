@@ -562,7 +562,6 @@ function SdTopNav({ active }: any) {
     ["Icons", "/icons"],
     ["Documentation", "/documentation"],
     ["Builder", "/builder"],
-    ["Demo", "/demo"],
     ["Showcase", "/showcase"],
   ];
   return (
