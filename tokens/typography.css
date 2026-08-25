@@ -18,29 +18,34 @@
   --weight-bold: 700;
 
   /* ---- Type scale (font-size / line-height / tracking) ---
+     Aligned to Atlassian's type scale (atlassian.design/foundations/
+     typography#brand-fonts), 2026-08-25 — Display maps onto Atlassian's
+     Heading XXL/XL/L, Heading H1–H3 maps onto Atlassian's Heading M/S/XS.
+     Atlassian doesn't publish letter-spacing values, so tracking is
+     unchanged from the prior scale (not guessed to match a new size).
      Display — IBM Plex Sans Bold, tight tracking, for hero & marketing. */
-  --display-large-size: 48px;
-  --display-large-line: 64px;
+  --display-large-size: 32px;   /* Atlassian Heading XXL */
+  --display-large-line: 36px;
   --display-large-tracking: -1px;
 
-  --display-medium-size: 40px;
-  --display-medium-line: 48px;
+  --display-medium-size: 28px;  /* Atlassian Heading XL */
+  --display-medium-line: 32px;
   --display-medium-tracking: -0.5px;
 
-  --display-small-size: 32px;
-  --display-small-line: 40px;
+  --display-small-size: 24px;   /* Atlassian Heading L */
+  --display-small-line: 28px;
   --display-small-tracking: -0.25px;
 
   /* Headings — section & component titles */
-  --heading-h1-size: 24px;
-  --heading-h1-line: 32px;
+  --heading-h1-size: 20px;      /* Atlassian Heading M */
+  --heading-h1-line: 24px;
   --heading-h1-tracking: -0.25px;
 
-  --heading-h2-size: 20px;
-  --heading-h2-line: 24px;
+  --heading-h2-size: 16px;      /* Atlassian Heading S */
+  --heading-h2-line: 20px;
   --heading-h2-tracking: -0.25px;
 
-  --heading-h3-size: 16px;
+  --heading-h3-size: 14px;      /* Atlassian Heading XS */
   --heading-h3-line: 20px;
   --heading-h3-tracking: 0;
 
@@ -68,5 +73,5 @@
   --helper-tracking: 0.2px;
 
   --code-size: 12px;
-  --code-line: 16px;
+  --code-line: 20px; /* Atlassian font.code */
 }
