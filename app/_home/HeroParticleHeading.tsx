@@ -12,11 +12,17 @@ export const Sparkle = () => (
 const ACCENT_COLOR = "#d58b03";
 type Tok = { text: string; color: string; noBreak?: boolean; isClarity?: boolean };
 
-/** Read the current hero text color from the CSS token (theme-aware). */
+/** Read the current hero text color from the CSS token (theme-aware).
+ * Queries .hero itself, not document.documentElement — --hero-text-color
+ * is set scoped to .hero (e.g. forced white when the Grainient hero
+ * background is active), and custom properties only cascade downward, so
+ * reading from the <html> root (an ancestor of .hero) would silently miss
+ * anything set below it. */
 function getBaseColor(): string {
   if (typeof document === "undefined") return "#0a0a14";
+  const scope = document.querySelector(".hero") ?? document.documentElement;
   return (
-    getComputedStyle(document.documentElement)
+    getComputedStyle(scope)
       .getPropertyValue("--hero-text-color")
       .trim() || "#0a0a14"
   );

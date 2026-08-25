@@ -6,6 +6,7 @@ import {
 } from "@sandhata/spectra";
 import HeroParticleHeading from "./_home/HeroParticleHeading";
 import { PixelCanvasBackground } from "./_fx/PixelCanvasBackground";
+import Grainient from "./_fx/Grainient";
 import { ThemeToggle } from "./_docs/ThemeToggle";
 
 /* ── Icons ────────────────────────────────────────────────────── */
@@ -593,7 +594,31 @@ export default function App() {
 
       {/* HERO */}
       <section className="hero">
-        <div className="hero-aurora"/>
+        <Grainient
+          className="hero-grainient"
+          color1="#8bb6ff"
+          color2="#4518f9"
+          color3="#cd7f4e"
+          timeSpeed={0.25}
+          colorBalance={0}
+          warpStrength={1}
+          warpFrequency={5}
+          warpSpeed={2}
+          warpAmplitude={50}
+          blendAngle={0}
+          blendSoftness={0.05}
+          rotationAmount={500}
+          noiseScale={2}
+          grainAmount={0.1}
+          grainScale={2}
+          grainAnimated={false}
+          contrast={1.5}
+          gamma={1}
+          saturation={1}
+          centerX={0}
+          centerY={0}
+          zoom={0.9}
+        />
         <HeroParticleHeading/>
 
         <p className="hero-sub">

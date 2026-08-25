@@ -64,31 +64,37 @@ body { background: #FEFAF7; overflow-x: hidden; font-family: var(--font-normal);
 .hero {
   position: relative; isolation: isolate;
   padding: 101px 40px 0; text-align: center;
-  background: #fdf5f0; /* cream base behind the animated aurora */
+  background: #fdf5f0; /* cream base — only visible as the prefers-reduced-motion fallback, see below */
 }
-/* aurora — wide sunrise arc rising from just below the hero bottom */
-.hero-aurora {
-  /* Extend 20% past each side so scale() still covers → no edge gaps.
-     Sunrise palette rising from below, reaching up behind the heading and
-     buttons; kept in sync with .browser-glow so they read as one glow. */
-  position: absolute; top: 0; bottom: 0; left: -20%; right: -20%; z-index: 0; pointer-events: none;
-  background:
-    radial-gradient(180% 95% at 50% 112%,
-      rgba(198,120,224,0.32)  0%,   /* soft violet heart */
-      rgba(244,150,190,0.30) 14%,   /* rose pink */
-      rgba(255,186,104,0.34) 30%,   /* warm gold */
-      rgba(255,206,128,0.22) 48%,   /* pale gold */
-      rgba(255,228,196,0.10) 66%,   /* cream falloff */
-      transparent 82%
-    );
-  /* Centered (not bottom) pivot: with top/bottom flush against the section
-     (no vertical overhang, unlike the horizontal -20%/right:-20%), a
-     bottom-anchored pivot lets translateY(-8%) at the animation's peak lift
-     the div's bottom edge above the section's real bottom, exposing a flat
-     strip of the plain background there. A centered pivot keeps the bottom
-     edge flush (or past) the container through the whole cycle instead. */
-  transform-origin: 50% 50%;
-  animation: auroraRise 2s ease-in-out infinite alternate;
+/* Grainient's colour knobs (color1/2/3) are fixed hex values, not theme
+   tokens — the same vivid blue/violet/terracotta gradient paints the hero
+   in both light and dark mode, fully opaque, covering the flat .hero
+   background above. That decouples hero text colour from the site's
+   light/dark theme: the dark-on-cream pairing (`--hero-text-color`'s root
+   default) is unreadable against it, so force a light pairing whenever
+   Grainient is actually rendering. Scoped to `not (prefers-reduced-motion:
+   reduce)` because Grainient renders nothing under reduced motion (see
+   app/_fx/Grainient.tsx) — the hero then falls back to its flat cream/dark
+   background and should keep the original theme-matched dark/light text
+   pairing (set on :root) instead of white-on-cream. */
+@media not (prefers-reduced-motion: reduce) {
+  .hero { --hero-text-color: #ffffff; --hero-sub-color: rgba(255,255,255,0.82); }
+}
+/* Grainient — animated grainy-gradient WebGL background (app/_fx/Grainient.tsx,
+   ported from react-bits.dev), replacing the old CSS .hero-aurora glow.
+   `.grainient-container` is the component's own base class (relative box
+   that fills its parent); `.hero-grainient` positions that box to fill the
+   hero exactly, the same job `.hero-aurora`'s absolute+inset used to do.
+   No horizontal overhang needed here (unlike .hero-aurora's -20%/-20%
+   buffer) since the shader animates internally rather than via a CSS
+   scale()/translate() that could expose an edge. The shader always paints
+   fully opaque pixels, so it fully replaces the flat .hero background
+   underneath — .hero's own background colour only shows through as the
+   prefers-reduced-motion fallback (Grainient renders nothing in that case,
+   see app/_fx/Grainient.tsx). */
+.grainient-container { position: relative; width: 100%; height: 100%; overflow: hidden; }
+.hero-grainient {
+  position: absolute; inset: 0; z-index: 0; pointer-events: none;
 }
 /* faint concentric-arc texture from the bottom corners */
 .hero::before {
@@ -100,10 +106,6 @@ body { background: #FEFAF7; overflow-x: hidden; font-family: var(--font-normal);
   mask-image: radial-gradient(70% 70% at 50% 90%, transparent 32%, #000 72%);
   -webkit-mask-image: radial-gradient(70% 70% at 50% 90%, transparent 32%, #000 72%);
 }
-@media (prefers-reduced-motion: reduce) {
-  .hero-aurora { animation: none; }
-}
-
 .hero h1 {
   font: 400 80px/1.2 var(--font-normal);
   color: var(--hero-text-color, #0a0a14); margin: 0 auto;
@@ -1121,17 +1123,6 @@ button, a[href], input, .acc-btn, .nl { transition: background .2s ease, color .
 [data-theme="dark"] .hero,
 :root:not([data-theme="light"]) .hero { background: #0d1117; }
 
-[data-theme="dark"] .hero-aurora,
-:root:not([data-theme="light"]) .hero-aurora {
-  background: radial-gradient(180% 95% at 50% 112%,
-    rgba(120,60,160,0.28)  0%,
-    rgba(60,40,120,0.26)  20%,
-    rgba(0,54,221,0.18)   42%,
-    rgba(0,30,90,0.10)    64%,
-    transparent 82%
-  );
-}
-
 [data-theme="dark"] .sec-alt,
 :root:not([data-theme="light"]) .sec-alt { background: #161b22; }
 
@@ -1258,15 +1249,6 @@ button, a[href], input, .acc-btn, .nl { transition: background .2s ease, color .
   :root:not([data-theme="light"]) .nav-theme-btn:hover { background: rgba(255,255,255,0.07); }
 
   :root:not([data-theme="light"]) .hero { background: #0d1117; }
-  :root:not([data-theme="light"]) .hero-aurora {
-    background: radial-gradient(180% 95% at 50% 112%,
-      rgba(120,60,160,0.28)  0%,
-      rgba(60,40,120,0.26)  20%,
-      rgba(0,54,221,0.18)   42%,
-      rgba(0,30,90,0.10)    64%,
-      transparent 82%
-    );
-  }
   :root:not([data-theme="light"]) .sec-alt { background: #161b22; }
 
   :root:not([data-theme="light"]) .expect-h,
