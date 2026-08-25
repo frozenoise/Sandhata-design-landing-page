@@ -1,13 +1,21 @@
-/* Sandhata docs — tiny JSX syntax highlighter (light theme). */
+/* Sandhata docs — tiny JSX syntax highlighter.
+   7 token classes now, up from the original 5 — added func (a call or
+   function-declaration name, identifier immediately followed by "(") and
+   var (any other bare identifier: a plain variable/prop-value reference).
+   Colours are read directly off a real Cursor screenshot (2026-08-25),
+   not guessed — see docs.css for the per-class values and the caveat that
+   only the dark-theme set was sourced that way; light-theme is unchanged. */
 export function sdHighlight(src: string): string {
   const esc = String(src).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
-  const RX = /(\/\/[^\n]*)|("[^"]*"|'[^']*')|\b(import|from|const|let|return|export|default|function|useState)\b|(&lt;\/?[A-Za-z][\w.]*)|([A-Za-z_][\w]*)(?=={|="|=')/g;
-  return esc.replace(RX, function (m, com, str, kw, tag, prop) {
+  const RX = /(\/\/[^\n]*)|("[^"]*"|'[^']*')|\b(import|from|const|let|return|export|default|function|useState|null|true|false)\b|(&lt;\/?[A-Za-z][\w.]*)|([A-Za-z_][\w]*)(?=={|="|=')|([A-Za-z_][\w]*)(?=\()|\b([A-Za-z_][\w]*)\b/g;
+  return esc.replace(RX, function (m, com, str, kw, tag, prop, func, variable) {
     if (com) return '<span class="c-com">' + com + "</span>";
     if (str) return '<span class="c-str">' + str + "</span>";
     if (kw) return '<span class="c-kw">' + kw + "</span>";
     if (tag) return '<span class="c-tag">' + tag + "</span>";
     if (prop) return '<span class="c-prop">' + prop + "</span>";
+    if (func) return '<span class="c-func">' + func + "</span>";
+    if (variable) return '<span class="c-var">' + variable + "</span>";
     return m;
   });
 }

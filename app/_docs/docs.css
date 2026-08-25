@@ -7,9 +7,17 @@
   --doc-active: #F6E7DA;      /* peach sidebar highlight */
   --doc-code-bg: #F6F7F9;     /* cool light code surface */
   --c-kw: #0036DD; --c-str: rgb(0,122,72); --c-tag: #2A3F6C; --c-prop: rgb(96,45,234); --c-com: #98A3AD;
+  --c-func: #2A3F6C; --c-var: #202225; /* light theme: unchanged/unsourced, see note below */
 }
 
-/* ── Dark theme overrides for doc tokens ─────────────────────── */
+/* ── Dark theme overrides for doc tokens ─────────────────────────────────
+   --c-kw/str/tag/prop/func/var/com read directly off a real Cursor
+   screenshot (2026-08-25, user's own editor, not a generic VS Code guess)
+   — visual sampling, not a pixel-perfect colour-picker read, so treat as a
+   close approximation to refine against the rendered result, not gospel.
+   Only the dark-theme values were sourced this way; light-theme (--c-func/
+   --c-var above) are new but not screenshot-verified — no light-theme
+   Cursor screenshot was provided to sample from. */
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) {
     --doc-bg: #0f1117;
@@ -17,7 +25,8 @@
     --doc-line: #21262d;
     --doc-active: rgba(0, 54, 221, 0.18);
     --doc-code-bg: #0d1117;
-    --c-kw: #79b8ff; --c-str: #85e89d; --c-tag: #b392f0; --c-prop: #b392f0; --c-com: #6a737d;
+    --c-kw: #82AAFF; --c-str: #9ECE6A; --c-tag: #E0C285; --c-prop: #7FDBCA;
+    --c-func: #DCC48E; --c-var: #B4BEC9; --c-com: #6B7280;
   }
 }
 [data-theme="dark"] {
@@ -26,7 +35,8 @@
   --doc-line: #21262d;
   --doc-active: rgba(0, 54, 221, 0.18);
   --doc-code-bg: #0d1117;
-  --c-kw: #79b8ff; --c-str: #85e89d; --c-tag: #b392f0; --c-prop: #b392f0; --c-com: #6a737d;
+  --c-kw: #82AAFF; --c-str: #9ECE6A; --c-tag: #E0C285; --c-prop: #7FDBCA;
+  --c-func: #DCC48E; --c-var: #B4BEC9; --c-com: #6B7280;
 }
 body { margin: 0; background: var(--doc-bg); }
 .doc-root { display: flex; flex-direction: column; height: 100vh; }
@@ -176,6 +186,7 @@ pre.doc-code {
 pre.doc-code::-webkit-scrollbar { display: none; }
 pre.doc-code .c-kw { color: var(--c-kw); } pre.doc-code .c-str { color: var(--c-str); }
 pre.doc-code .c-tag { color: var(--c-tag); } pre.doc-code .c-prop { color: var(--c-prop); }
+pre.doc-code .c-func { color: var(--c-func); } pre.doc-code .c-var { color: var(--c-var); }
 pre.doc-code .c-com { color: var(--c-com); }
 
 /* Line-number gutter — Base UI docs reference: a muted, right-aligned digit
