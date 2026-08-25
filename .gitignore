@@ -22,6 +22,7 @@ skills-lock.json
 !/HANDOFF.md
 !/packages/spectra/README.md
 !/packages/spectra-tokens/README.md
+!/packages/spectra/guidelines/**/*.md
 
 # os / editor cruft
 .DS_Store

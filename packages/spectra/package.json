@@ -4,20 +4,26 @@
   "description": "One token set. Every client's brand. Zero forking.",
   "license": "UNLICENSED",
   "sideEffects": ["*.css"],
-  "main": "./src/index.js",
-  "module": "./src/index.js",
+  "main": "./dist/index.js",
+  "module": "./dist/index.mjs",
+  "types": "./src/index.d.ts",
   "exports": {
     ".": {
-      "default": "./src/index.js"
+      "types": "./src/index.d.ts",
+      "import": "./dist/index.mjs",
+      "require": "./dist/index.js",
+      "default": "./dist/index.js"
     }
   },
   "files": [
     "dist",
-    "src"
+    "src",
+    "guidelines"
   ],
   "scripts": {
     "build": "tsup",
-    "dev": "tsup --watch"
+    "dev": "tsup --watch",
+    "prepublishOnly": "npm run build"
   },
   "peerDependencies": {
     "react": ">=18",
