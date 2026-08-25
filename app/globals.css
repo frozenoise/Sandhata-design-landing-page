@@ -165,31 +165,6 @@ body { background: #FEFAF7; overflow-x: hidden; font-family: var(--font-normal);
   max-width: 1232px; margin: 56px auto 0;
   padding: 0 40px;
 }
-/* Warm sunrise glow centred behind the browser/video frame.
-   Radiates from the centre and rises toward the top of the frame —
-   sunrise palette: violet heart → pink → warm gold → pale cream. */
-.browser-glow {
-  position: absolute; z-index: 0; pointer-events: none;
-  top: -60%; left: -25%; right: -25%; height: 150%;
-  background: radial-gradient(ellipse 58% 48% at 50% 60%,
-    rgba(198,120,224,0.34)  0%,   /* soft violet heart */
-    rgba(244,150,190,0.32) 20%,   /* rose pink */
-    rgba(255,186,104,0.36) 42%,   /* warm gold */
-    rgba(255,212,148,0.22) 60%,   /* pale gold */
-    rgba(255,232,200,0.10) 78%,   /* cream falloff */
-    transparent 90%
-  );
-  transform-origin: 50% 62%;
-  animation: auroraRise 1s ease-in-out infinite alternate;
-}
-/* light radiates outward from the centre while drifting up toward the top */
-@keyframes auroraRise {
-  0%   { opacity: 0.55; transform: translateY(6%)  scale(0.88); }
-  50%  { opacity: 0.90; transform: translateY(-2%) scale(1.06); }
-  100% { opacity: 0.72; transform: translateY(-8%) scale(1.16); }
-}
-@media (prefers-reduced-motion: reduce) { .browser-glow { animation: none; } }
-
 .browser-cut {
   content: ''; position: absolute; z-index: 0;
   top: 50%; height: 320px;
@@ -339,7 +314,13 @@ body { background: #FEFAF7; overflow-x: hidden; font-family: var(--font-normal);
   font: 12px/1 var(--font-mono); color: #0a0a14;
   background: #f4f5f7; border: 1px solid rgba(10,10,20,0.06);
   border-radius: 8px; padding: 10px 12px;
+  display: flex; align-items: center; justify-content: space-between; gap: 10px;
+  appearance: none; cursor: pointer; text-align: left;
+  transition: background .15s ease, border-color .15s ease, color .15s ease;
 }
+.eco-snippet svg { flex-shrink: 0; }
+.eco-snippet:hover { background: #eceef1; border-color: rgba(10,10,20,0.12); }
+.eco-snippet.is-copied { color: var(--text-success); border-color: var(--text-success); }
 .eco-soon {
   font: 700 11px/1 var(--font-bold); color: #9aa0ac;
   background: #f4f5f7; border-radius: 6px; padding: 6px 10px;
@@ -689,7 +670,7 @@ button, a[href], input, .acc-btn, .nl { transition: background .2s ease, color .
 .build {
   padding: 100px 40px 54px;
   position: relative; overflow: hidden;
-  border-radius: 50px;
+  border-radius: 50px 50px 0 0;
   background: #fefaf7; /* fallback base beneath .build-prism */
 }
 /* Animated "prism" background — layered blurred colour blobs that slowly

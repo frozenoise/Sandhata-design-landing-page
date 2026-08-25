@@ -883,7 +883,6 @@ export default function ShowcasePage() {
   /* ─ Hero ──────────────────────────────────────────────── */
   const heroBand = (
     <section id="sc-overview" style={{ position:"relative", overflow:"hidden", background:"#fdf5f0", scrollMarginTop:0, minHeight:"50vh" }}>
-      <div className="hero-aurora"/>
       <div className="sc-band-content" style={{ ...bandPad({ paddingTop:84, paddingBottom:70 }), position:"relative", zIndex:1, textAlign:"center" }}>
         <p style={{ fontFamily:"var(--font-normal)", fontSize:11, fontWeight:700, letterSpacing:"0.10em",
           textTransform:"uppercase", color:"rgba(0,0,0,0.35)", margin:"0 0 16px" }}>SANDHATA DESIGN SYSTEM</p>

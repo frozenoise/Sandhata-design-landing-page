@@ -30,6 +30,50 @@ const CodeIco  = () => <I size={15} sw={1.4} d={<><polyline points="16 18 22 12 
 const LayersIco = () => <I size={18} d={<><polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/></>}/>;
 const BoxIco   = () => <I size={18} d={<><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></>}/>;
 const ZapIco   = () => <I size={18} d={<polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/>}/>;
+/* npm/Bun wordmarks — exact simple-icons path data (single-fill, currentColor),
+   not hand-approximated, so the square/bun silhouettes read correctly. */
+const NpmIco = () => (
+  <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor">
+    <path d="M1.763 0C.786 0 0 .786 0 1.763v20.474C0 23.214.786 24 1.763 24h20.474c.977 0 1.763-.786 1.763-1.763V1.763C24 .786 23.214 0 22.237 0zM5.13 5.323l13.837.019-.009 13.836h-3.464l.01-10.382h-3.456L12.04 19.17H5.113z"/>
+  </svg>
+);
+const BunIco = () => (
+  <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor">
+    <path d="M12 22.596c6.628 0 12-4.338 12-9.688 0-3.318-2.057-6.248-5.219-7.986-1.286-.715-2.297-1.357-3.139-1.89C14.058 2.025 13.08 1.404 12 1.404c-1.097 0-2.334.785-3.966 1.821a49.92 49.92 0 0 1-2.816 1.697C2.057 6.66 0 9.59 0 12.908c0 5.35 5.372 9.687 12 9.687v.001ZM10.599 4.715c.334-.759.503-1.58.498-2.409 0-.145.202-.187.23-.029.658 2.783-.902 4.162-2.057 4.624-.124.048-.199-.121-.103-.209a5.763 5.763 0 0 0 1.432-1.977Zm2.058-.102a5.82 5.82 0 0 0-.782-2.306v-.016c-.069-.123.086-.263.185-.172 1.962 2.111 1.307 4.067.556 5.051-.082.103-.23-.003-.189-.126a5.85 5.85 0 0 0 .23-2.431Zm1.776-.561a5.727 5.727 0 0 0-1.612-1.806v-.014c-.112-.085-.024-.274.114-.218 2.595 1.087 2.774 3.18 2.459 4.407a.116.116 0 0 1-.049.071.11.11 0 0 1-.153-.026.122.122 0 0 1-.022-.083 5.891 5.891 0 0 0-.737-2.331Zm-5.087.561c-.617.546-1.282.76-2.063 1-.117 0-.195-.078-.156-.181 1.752-.909 2.376-1.649 2.999-2.778 0 0 .155-.118.188.085 0 .304-.349 1.329-.968 1.874Zm4.945 11.237a2.957 2.957 0 0 1-.937 1.553c-.346.346-.8.565-1.286.62a2.178 2.178 0 0 1-1.327-.62 2.955 2.955 0 0 1-.925-1.553.244.244 0 0 1 .064-.198.234.234 0 0 1 .193-.069h3.965a.226.226 0 0 1 .19.07c.05.053.073.125.063.197Zm-5.458-2.176a1.862 1.862 0 0 1-2.384-.245 1.98 1.98 0 0 1-.233-2.447c.207-.319.503-.566.848-.713a1.84 1.84 0 0 1 1.092-.11c.366.075.703.261.967.531a1.98 1.98 0 0 1 .408 2.114 1.931 1.931 0 0 1-.698.869v.001Zm8.495.005a1.86 1.86 0 0 1-2.381-.253 1.964 1.964 0 0 1-.547-1.366c0-.384.11-.76.32-1.079.207-.319.503-.567.849-.713a1.844 1.844 0 0 1 1.093-.108c.367.076.704.262.968.534a1.98 1.98 0 0 1 .4 2.117 1.932 1.932 0 0 1-.702.868Z"/>
+  </svg>
+);
+const CopyIco  = () => <I size={13} sw={1.6} d={<><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></>}/>;
+const CheckIco = () => <I size={13} sw={2} d={<polyline points="20 6 9 17 4 12"/>}/>;
+
+/* Click-to-copy install command — mirrors the icon-swap-on-copy pattern used
+   by the docs shell's SdCodeBlock (app/_docs/shell.tsx), reimplemented here
+   since this is landing-page-local, not docs chrome. */
+function EcoSnippet({ text }: { text: string }) {
+  const [copied, setCopied] = React.useState(false);
+  const timeoutRef = React.useRef<ReturnType<typeof setTimeout>>();
+  const onCopy = async () => {
+    try {
+      await navigator.clipboard.writeText(text);
+      setCopied(true);
+      clearTimeout(timeoutRef.current);
+      timeoutRef.current = setTimeout(() => setCopied(false), 1500);
+    } catch {
+      // Clipboard API unavailable (permissions/insecure context) — fail quietly.
+    }
+  };
+  return (
+    <button
+      type="button"
+      className={"eco-snippet" + (copied ? " is-copied" : "")}
+      onClick={onCopy}
+      aria-label={copied ? "Copied to clipboard" : `Copy "${text}"`}
+      title={copied ? "Copied" : "Copy"}
+    >
+      <span>{text}</span>
+      {copied ? <CheckIco/> : <CopyIco/>}
+    </button>
+  );
+}
 
 /* ── Showcase charts (Ready-to-use section) ───────────────────── */
 function RadarChart() {
@@ -634,7 +678,6 @@ export default function App() {
 
         {/* BROWSER WINDOW — straddles the cut line at its halfmark */}
         <div className="browser-outer">
-          <div className="browser-glow"/>
           <div className="browser-cut"/>
           <div className="browser">
             <div className="browser-bar">
@@ -677,16 +720,16 @@ export default function App() {
           </div>
           <div className="eco-cards">
             <div className="cc eco-card">
-              <div className="eco-logo eco-logo-npm">npm</div>
+              <div className="eco-logo eco-logo-npm"><NpmIco/></div>
               <div className="eco-card-name">npm</div>
               <div className="eco-card-desc">Publish and install via the npm registry under the <code>@sandhata</code> scope.</div>
-              <div className="eco-snippet">npm install @sandhata/spectra</div>
+              <EcoSnippet text="npm install @sandhata/spectra"/>
             </div>
             <div className="cc eco-card">
-              <div className="eco-logo eco-logo-bun">bun</div>
+              <div className="eco-logo eco-logo-bun"><BunIco/></div>
               <div className="eco-card-name">Bun</div>
               <div className="eco-card-desc">Native workspace support — link the package locally with zero extra config.</div>
-              <div className="eco-snippet">bun add @sandhata/spectra</div>
+              <EcoSnippet text="bun add @sandhata/spectra"/>
             </div>
             <div className="cc eco-card">
               <div className="eco-logo eco-logo-figma"><FigmaIco/></div>
