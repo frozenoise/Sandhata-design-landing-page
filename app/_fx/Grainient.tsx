@@ -332,6 +332,25 @@ const Grainient = ({
     u.uColor1.value = new Float32Array(hexToRgb(color1));
     u.uColor2.value = new Float32Array(hexToRgb(color2));
     u.uColor3.value = new Float32Array(hexToRgb(color3));
+
+    // Force these corrected values to actually reach the GPU right now,
+    // rather than waiting for the rAF loop's next tick. Real bug, found
+    // live: Effect 1's very first frame (inside its own synchronous
+    // setSize() call) renders with this program's placeholder [1,1,1]
+    // uniforms, since it necessarily runs before this effect ever gets a
+    // chance to set the real colours. That's normally invisible — the rAF
+    // loop's next frame (scheduled a few lines later in Effect 1, after
+    // this effect has already run) picks up the corrected values within a
+    // frame or two. But the loop is gated on page/element visibility
+    // (`document.hidden`, an IntersectionObserver), and if that gate reads
+    // false at mount — a real, confirmed case: a background/unfocused tab
+    // — tryStart() never fires the loop at all, so this canvas is stuck
+    // showing that one placeholder-white frame forever, even once the tab
+    // becomes visible and Effect 2 has long since set the right colours,
+    // because nothing ever renders again to pick them up. One explicit
+    // render call here closes that gap unconditionally, independent of
+    // whatever gated the loop.
+    ctx.renderer.render({ scene: ctx.mesh });
   }, [
     timeSpeed,
     colorBalance,

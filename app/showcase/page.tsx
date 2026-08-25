@@ -7,6 +7,7 @@ import {
   Switch, Checkbox, Radio, StatCard, Tooltip,
   Tag, Avatar, Card, Spinner, Tabs,
 } from "@sandhata/spectra";
+import { ThemeToggle } from "../_docs/ThemeToggle";
 
 /* ── Token ramp helper ─────────────────────────────────────── */
 const ramp = (base: string): React.CSSProperties => ({
@@ -691,6 +692,26 @@ export default function ShowcasePage() {
   const [dismissed, setDismissed] = React.useState<string[]>([]);
   const [tags, setTags] = React.useState(["Design system","React","TypeScript","Tokens"]);
   const [toast, setToast] = React.useState<string|null>(null);
+
+  // Sync the global light/dark switch (ThemeToggle, same one every other
+  // page uses) into this page's own "surface" state — showcase has its own
+  // richer Pure White/Warm/Ink Dark picker rather than the site-wide
+  // [data-theme] CSS layer, so toggling the global switch here maps onto
+  // that existing system (dark -> "dark"/Ink Dark, anything else -> "white")
+  // instead of standing up a second, parallel dark-mode stylesheet for this
+  // whole page. Runs once on mount (so arriving from another page already
+  // in dark mode opens showcase in Ink Dark, not a jarring bright white)
+  // and again on every subsequent toggle click, live.
+  React.useEffect(() => {
+    const syncFromGlobalTheme = () => {
+      const isDark = document.documentElement.getAttribute("data-theme") === "dark";
+      setSurface(isDark ? "dark" : "white");
+    };
+    syncFromGlobalTheme();
+    const observer = new MutationObserver(syncFromGlobalTheme);
+    observer.observe(document.documentElement, { attributes: true, attributeFilter: ["data-theme"] });
+    return () => observer.disconnect();
+  }, []);
   const [envVal, setEnvVal] = React.useState("");
   const [atomicP, setAtomicP] = React.useState(0);
   const foundRef  = React.useRef<HTMLDivElement>(null);
@@ -1638,6 +1659,7 @@ export default function ShowcasePage() {
       <div className="sc-scroll">
         <div style={{ display:"flex", alignItems:"center", gap:8, marginBottom:18 }}>
           {!collapsed&&<a href="/" className="sc-homebtn" style={{ flex:1 }}>{I_arrowL}<span>Back to home</span></a>}
+          {!collapsed&&<ThemeToggle className="sc-iconbtn" />}
           <button className="sc-iconbtn" onClick={()=>setCollapsed(c=>!c)}
             title={collapsed?"Expand":"Collapse"} aria-label={collapsed?"Expand sidebar":"Collapse sidebar"}>
             {collapsed?I_chevR:I_chevL}

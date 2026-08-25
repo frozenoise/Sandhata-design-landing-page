@@ -2,6 +2,7 @@
 
 import React from "react";
 import "../globals.css";
+import { ThemeToggle } from "../_docs/ThemeToggle";
 
 export default function PricingPage() {
   return (
@@ -16,6 +17,7 @@ export default function PricingPage() {
           <a className="nl" href="/builder">Builder</a>
           <a className="nl" href="/showcase">Showcase</a>
         </nav>
+        <ThemeToggle className="nav-theme-btn" />
       </header>
 
       <section style={{
@@ -28,7 +30,7 @@ export default function PricingPage() {
         <div style={{
           display: "inline-flex", alignItems: "center", gap: 6,
           padding: "5px 14px", borderRadius: 20,
-          background: "#EEF3FF", color: "#0036DD",
+          background: "var(--colour-primaryblue-50)", color: "var(--colour-primaryblue-500)",
           font: "700 12px/1 'IBM Plex Sans', system-ui",
           letterSpacing: "0.5px", marginBottom: 32,
         }}>
@@ -37,7 +39,7 @@ export default function PricingPage() {
 
         <h1 style={{
           font: "700 64px/1.1 'IBM Plex Sans', system-ui",
-          color: "#0a0a14", letterSpacing: "-2px",
+          color: "var(--text-title)", letterSpacing: "-2px",
           maxWidth: 580, marginBottom: 20,
         }}>
           Pricing
@@ -45,7 +47,7 @@ export default function PricingPage() {
 
         <p style={{
           font: "400 18px/1.6 'IBM Plex Sans', system-ui",
-          color: "#6b7280", maxWidth: 440, marginBottom: 48,
+          color: "var(--text-caption)", maxWidth: 440, marginBottom: 48,
         }}>
           We are working on our pricing plans. Check back soon — or get notified when we launch.
         </p>
