@@ -16,10 +16,17 @@ export function Input({
   style = {},
   ...rest
 }) {
+  const [focused, setFocused] = React.useState(false);
+  const [hovered, setHovered] = React.useState(false);
   const heights = { small: 32, medium: 40, large: 48 };
   const h = heights[size] || 40;
   const fieldId = id || (label ? `sd-input-${label.replace(/\s+/g, "-").toLowerCase()}` : undefined);
-  const borderColor = error ? "var(--border-error)" : "var(--border-default)";
+  const borderColor = error
+    ? "var(--border-error)"
+    : focused || hovered
+    ? "var(--border-action)"
+    : "var(--border-default)";
+  const background = disabled ? "var(--surface-disabled)" : hovered && !focused ? "var(--colour-neutral-200)" : "var(--field-02)";
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 4, width: "100%", ...style }}>
@@ -43,22 +50,19 @@ export function Input({
             fontFamily: "var(--font-normal)",
             fontSize: "var(--body-medium-size)",
             color: "var(--text-body)",
-            background: disabled ? "var(--surface-disabled)" : "var(--field-02)",
+            background,
             border: `1px solid ${borderColor}`,
             borderRadius: "var(--radius-sm)",
             outline: "none",
-            transition: "border-color var(--duration-fast-02), box-shadow var(--duration-fast-02)",
+            boxShadow: focused ? "var(--shadow-focus)" : "none",
+            transition: "border-color var(--duration-fast-02), box-shadow var(--duration-fast-02), background var(--duration-fast-02)",
             cursor: disabled ? "not-allowed" : "text",
             boxSizing: "border-box",
           }}
-          onFocus={(e) => {
-            if (!error) e.currentTarget.style.borderColor = "var(--border-action)";
-            e.currentTarget.style.boxShadow = "var(--shadow-focus)";
-          }}
-          onBlur={(e) => {
-            e.currentTarget.style.borderColor = borderColor;
-            e.currentTarget.style.boxShadow = "none";
-          }}
+          onFocus={() => setFocused(true)}
+          onBlur={() => setFocused(false)}
+          onMouseEnter={() => !disabled && setHovered(true)}
+          onMouseLeave={() => setHovered(false)}
           {...rest}
         />
         {iconRight && (

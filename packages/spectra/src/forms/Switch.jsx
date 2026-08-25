@@ -2,6 +2,12 @@ import React from "react";
 
 /** Toggle switch. Controlled via `checked` + `onChange`. */
 export function Switch({ checked = false, disabled = false, onChange, label, style = {}, ...rest }) {
+  const [hovered, setHovered] = React.useState(false);
+  const background = checked
+    ? hovered && !disabled
+      ? "var(--colour-primaryblue-700)"
+      : "var(--colour-primaryblue-500)"
+    : "var(--colour-neutral-300)";
   return (
     <label style={{
       display: "inline-flex", alignItems: "center", gap: 10,
@@ -9,9 +15,11 @@ export function Switch({ checked = false, disabled = false, onChange, label, sty
     }}>
       <span
         onClick={() => { if (!disabled && onChange) onChange(!checked); }}
+        onMouseEnter={() => setHovered(true)}
+        onMouseLeave={() => setHovered(false)}
         style={{
           position: "relative", width: 40, height: 22, flexShrink: 0, borderRadius: "var(--radius-pill)",
-          background: checked ? "var(--colour-primaryblue-500)" : "var(--colour-neutral-300)",
+          background,
           transition: "background var(--duration-moderate-02) var(--ease-standard-productive)",
         }}>
         <span style={{

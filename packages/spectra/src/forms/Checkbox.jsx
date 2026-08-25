@@ -2,16 +2,21 @@ import React from "react";
 
 /** Checkbox with label. Supports checked / indeterminate / disabled. */
 export function Checkbox({ label, checked = false, indeterminate = false, disabled = false, onChange, style = {}, ...rest }) {
+  const [hovered, setHovered] = React.useState(false);
   const active = checked || indeterminate;
+  const background = active ? "var(--colour-primaryblue-500)" : hovered && !disabled ? "var(--colour-neutral-200)" : "var(--field-02)";
   return (
-    <label style={{
-      display: "inline-flex", alignItems: "center", gap: 8,
-      cursor: disabled ? "not-allowed" : "pointer", opacity: disabled ? 0.5 : 1, ...style,
-    }}>
+    <label
+      onMouseEnter={() => setHovered(true)}
+      onMouseLeave={() => setHovered(false)}
+      style={{
+        display: "inline-flex", alignItems: "center", gap: 8,
+        cursor: disabled ? "not-allowed" : "pointer", opacity: disabled ? 0.5 : 1, ...style,
+      }}>
       <span style={{
         position: "relative", display: "inline-flex", alignItems: "center", justifyContent: "center",
         width: 18, height: 18, flexShrink: 0,
-        background: active ? "var(--colour-primaryblue-500)" : "var(--field-02)",
+        background,
         border: `1px solid ${active ? "var(--colour-primaryblue-500)" : "var(--border-default)"}`,
         borderRadius: "var(--radius-xs)", transition: "all var(--duration-fast-02)",
       }}>
