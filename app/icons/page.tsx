@@ -40,6 +40,12 @@ function IconTile({ name, content, style, size }: { name: string; content: strin
         borderColor: copied ? "var(--colour-primaryblue-200)" : "var(--doc-line)",
         borderRadius: "var(--radius-lg)",
         background: copied ? "var(--colour-primaryblue-50)" : "var(--doc-surface)",
+        // Buttons don't reliably inherit `color` from the page in every
+        // browser (the UA stylesheet's own `button { color: buttontext }`
+        // default can win) — the icon SVGs use stroke/fill="currentColor",
+        // so without this they render in a fixed, theme-blind grey instead
+        // of tracking dark/light mode.
+        color: "var(--text-body)",
         cursor: "pointer",
         minWidth: 82,
         transition: "background 0.1s, border-color 0.1s",

@@ -72,10 +72,19 @@ const RADII = [
   { label:"LG",   px:"10px", vars:{"--radius-xs":"4px","--radius-sm":"6px","--radius-md":"10px","--radius-lg":"14px","--radius-xl":"20px","--radius-pill":"999px"} as React.CSSProperties },
 ];
 
+// Deliberately resets every semantic token these "client screenshot" dashboard
+// cards actually use, so nothing leaks in from whatever surface (incl. Ink
+// Dark) the showcase page itself is on. Found incomplete live: it covered
+// --surface-raised/page and the --text-* scale, but missed --surface-secondary
+// and --text-disabled — under Ink Dark those two fell through to the ambient
+// dark values (#16162a, a light-on-dark grey), producing dark-on-dark card
+// rows (e.g. Recent Claims) even though the rest of the same card was
+// correctly reset to light.
 const LIGHT_RESETS: React.CSSProperties = {
-  "--surface-raised":"#ffffff","--surface-page":"#ffffff",
+  "--surface-raised":"#ffffff","--surface-page":"#ffffff","--surface-secondary":"#f5f6f8",
+  "--surface-disabled":"#e9ebee",
   "--text-title":"#202225","--text-body":"#3c4044","--text-subtitle":"#585f65",
-  "--text-caption":"#777880","--border-subtle":"rgba(20,22,24,0.08)",
+  "--text-caption":"#777880","--text-disabled":"#a9b5bf","--border-subtle":"rgba(20,22,24,0.08)",
   "--border-default":"rgba(20,22,24,0.14)","--field-02":"#ffffff",
 } as React.CSSProperties;
 
