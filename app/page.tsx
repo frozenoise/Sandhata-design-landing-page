@@ -7,7 +7,6 @@ import {
 import HeroParticleHeading from "./_home/HeroParticleHeading";
 import { PixelCanvasBackground } from "./_fx/PixelCanvasBackground";
 import Grainient from "./_fx/Grainient";
-import { Bend } from "./_fx/Bend";
 import { ThemeToggle } from "./_docs/ThemeToggle";
 
 /* ── Icons ────────────────────────────────────────────────────── */
@@ -634,7 +633,7 @@ export default function App() {
         <ThemeToggle className="nav-theme-btn" />
       </header>
 
-<Bend zone={220} angle={78} rounding={140} perspective={900} direction="out">
+<div>
 
       {/* HERO */}
       <section className="hero">
@@ -984,7 +983,7 @@ export default function App() {
         </div>
       </footer>
 
-      </Bend>
+      </div>
     </div>
   );
 }

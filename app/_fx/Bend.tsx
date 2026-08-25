@@ -441,14 +441,24 @@ export function Bend({
     return <div className={className} style={style}>{children}</div>;
   }
 
+  // `height: 100vh` is a default, not a hardcode — neither child con­tributes
+  // to normal document flow (the source canvas is display:none, the WebGL
+  // output canvas is position:absolute), so wrap would collapse to a
+  // zero-height box without an explicit height from somewhere. Callers can
+  // still override it via `style`.
   return (
-    <div ref={wrapRef} className={className} style={{ position: "relative", overflow: "hidden", ...style }}>
+    <div ref={wrapRef} className={className} style={{ position: "relative", overflow: "hidden", height: "100vh", ...style }}>
+      {/* display:none would suppress layout for the whole subtree, even
+          under layoutsubtree — its children (the real page content) would
+          all report zero size and there'd be nothing to capture. Give it
+          real dimensions instead; the WebGL output canvas below it in DOM
+          order paints over the same area every frame and visually hides it. */}
       <canvas
         ref={sourceCanvasRef}
         // @ts-expect-error experimental html-in-canvas attribute, no React/DOM types yet
         layoutsubtree="true"
         suppressHydrationWarning
-        style={{ display: "none" }}
+        style={{ position: "absolute", inset: 0, width: "100%", height: "100%" }}
       >
         <div ref={contentRef} style={{ position: "relative", width: "100%", height: "100%", overflow: "auto" }}>
           {children}
