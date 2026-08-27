@@ -205,10 +205,14 @@ function DonutChart() {
           />
         ))}
         {/* ── Centre — both lines share a group centred exactly at cy ── */}
+        {/* Hardcoded to near-black (#0a0a14) — invisible against the card's
+            dark-mode background (~1.1:1 contrast). SVG presentation
+            attributes accept var() same as the arc strokes above, so these
+            now track theme like everything else in the card. */}
         <text x={cx} y={cy - 10} textAnchor="middle" dominantBaseline="middle"
-          fontSize="22" fontWeight="700" fill="#0a0a14" style={{fontFamily:"var(--font-bold)"}}>{vals[0]}</text>
+          fontSize="22" fontWeight="700" fill="var(--text-title)" style={{fontFamily:"var(--font-bold)"}}>{vals[0]}</text>
         <text x={cx} y={cy + 10} textAnchor="middle" dominantBaseline="middle"
-          fontSize="10" fill="#8a8f9b" style={{fontFamily:"var(--font-normal)"}}>Visitors</text>
+          fontSize="10" fill="var(--text-caption)" style={{fontFamily:"var(--font-normal)"}}>Visitors</text>
       </svg>
       {/* ── Tooltip ── */}
       {hiArc !== null && (
@@ -225,7 +229,7 @@ function DonutChart() {
           <div key={arc.label} style={{display:"flex",alignItems:"center",gap:8}}>
             <span style={{width:9,height:9,borderRadius:"50%",background:arc.color,flexShrink:0,display:"inline-block"}}/>
             <span className="rtu-card-sub" style={{margin:0,flex:1}}>{arc.label}</span>
-            <span className="rtu-card-sub" style={{margin:0,color:"#0a0a14",fontWeight:600}}>{arc.value}</span>
+            <span className="rtu-card-sub" style={{margin:0,color:"var(--text-title)",fontWeight:600}}>{arc.value}</span>
           </div>
         ))}
       </div>

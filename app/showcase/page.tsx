@@ -413,8 +413,10 @@ function DonutChart() {
           {Array.from({length:TICKS}).map((_,t)=>{const a=(t/TICKS)*Math.PI*2-Math.PI/2;return<line key={t} x1={(cx+ir0*Math.cos(a)).toFixed(2)} y1={(cy+ir0*Math.sin(a)).toFixed(2)} x2={(cx+ir1*Math.cos(a)).toFixed(2)} y2={(cy+ir1*Math.sin(a)).toFixed(2)} stroke="rgba(0,0,0,0.18)" strokeWidth="0.9"/>;}) }
           <circle cx={cx} cy={cy} r={OR} fill="none" stroke="rgba(0,0,0,0.07)" strokeWidth={Osw}/>
           {arcs.map((arc,i)=><path key={`${month}-${i}`} d={arc.d} fill="none" stroke={arc.color} strokeWidth={hiArc===i?Osw+3:Osw} strokeLinecap="round" style={{ cursor:"pointer", transition:"stroke-width .15s ease" }} onMouseEnter={()=>setHiArc(i)} onMouseLeave={()=>setHiArc(null)}/>)}
-          <text x={cx} y={cy-10} textAnchor="middle" dominantBaseline="middle" fontSize="22" fontWeight="700" fill="#0a0a14" style={{ fontFamily:"var(--font-bold)" }}>{vals[0]}</text>
-          <text x={cx} y={cy+10} textAnchor="middle" dominantBaseline="middle" fontSize="10" fill="#8a8f9b" style={{ fontFamily:"var(--font-normal)" }}>Visitors</text>
+          {/* Same fix as app/page.tsx's copy of this component — hardcoded
+              near-black text was ~1.1:1 against the card's dark background. */}
+          <text x={cx} y={cy-10} textAnchor="middle" dominantBaseline="middle" fontSize="22" fontWeight="700" fill="var(--text-title)" style={{ fontFamily:"var(--font-bold)" }}>{vals[0]}</text>
+          <text x={cx} y={cy+10} textAnchor="middle" dominantBaseline="middle" fontSize="10" fill="var(--text-caption)" style={{ fontFamily:"var(--font-normal)" }}>Visitors</text>
         </svg>
       </div>
       {hiArc!==null&&<div className="rtu-tip" style={{ position:"absolute",left:"50%",top:"42%",transform:"translate(-50%,-50%)",pointerEvents:"none" }}>{arcs[hiArc]?.value}<span>{arcs[hiArc]?.label}</span></div>}
@@ -422,7 +424,7 @@ function DonutChart() {
         {arcs.map(arc=>(<div key={arc.label} style={{ display:"flex", alignItems:"center", gap:8 }}>
           <span style={{ width:9,height:9,borderRadius:"50%",background:arc.color,flexShrink:0,display:"inline-block" }}/>
           <span className="rtu-card-sub" style={{ margin:0,flex:1 }}>{arc.label}</span>
-          <span className="rtu-card-sub" style={{ margin:0,color:"#0a0a14",fontWeight:600 }}>{arc.value}</span>
+          <span className="rtu-card-sub" style={{ margin:0,color:"var(--text-title)",fontWeight:600 }}>{arc.value}</span>
         </div>))}
       </div>
     </div>

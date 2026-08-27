@@ -50,7 +50,10 @@
   background: var(--doc-bg); color: var(--text-body); font: 12px/1.4 var(--font-normal); cursor: pointer;
   transition: border-color .12s, background .12s;
 }
-.bld-chip:hover:not(:disabled) { border-color: var(--colour-primaryblue-300); background: var(--colour-primaryblue-50); }
+/* Same fix as .bld-msg-user: pin the text colour when the background goes
+   to a fixed-light tint, instead of leaving --text-body (theme-adaptive —
+   near-white in dark mode) to collide with it. */
+.bld-chip:hover:not(:disabled) { border-color: var(--colour-primaryblue-300); background: var(--colour-primaryblue-50); color: var(--colour-primaryblue-600); }
 .bld-chip:disabled { opacity: 0.5; cursor: not-allowed; }
 
 /* chat messages */
@@ -61,7 +64,13 @@
   background: var(--colour-primaryblue-50);
   border: 1px solid var(--colour-primaryblue-200, #b3c6ff);
   border-radius: 10px 10px 2px 10px;
-  font: 13px/1.5 var(--font-normal); color: var(--text-body);
+  font: 13px/1.5 var(--font-normal);
+  /* Deliberately-light bubble background (not theme-adaptive, same as
+     Badge's "subtle" tone) paired with --text-body, which IS theme-adaptive
+     — in dark mode --text-body resolves to near-white, ~1:1 against this
+     light lavender background. Pin the fg to match the bg instead, same
+     pairing Badge already uses for primaryblue-50/600. */
+  color: var(--colour-primaryblue-600);
   word-break: break-word;
 }
 .bld-msg-bot {
@@ -257,6 +266,13 @@
 }
 .bld-history-meta { display: flex; align-items: center; gap: 6px; flex-shrink: 0; }
 .bld-history-time { font: 11px/1 var(--font-normal); color: var(--text-caption); white-space: nowrap; }
+/* Same fix again: --text-body/--text-caption are theme-adaptive but the
+   hover/active background above is a fixed-light tint — pin both to a
+   colour that reads on that tint in either theme. */
+.bld-history-item:hover .bld-history-name,
+.bld-history-item.active .bld-history-name { color: var(--colour-primaryblue-700); }
+.bld-history-item:hover .bld-history-time,
+.bld-history-item.active .bld-history-time { color: var(--colour-primaryblue-500); }
 .bld-history-del {
   width: 20px; height: 20px; border: none; background: none; padding: 0;
   color: var(--text-caption); cursor: pointer; border-radius: 4px;
@@ -341,7 +357,7 @@
   font: 700 12px/1 var(--font-bold); cursor: pointer;
   transition: border-color .12s, background .12s;
 }
-.bld-signin-btn:hover { border-color: var(--colour-primaryblue-300); background: var(--colour-primaryblue-50); }
+.bld-signin-btn:hover { border-color: var(--colour-primaryblue-300); background: var(--colour-primaryblue-50); color: var(--colour-primaryblue-600); }
 
 /* ── Auth modal ──────────────────────────────────────────────── */
 .bld-modal-overlay {
