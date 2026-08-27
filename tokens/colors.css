@@ -236,6 +236,11 @@
   --text-caption: var(--colour-neutral-400);
   --text-disabled: var(--colour-neutral-600);
   --text-inverse: var(--colour-neutral-950);
+  /* Light theme's primaryblue-500 (used unredefined by every other
+     "action" text in the app) sits at ~1.95:1 against neutral-900/950 —
+     fails WCAG AA badly. Found via Button's `ghost` hierarchy going
+     near-invisible in dark mode; primaryblue-300 restores ~5:1+. */
+  --text-action: var(--colour-primaryblue-300);
 
   --icon-primary: var(--colour-neutral-100);
   --icon-secondary: var(--colour-neutral-400);

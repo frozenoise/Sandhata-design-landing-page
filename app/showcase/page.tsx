@@ -62,6 +62,12 @@ const SURFACES = {
     "--text-subtitle":"rgba(255,255,255,0.60)","--text-caption":"rgba(255,255,255,0.38)",
     "--text-disabled":"rgba(255,255,255,0.25)","--border-subtle":"rgba(255,255,255,0.07)",
     "--border-default":"rgba(255,255,255,0.12)","--field-02":"rgba(255,255,255,0.06)",
+    // This surface is selectable independent of the site-wide data-theme
+    // toggle, so it needs its own --text-action rather than relying on the
+    // global dark override — otherwise picking "Ink Dark" while global theme
+    // is still "light" leaves Button's ghost hierarchy at primaryblue-500
+    // (~2:1 contrast here, fails AA).
+    "--text-action":"var(--colour-primaryblue-300)",
   } as React.CSSProperties },
 };
 

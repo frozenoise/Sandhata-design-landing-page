@@ -17,8 +17,12 @@ export function IconButton({
   const palettes = {
     primary:   { bg: "var(--colour-primaryblue-500)", hover: "var(--colour-primaryblue-700)", fg: "var(--colour-neutral-0)", bd: "transparent" },
     secondary: { bg: "var(--colour-primaryblue-50)", hover: "var(--colour-primaryblue-100)", fg: "var(--colour-primaryblue-600)", bd: "transparent" },
-    tertiary:  { bg: "transparent", hover: "var(--colour-neutral-100)", fg: "var(--colour-neutral-700)", bd: "var(--colour-neutral-300)" },
-    ghost:     { bg: "transparent", hover: "var(--colour-neutral-100)", fg: "var(--colour-neutral-700)", bd: "transparent" },
+    // Semantic tokens (same fix as Button.jsx): raw neutral-700 measured
+    // ~2.5:1 against a dark surface, well under WCAG AA. --icon-primary/
+    // --icon-secondary already carry dark-theme overrides, so these now
+    // track whatever surface the button lands on for free.
+    tertiary:  { bg: "transparent", hover: "var(--background-hover)", fg: "var(--icon-primary)", bd: "var(--border-default)" },
+    ghost:     { bg: "transparent", hover: "var(--background-hover)", fg: "var(--icon-secondary)", bd: "transparent" },
     danger:    { bg: "transparent", hover: "var(--colour-error-50)", fg: "var(--colour-error-500)", bd: "transparent" },
   };
   const d = dims[size] || 40;
