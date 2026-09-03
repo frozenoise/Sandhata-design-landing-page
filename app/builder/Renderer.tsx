@@ -5,14 +5,12 @@ import {
   Button, Badge, Alert, Spinner, Avatar, Tag, StatCard, Card,
   Input, Textarea, Select, Switch, Checkbox, Radio, Tabs, Tooltip, IconButton,
 } from "@sandhata/spectra";
-
-/* A generated UI is a tree of these nodes. Only whitelisted component types
-   are ever rendered — the model can never inject arbitrary code/markup. */
-export type UINode = {
-  type: string;
-  props?: Record<string, any>;
-  children?: UINode[] | string;
-};
+// UINode + treeToJSX live in uiTree.ts (no React import) so server code —
+// e.g. app/api/github/push — can reuse the exact same JSX pretty-printer
+// without pulling a "use client" component module into a route handler.
+// Re-exported here so existing imports of these from "./Renderer" keep working.
+import { treeToJSX, type UINode } from "./uiTree";
+export { treeToJSX, type UINode };
 
 /* Design-system components the model may use. */
 const DS: Record<string, any> = {
@@ -80,28 +78,4 @@ export function RenderTree({ tree }: { tree: UINode | null }) {
   keyCounter = 0;
   if (!tree) return null;
   return <RenderNode node={tree} />;
-}
-
-/* Pretty-print the tree as copyable JSX using the same component names. */
-export function treeToJSX(node: UINode | null, depth = 0): string {
-  if (!node) return "";
-  const pad = "  ".repeat(depth);
-  const { type, props = {}, children } = node;
-  const attrs = Object.entries(props)
-    .filter(([k]) => k !== "style")
-    .map(([k, v]) =>
-      typeof v === "string" ? `${k}="${v}"` :
-      typeof v === "boolean" ? (v ? k : "") :
-      `${k}={${JSON.stringify(v)}}`
-    )
-    .filter(Boolean)
-    .join(" ");
-  const open = `<${type}${attrs ? " " + attrs : ""}>`;
-  const close = `</${type}>`;
-  if (typeof children === "string") return `${pad}${open}${children}${close}`;
-  if (Array.isArray(children) && children.length) {
-    const inner = children.map((c) => treeToJSX(c, depth + 1)).join("\n");
-    return `${pad}${open}\n${inner}\n${pad}${close}`;
-  }
-  return `${pad}<${type}${attrs ? " " + attrs : ""} />`;
 }
