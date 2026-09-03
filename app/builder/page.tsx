@@ -33,6 +33,33 @@ type ProjectItem = {
   sessionCount: number;
 };
 
+// ── Azure DevOps integration (Phase 1) ──────────────────────────────────────
+type AdoStatus = {
+  connected: boolean;
+  organization?: string;
+  adoProject?: string;
+  lastValidatedAt?: string | null;
+};
+
+type WorkItemLinkItem = {
+  id: string;
+  builderItemId: string;
+  builderItemKind: string; // "project" | "page" in Phase 1
+  adoWorkItemId: number;
+  adoWorkItemType: string;
+  adoUrl: string;
+  lastKnownState: string;
+  lastKnownCategory: string | null; // "new" | "in_progress" | "completed" | null
+  lastSyncError?: string | null;
+};
+
+type AdoStatusValue = "new" | "in_progress" | "completed";
+const ADO_STATUSES: { value: AdoStatusValue; label: string }[] = [
+  { value: "new", label: "New" },
+  { value: "in_progress", label: "In Progress" },
+  { value: "completed", label: "Completed" },
+];
+
 const EXAMPLES = [
   "A login form with email, password, remember me, and a primary sign-in button",
   "A pricing section with three plan cards and a recommended badge",
@@ -71,6 +98,8 @@ const GithubIcon   = () => (<svg width="14" height="14" viewBox="0 0 24 24" fill
 const FolderIcon   = () => (<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 7a2 2 0 012-2h4l2 2h8a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2V7z"/></svg>);
 const ChevronIcon  = () => (<svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="9 18 15 12 9 6"/></svg>);
 const PlusIcon     = () => (<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>);
+const AdoIcon      = () => (<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 16V8a2 2 0 00-1-1.73l-7-4a2 2 0 00-2 0l-7 4A2 2 0 003 8v8a2 2 0 001 1.73l7 4a2 2 0 002 0l7-4A2 2 0 0021 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></svg>);
+const ExternalIcon = () => (<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>);
 
 export default function BuilderPage() {
   const { data: session, status } = useSession();
@@ -100,6 +129,20 @@ export default function BuilderPage() {
   const [showProfile,   setShowProfile]   = React.useState(false);
   const [hasAccountKey, setHasAccountKey] = React.useState(false);
   const [keySaved,      setKeySaved]      = React.useState(false);
+
+  // ── Azure DevOps (Phase 1: manual PAT connect, per-project) ────────────
+  const [adoStatus,     setAdoStatus]     = React.useState<AdoStatus | null>(null);
+  const [adoLoading,    setAdoLoading]    = React.useState(false);
+  const [adoLinks,      setAdoLinks]      = React.useState<WorkItemLinkItem[]>([]);
+  const [adoModalOpen,  setAdoModalOpen]  = React.useState(false);
+  const [adoOrgDraft,   setAdoOrgDraft]   = React.useState("");
+  const [adoProjDraft,  setAdoProjDraft]  = React.useState("");
+  const [adoPatDraft,   setAdoPatDraft]   = React.useState("");
+  const [adoConnecting, setAdoConnecting] = React.useState(false);
+  const [adoConnectErr, setAdoConnectErr] = React.useState<string | null>(null);
+  const [adoLinking,    setAdoLinking]    = React.useState<"project" | "page" | null>(null);
+  const [adoUpdating,   setAdoUpdating]   = React.useState<"project" | "page" | null>(null);
+  const [adoRowErrors,  setAdoRowErrors]  = React.useState<{ project?: string; page?: string }>({});
 
   const chatRef    = React.useRef<HTMLDivElement>(null);
   const inputRef   = React.useRef<HTMLTextAreaElement>(null);
@@ -318,6 +361,142 @@ export default function BuilderPage() {
     }));
   }
 
+  // ── Azure DevOps helpers ─────────────────────────────────────────────────
+  // Connections are per-Project (not per-user), so everything here keys off
+  // activeProjectId — Ungrouped sessions have no ADO surface at all.
+  React.useEffect(() => {
+    if (!isLoggedIn || !activeProjectId) {
+      setAdoStatus(null);
+      setAdoLinks([]);
+      setAdoRowErrors({});
+      return;
+    }
+    loadAdoForProject(activeProjectId);
+  }, [isLoggedIn, activeProjectId]);
+
+  async function loadAdoForProject(projectId: string) {
+    setAdoLoading(true);
+    try {
+      const res = await fetch(`/api/ado/connect?projectId=${projectId}`);
+      const d = res.ok ? await res.json() : { connected: false };
+      setAdoStatus(d);
+      if (d.connected) {
+        const syncRes = await fetch(`/api/ado/workitems/sync?projectId=${projectId}`);
+        if (syncRes.ok) {
+          const sd = await syncRes.json();
+          setAdoLinks(sd.links ?? []);
+        }
+      } else {
+        setAdoLinks([]);
+      }
+    } catch {
+      setAdoStatus({ connected: false });
+      setAdoLinks([]);
+    } finally {
+      setAdoLoading(false);
+    }
+  }
+
+  async function connectAdo() {
+    if (!activeProjectId) return;
+    setAdoConnecting(true);
+    setAdoConnectErr(null);
+    try {
+      const res = await fetch("/api/ado/connect", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          projectId: activeProjectId,
+          organization: adoOrgDraft.trim(),
+          adoProject: adoProjDraft.trim(),
+          pat: adoPatDraft.trim(),
+        }),
+      });
+      const d = await res.json();
+      if (!res.ok) {
+        setAdoConnectErr(d.message || d.error || "Failed to connect to Azure DevOps.");
+        return;
+      }
+      setAdoStatus(d);
+      setAdoLinks([]);
+      setAdoPatDraft("");
+      setAdoModalOpen(false);
+    } catch (e: any) {
+      setAdoConnectErr(e?.message || "Network error");
+    } finally {
+      setAdoConnecting(false);
+    }
+  }
+
+  async function disconnectAdo() {
+    if (!activeProjectId) return;
+    if (!window.confirm("Disconnect this project from Azure DevOps? Already-linked work items stay linked for reference, but status pushes stop working until you reconnect.")) return;
+    await fetch(`/api/ado/connect?projectId=${activeProjectId}`, { method: "DELETE" }).catch(() => {});
+    setAdoStatus({ connected: false });
+    setAdoLinks([]);
+  }
+
+  async function linkAdoWorkItem(kind: "project" | "page") {
+    if (!activeProjectId) return;
+    const builderItemId = kind === "project" ? activeProjectId : dbSessionId;
+    if (!builderItemId) return;
+    const title = kind === "project"
+      ? (projects.find(p => p.id === activeProjectId)?.name || "Project")
+      : (history.find(s => s.id === dbSessionId)?.name || "Page");
+
+    setAdoLinking(kind);
+    setAdoRowErrors(er => ({ ...er, [kind]: undefined }));
+    try {
+      const res = await fetch("/api/ado/workitems", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ projectId: activeProjectId, builderItemId, builderItemKind: kind, title }),
+      });
+      const d = await res.json();
+      if (res.ok) {
+        setAdoLinks(links => {
+          const exists = links.some(l => l.id === d.link.id);
+          return exists ? links.map(l => (l.id === d.link.id ? d.link : l)) : [d.link, ...links];
+        });
+      } else {
+        setAdoRowErrors(er => ({ ...er, [kind]: d.message || d.error || "Failed to link." }));
+      }
+    } catch (e: any) {
+      setAdoRowErrors(er => ({ ...er, [kind]: e?.message || "Network error" }));
+    } finally {
+      setAdoLinking(null);
+    }
+  }
+
+  // Optimistic status push with rollback on ADO rejection (e.g. an illegal
+  // state transition) — errors surface inline via bld-msg-error styling
+  // rather than being swallowed.
+  async function pushAdoStatus(kind: "project" | "page", link: WorkItemLinkItem, status: AdoStatusValue) {
+    const prevLinks = adoLinks;
+    setAdoUpdating(kind);
+    setAdoRowErrors(er => ({ ...er, [kind]: undefined }));
+    setAdoLinks(links => links.map(l => (l.id === link.id ? { ...l, lastKnownCategory: status } : l)));
+    try {
+      const res = await fetch(`/api/ado/workitems/${link.id}/status`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ status }),
+      });
+      const d = await res.json();
+      if (res.ok) {
+        setAdoLinks(links => links.map(l => (l.id === link.id ? d.link : l)));
+      } else {
+        setAdoLinks(prevLinks);
+        setAdoRowErrors(er => ({ ...er, [kind]: d.message || d.error || "Azure DevOps rejected the status change." }));
+      }
+    } catch (e: any) {
+      setAdoLinks(prevLinks);
+      setAdoRowErrors(er => ({ ...er, [kind]: e?.message || "Network error" }));
+    } finally {
+      setAdoUpdating(null);
+    }
+  }
+
   async function saveToDb(updatedMsgs: ChatMsg[], updatedTree: UINode, isFirst: boolean) {
     if (!isLoggedIn) return;
     const name = updatedMsgs.find(m => m.role === "user")?.content?.slice(0, 120) || "Untitled";
@@ -479,6 +658,55 @@ export default function BuilderPage() {
   const isEmpty = msgs.length === 0 && !loading;
   const ungroupedSessions = history.filter(s => !s.projectId);
 
+  // The currently-open page only gets ADO "page" controls when it actually
+  // belongs to the active project — activeProjectId can be changed in the
+  // sidebar independently of what's currently loaded in the chat/canvas.
+  const currentPageInActiveProject =
+    !!dbSessionId && history.find(s => s.id === dbSessionId)?.projectId === activeProjectId;
+  const adoProjectLink = activeProjectId
+    ? adoLinks.find(l => l.builderItemKind === "project" && l.builderItemId === activeProjectId)
+    : undefined;
+  const adoPageLink = currentPageInActiveProject
+    ? adoLinks.find(l => l.builderItemKind === "page" && l.builderItemId === dbSessionId)
+    : undefined;
+
+  // Shared status-control + link-row renderer for the "project" and "page"
+  // ADO rows — visually similar weight to the preview/code bld-tabs toggle.
+  function renderAdoRow(kind: "project" | "page", link: WorkItemLinkItem | undefined, label: string) {
+    const isLinking = adoLinking === kind;
+    const isUpdating = adoUpdating === kind;
+    const error = adoRowErrors[kind];
+    return (
+      <div className="bld-ado-row">
+        <span className="bld-ado-row-label">{label}</span>
+        {link ? (
+          <>
+            <a className="bld-ado-item-link" href={link.adoUrl} target="_blank" rel="noopener noreferrer" title={`${link.adoWorkItemType} #${link.adoWorkItemId} — open in Azure DevOps`}>
+              #{link.adoWorkItemId} <ExternalIcon />
+            </a>
+            <div className="bld-ado-status">
+              {ADO_STATUSES.map(s => (
+                <button
+                  key={s.value}
+                  className={link.lastKnownCategory === s.value ? "on" : ""}
+                  onClick={() => pushAdoStatus(kind, link, s.value)}
+                  disabled={isUpdating}
+                >
+                  {s.label}
+                </button>
+              ))}
+            </div>
+          </>
+        ) : (
+          <button className="bld-ado-link-action" onClick={() => linkAdoWorkItem(kind)} disabled={isLinking}>
+            {isLinking ? "Linking…" : "Link to Azure DevOps"}
+          </button>
+        )}
+        {error && <div className="bld-msg-error bld-ado-row-error"><span>{error}</span></div>}
+      </div>
+    );
+  }
+
   // Shared row markup for a session under a project group or the
   // "Ungrouped" bucket — the move-select lets you re-file an existing page
   // into a different project (or out of one) without deleting/recreating it.
@@ -534,6 +762,64 @@ export default function BuilderPage() {
             <button className="bld-modal-skip" onClick={dismissAuthModal}>
               Continue without signing in
             </button>
+          </div>
+        </div>
+      )}
+
+      {/* ── Azure DevOps connect modal ───────────────────────────────── */}
+      {adoModalOpen && (
+        <div className="bld-modal-overlay" onClick={() => !adoConnecting && setAdoModalOpen(false)}>
+          <div className="bld-modal" onClick={e => e.stopPropagation()}>
+            <button className="bld-modal-close" onClick={() => setAdoModalOpen(false)} title="Dismiss" disabled={adoConnecting}>
+              <XIcon />
+            </button>
+            <div className="bld-modal-icon"><AdoIcon /></div>
+            <h2 className="bld-modal-title">Connect Azure DevOps</h2>
+            <p className="bld-modal-body">
+              Paste a personal access token with <strong>Work Items (Read &amp; Write)</strong> scope.
+              It&apos;s encrypted at rest and used only to push status for this project.
+            </p>
+            <div className="bld-ado-form">
+              <input
+                className="bld-key-input"
+                placeholder="Organization (e.g. contoso)"
+                value={adoOrgDraft}
+                onChange={e => setAdoOrgDraft(e.target.value)}
+                disabled={adoConnecting}
+                autoFocus
+              />
+              <input
+                className="bld-key-input"
+                placeholder="Project name (e.g. Website)"
+                value={adoProjDraft}
+                onChange={e => setAdoProjDraft(e.target.value)}
+                disabled={adoConnecting}
+              />
+              <input
+                className="bld-key-input"
+                type="password"
+                placeholder="Personal access token"
+                value={adoPatDraft}
+                onChange={e => setAdoPatDraft(e.target.value)}
+                onKeyDown={e => { if (e.key === "Enter") connectAdo(); }}
+                disabled={adoConnecting}
+              />
+            </div>
+            {adoConnectErr && (
+              <div className="bld-msg-error bld-ado-modal-error"><span>{adoConnectErr}</span></div>
+            )}
+            <div className="bld-modal-actions">
+              <button
+                className="bld-go-sm"
+                onClick={connectAdo}
+                disabled={adoConnecting || !adoOrgDraft.trim() || !adoProjDraft.trim() || !adoPatDraft.trim()}
+              >
+                {adoConnecting ? "Connecting…" : "Connect"}
+              </button>
+            </div>
+            <a className="bld-key-link" href="https://learn.microsoft.com/en-us/azure/devops/organizations/accounts/use-personal-access-tokens-to-authenticate" target="_blank" rel="noopener noreferrer">
+              How do I create a PAT? →
+            </a>
           </div>
         </div>
       )}
@@ -652,6 +938,31 @@ export default function BuilderPage() {
                 </div>
               </div>
             </div>
+
+            {/* Azure DevOps — project-scoped connect + link/status controls.
+                Lives near the project context line above, not gated behind
+                the History panel, so it stays visible whatever the sidebar
+                is showing. */}
+            {isLoggedIn && activeProjectId && (
+              <div className="bld-ado-strip">
+                {adoLoading && !adoStatus ? (
+                  <span className="bld-ado-loading">Checking Azure DevOps…</span>
+                ) : adoStatus?.connected ? (
+                  <>
+                    <div className="bld-ado-conn">
+                      <span className="bld-ado-badge"><AdoIcon /> {adoStatus.organization}/{adoStatus.adoProject}</span>
+                      <button className="bld-key-clear" onClick={disconnectAdo}>Disconnect</button>
+                    </div>
+                    {renderAdoRow("project", adoProjectLink, "Project")}
+                    {currentPageInActiveProject && renderAdoRow("page", adoPageLink, "This page")}
+                  </>
+                ) : (
+                  <button className="bld-ado-connect-btn" onClick={() => { setAdoConnectErr(null); setAdoModalOpen(true); }}>
+                    <AdoIcon /> Connect Azure DevOps
+                  </button>
+                )}
+              </div>
+            )}
           </div>
 
           {/* Projects + history panel */}

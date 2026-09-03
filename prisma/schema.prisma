@@ -66,13 +66,14 @@ model VerificationToken {
 // switch — no simultaneous multi-pane editing (see HANDOFF.md §9).
 
 model Project {
-  id        String           @id @default(cuid())
-  userId    String
-  user      User             @relation(fields: [userId], references: [id], onDelete: Cascade)
-  name      String
-  createdAt DateTime         @default(now())
-  updatedAt DateTime         @updatedAt
-  sessions  BuilderSession[]
+  id            String           @id @default(cuid())
+  userId        String
+  user          User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  name          String
+  createdAt     DateTime         @default(now())
+  updatedAt     DateTime         @updatedAt
+  sessions      BuilderSession[]
+  adoConnection AdoConnection?
 
   @@index([userId, updatedAt])
 }
@@ -95,6 +96,76 @@ model BuilderSession {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
+  workItemLinks WorkItemLink[]
+
   @@index([userId, updatedAt])
   @@index([projectId, updatedAt])
+}
+
+// ── Azure DevOps integration (Phase 1) ──────────────────────────────────────
+// Manual-PAT connect, one per Project (a user can point different projects
+// at different ADO orgs). See HANDOFF.md / CLAUDE.md for the full plan —
+// Phase 1 only covers push-status + on-load reconciliation, no webhooks.
+
+model AdoConnection {
+  id        String  @id @default(cuid())
+  projectId String  @unique
+  project   Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  organization String
+  adoProject   String
+
+  // Encrypted PAT (lib/crypto.ts, AES-256-GCM). Null while disconnected —
+  // DELETE /api/ado/connect nulls this out but keeps the row (and its
+  // WorkItemLink history) around for reference rather than deleting it, so
+  // reconnecting doesn't orphan already-linked work items. `active` mirrors
+  // "has a usable PAT right now" so routes can check one boolean instead of
+  // re-deriving it from patEnc being null every time.
+  patEnc String? @db.Text
+  active Boolean @default(true)
+
+  connectedByUserId String
+
+  // Computed once at connect time from the ADO project's real work item
+  // types/states (see lib/ado.ts) and cached here — Phase 1 has no
+  // configuration UI, just these sane defaults.
+  typeMapping  Json // { "project": "<ADO type>", "page": "<ADO type>", ... }
+  stateMapping Json // { "<ADO type>": { new, in_progress, completed: "<literal ADO state>" } }
+
+  lastValidatedAt DateTime?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  workItemLinks WorkItemLink[]
+}
+
+model WorkItemLink {
+  id           String        @id @default(cuid())
+  connectionId String
+  connection   AdoConnection @relation(fields: [connectionId], references: [id], onDelete: Cascade)
+
+  // The builder-side thing this ADO work item represents. Phase 1 only
+  // creates links for "project" (the Project as a whole) and "page" (a
+  // single BuilderSession) — the other kind values below are accepted by
+  // the schema but not produced by any route yet, ahead of real task/RAID
+  // entities that don't exist in the product today.
+  builderSessionId String?
+  builderSession   BuilderSession? @relation(fields: [builderSessionId], references: [id], onDelete: SetNull)
+  builderItemId    String // Project.id or BuilderSession.id depending on kind
+  builderItemKind  String // "project" | "page" (Phase 1) — "raid:*" | "bug" | "task" reserved, unused
+
+  adoWorkItemId   Int
+  adoWorkItemType String
+  adoUrl          String
+
+  lastKnownState    String
+  lastKnownCategory String?
+  lastSyncedAt      DateTime
+  lastSyncError     String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([connectionId, adoWorkItemId])
+  @@index([builderSessionId])
 }
