@@ -482,6 +482,82 @@
   background: var(--colour-primaryblue-50);
 }
 
+/* ── GitHub push integration (Phase 1) ─────────────────────── */
+.bld-github-notice {
+  flex-shrink: 0;
+  display: flex; align-items: center; justify-content: space-between; gap: 10px;
+  padding: 9px 16px;
+  font: 12px/1.4 var(--font-normal);
+  border-bottom: 1px solid var(--doc-line);
+}
+.bld-github-notice button {
+  border: none; background: none; padding: 0; cursor: pointer;
+  display: flex; align-items: center; color: inherit; opacity: 0.7;
+}
+.bld-github-notice button:hover { opacity: 1; }
+.bld-github-notice--success {
+  background: var(--surface-success, #f0fdf4);
+  color: var(--colour-success-600, #1a7f4b);
+}
+.bld-github-notice--error {
+  background: var(--surface-error, #fff5f5);
+  color: var(--colour-error-600);
+}
+
+/* project-head GitHub trigger — same footprint as .bld-history-del, always
+   visible (unlike the delete button's hover-reveal) since connection state
+   is useful at a glance, not just on hover. */
+.bld-project-github-btn {
+  width: 20px; height: 20px; border: none; background: none; padding: 0;
+  color: var(--text-caption); cursor: pointer; border-radius: 4px;
+  display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+  opacity: 0.55; transition: opacity .1s, color .1s, background .1s;
+}
+.bld-project-github-btn svg { width: 12px; height: 12px; }
+.bld-project-github-btn:hover { opacity: 1; background: var(--colour-primaryblue-50); color: var(--colour-primaryblue-500); }
+.bld-project-github-btn.connected { opacity: 1; color: var(--colour-success-600, #1a7f4b); }
+.bld-project-github-btn.connected:hover { background: var(--colour-success-100, #dcfce7); }
+.bld-project-github-btn.error { color: var(--colour-error-600); opacity: 1; }
+.bld-project-github-btn.error:hover { background: var(--colour-error-100, #fee2e2); }
+
+/* modal contents */
+.bld-modal--github { max-width: 420px; }
+.bld-github-connect, .bld-github-repos, .bld-github-connected {
+  display: flex; flex-direction: column; gap: 10px; width: 100%;
+}
+.bld-github-install-select {
+  height: 32px; font: 12px/1 var(--font-normal); cursor: pointer;
+}
+.bld-github-repo-list {
+  display: flex; flex-direction: column; gap: 4px;
+  max-height: 220px; overflow-y: auto;
+  border: 1px solid var(--doc-line); border-radius: var(--radius-md);
+  padding: 4px;
+}
+.bld-github-repo-item {
+  display: flex; align-items: center; justify-content: space-between; gap: 8px;
+  width: 100%; text-align: left;
+  padding: 8px 10px; border: none; border-radius: var(--radius-sm);
+  background: none; color: var(--text-body); font: 12px/1.4 var(--font-mono);
+  cursor: pointer; transition: background .1s;
+}
+.bld-github-repo-item:hover:not(:disabled) { background: var(--colour-primaryblue-50); color: var(--colour-primaryblue-600); }
+.bld-github-repo-item:disabled { opacity: 0.5; cursor: not-allowed; }
+.bld-github-repo-private {
+  flex-shrink: 0; font: 700 9px/1 var(--font-bold); letter-spacing: 0.4px; text-transform: uppercase;
+  color: var(--text-caption); background: var(--doc-line); border-radius: 999px; padding: 2px 6px;
+}
+.bld-github-repo-badge {
+  display: flex; align-items: center; gap: 7px;
+  font: 700 13px/1.3 var(--font-bold); color: var(--text-title);
+  padding: 9px 12px; border: 1px solid var(--doc-line); border-radius: var(--radius-md);
+  background: var(--doc-bg);
+}
+.bld-github-branch {
+  font: 11px/1 var(--font-mono); color: var(--text-caption);
+  background: var(--doc-line); border-radius: 999px; padding: 3px 8px; margin-left: auto;
+}
+
 /* ── Responsive ─────────────────────────────────────────────── */
 @media (max-width: 860px) {
   .bld { flex-direction: column; overflow: visible; }

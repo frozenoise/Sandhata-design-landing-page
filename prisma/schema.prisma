@@ -22,6 +22,7 @@ model User {
   sessions       Session[]
   builderSessions BuilderSession[]
   projects        Project[]
+  githubInstallations GitHubInstallation[]
 }
 
 model Account {
@@ -74,7 +75,50 @@ model Project {
   updatedAt DateTime         @updatedAt
   sessions  BuilderSession[]
 
+  // ── GitHub push integration (Phase 1: push-only, single repo) ───────────
+  // All optional — a project has no GitHub connection until /api/github/connect
+  // is called. SetNull (not Cascade) on the installation FK: uninstalling/
+  // deleting a GitHubInstallation row shouldn't delete the project it was
+  // pushing to, just leave it disconnected (repoOwner/repoName stay as a
+  // record of where it last pointed, syncStatus reflects the break).
+  githubInstallationId String?
+  githubInstallation   GitHubInstallation? @relation(fields: [githubInstallationId], references: [id], onDelete: SetNull)
+  repoOwner            String?
+  repoName             String?
+  defaultBranch        String?
+  // The branch we actually push to (sandhata/<project-slug>), created off
+  // the repo's default branch on first connect — never pushed straight to
+  // defaultBranch. See lib/github.ts / app/api/github/push.
+  workingBranch         String?
+  lastSyncedSha         String?
+  lastSyncedAt          DateTime?
+  // "idle" | "syncing" | "synced" | "error" — set by /api/github/push;
+  // "error" pairs with lastSyncError holding the human-readable reason.
+  syncStatus            String?
+  lastSyncError         String?  @db.Text
+
   @@index([userId, updatedAt])
+  @@unique([repoOwner, repoName, userId])
+}
+
+// One GitHub App installation (an org or user account that installed the
+// Sandhata GitHub App), linked to whichever Sandhata user completed that
+// install flow. installationId is the source of truth for minting a scoped
+// access token (see lib/github.ts) — accountLogin/accountType are cached
+// display-only fields so the repo picker doesn't need a live API call just
+// to label "installed on: <account>".
+model GitHubInstallation {
+  id             String   @id @default(cuid())
+  userId         String
+  user           User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  installationId Int      @unique
+  accountLogin   String
+  accountType    String
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+  projects       Project[]
+
+  @@index([userId])
 }
 
 // ── Builder sessions ─────────────────────────────────────────────────────────

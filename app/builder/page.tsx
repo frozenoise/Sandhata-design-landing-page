@@ -31,6 +31,29 @@ type ProjectItem = {
   updatedAt: string;
   createdAt: string;
   sessionCount: number;
+  // GitHub push integration (Phase 1) — all optional/null until connected.
+  repoOwner?: string | null;
+  repoName?: string | null;
+  defaultBranch?: string | null;
+  workingBranch?: string | null;
+  syncStatus?: string | null;
+  lastSyncedAt?: string | null;
+  lastSyncError?: string | null;
+};
+
+type GithubInstallationItem = {
+  id: string;
+  installationId: number;
+  accountLogin: string;
+  accountType: string;
+};
+
+type GithubRepoItem = {
+  owner: string;
+  name: string;
+  fullName: string;
+  private: boolean;
+  defaultBranch: string;
 };
 
 const EXAMPLES = [
@@ -101,6 +124,20 @@ export default function BuilderPage() {
   const [hasAccountKey, setHasAccountKey] = React.useState(false);
   const [keySaved,      setKeySaved]      = React.useState(false);
 
+  // ── GitHub push integration (Phase 1) ────────────────────────────────────
+  // null = not checked yet (treated as "unknown", not "unavailable" — avoids
+  // a flash of the disabled state before the first /api/github/config reply).
+  const [githubConfigured,     setGithubConfigured]     = React.useState<boolean | null>(null);
+  const [githubInstallations,  setGithubInstallations]  = React.useState<GithubInstallationItem[]>([]);
+  const [githubModalProjectId, setGithubModalProjectId] = React.useState<string | null>(null);
+  const [githubRepoPickerInstallationId, setGithubRepoPickerInstallationId] = React.useState<number | null>(null);
+  const [githubRepos,        setGithubRepos]        = React.useState<GithubRepoItem[]>([]);
+  const [githubReposLoading, setGithubReposLoading] = React.useState(false);
+  const [githubConnecting,   setGithubConnecting]   = React.useState(false);
+  const [githubPushing,      setGithubPushing]      = React.useState<string | null>(null); // projectId currently pushing
+  const [githubModalError,   setGithubModalError]   = React.useState<string | null>(null);
+  const [githubNotice,       setGithubNotice]       = React.useState<{ type: "success" | "error"; text: string } | null>(null);
+
   const chatRef    = React.useRef<HTMLDivElement>(null);
   const inputRef   = React.useRef<HTMLTextAreaElement>(null);
   const profileRef = React.useRef<HTMLDivElement>(null);
@@ -167,6 +204,41 @@ export default function BuilderPage() {
     if (isLoggedIn) { loadHistory(); loadProjects(); }
     else { setHistory([]); setProjects([]); }
   }, [isLoggedIn]);
+
+  // ── GitHub: check App configuration + load saved installations ──────────
+  React.useEffect(() => {
+    if (isLoggedIn) { loadGithubConfig(); loadGithubInstallations(); }
+    else { setGithubConfigured(null); setGithubInstallations([]); }
+  }, [isLoggedIn]);
+
+  // ── GitHub: handle the /api/github/install/callback redirect back here ──
+  // Plain window.location parsing (not next/navigation's useSearchParams) —
+  // this page is already all-client-side, and this sidesteps needing a
+  // Suspense boundary just for a one-time query-param read on mount.
+  React.useEffect(() => {
+    if (typeof window === "undefined") return;
+    const params = new URLSearchParams(window.location.search);
+    const gh = params.get("github");
+    const ghErr = params.get("github_error");
+    const instId = params.get("installationId");
+    const connectProject = params.get("connectProject");
+    if (!gh && !ghErr) return;
+
+    if (gh === "connected") {
+      setGithubNotice({ type: "success", text: "GitHub account connected." });
+      loadGithubInstallations();
+      if (connectProject) {
+        setShowHistory(true);
+        setExpandedProjects(ex => new Set(ex).add(connectProject));
+        openGithubModal(connectProject);
+        const idNum = instId ? Number(instId) : NaN;
+        if (Number.isFinite(idNum)) openRepoPicker(idNum);
+      }
+    } else if (ghErr) {
+      setGithubNotice({ type: "error", text: githubErrorMessage(ghErr) });
+    }
+    window.history.replaceState({}, "", "/builder");
+  }, []);
 
   // ── Clear any pending debounced key-save on unmount ──────────────────────
   React.useEffect(() => () => { if (keySaveTimer.current) clearTimeout(keySaveTimer.current); }, []);
@@ -317,6 +389,143 @@ export default function BuilderPage() {
       return p;
     }));
   }
+
+  // ── GitHub push integration (Phase 1) helpers ────────────────────────────
+  function githubErrorMessage(code: string): string {
+    switch (code) {
+      case "not_configured":          return "GitHub integration isn't set up yet.";
+      case "invalid_state":           return "That GitHub connection link expired — try again.";
+      case "install_requested":       return "Installation request sent — waiting on approval from an organization owner.";
+      case "missing_installation_id": return "GitHub didn't return an installation id — try again.";
+      case "installation_not_found":  return "Couldn't find that GitHub installation.";
+      case "callback_failed":         return "Connecting to GitHub failed — try again.";
+      case "unauthenticated":         return "Sign in, then try connecting GitHub again.";
+      default:                        return "Something went wrong connecting GitHub.";
+    }
+  }
+
+  async function loadGithubConfig() {
+    try {
+      const res = await fetch("/api/github/config");
+      setGithubConfigured(res.ok ? !!(await res.json()).configured : false);
+    } catch {
+      setGithubConfigured(false);
+    }
+  }
+
+  async function loadGithubInstallations() {
+    try {
+      const res = await fetch("/api/github/installations");
+      if (res.ok) {
+        const d = await res.json();
+        setGithubInstallations(d.installations ?? []);
+      }
+    } catch {}
+  }
+
+  function openGithubModal(projectId: string) {
+    setGithubModalProjectId(projectId);
+    setGithubModalError(null);
+    setGithubRepos([]);
+    setGithubRepoPickerInstallationId(null);
+  }
+
+  function closeGithubModal() {
+    setGithubModalProjectId(null);
+    setGithubRepoPickerInstallationId(null);
+    setGithubRepos([]);
+    setGithubModalError(null);
+  }
+
+  // Full-page navigation (not fetch) — the route redirects the browser to
+  // github.com, so this has to leave the SPA. GitHub's own install picker
+  // handles "install fresh" vs "use an existing installation" from here.
+  function startGithubInstall(projectId: string) {
+    window.location.href = `/api/github/install?projectId=${encodeURIComponent(projectId)}`;
+  }
+
+  async function openRepoPicker(installationId: number) {
+    setGithubRepoPickerInstallationId(installationId);
+    setGithubReposLoading(true);
+    setGithubModalError(null);
+    try {
+      const res = await fetch(`/api/github/repos?installationId=${installationId}`);
+      const d = await res.json();
+      if (!res.ok) { setGithubModalError(d.message || "Failed to load repositories."); setGithubRepos([]); }
+      else setGithubRepos(d.repos ?? []);
+    } catch {
+      setGithubModalError("Failed to load repositories.");
+    } finally {
+      setGithubReposLoading(false);
+    }
+  }
+
+  async function connectRepo(projectId: string, installationId: number, owner: string, repo: string) {
+    setGithubConnecting(true);
+    setGithubModalError(null);
+    try {
+      const res = await fetch("/api/github/connect", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ projectId, installationId, owner, repo }),
+      });
+      const d = await res.json();
+      if (!res.ok) { setGithubModalError(d.message || "Failed to connect repository."); return; }
+      setProjects(ps => ps.map(p => p.id === projectId ? { ...p, ...d.project } : p));
+      closeGithubModal();
+    } catch {
+      setGithubModalError("Failed to connect repository.");
+    } finally {
+      setGithubConnecting(false);
+    }
+  }
+
+  async function disconnectRepo(projectId: string) {
+    if (!window.confirm("Disconnect this project from GitHub? This won't delete anything on GitHub.")) return;
+    await fetch("/api/github/disconnect", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ projectId }),
+    }).catch(() => {});
+    setProjects(ps => ps.map(p => p.id === projectId
+      ? { ...p, repoOwner: null, repoName: null, defaultBranch: null, workingBranch: null, syncStatus: null, lastSyncError: null }
+      : p
+    ));
+    closeGithubModal();
+  }
+
+  async function pushToGithub(projectId: string) {
+    setGithubPushing(projectId);
+    try {
+      const res = await fetch("/api/github/push", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ projectId }),
+      });
+      const d = await res.json();
+      if (!res.ok) {
+        setProjects(ps => ps.map(p => p.id === projectId ? { ...p, syncStatus: "error", lastSyncError: d.message || d.error } : p));
+        return;
+      }
+      setProjects(ps => ps.map(p => p.id === projectId ? { ...p, ...d.project } : p));
+    } catch (e: any) {
+      setProjects(ps => ps.map(p => p.id === projectId ? { ...p, syncStatus: "error", lastSyncError: e?.message || "Push failed" } : p));
+    } finally {
+      setGithubPushing(null);
+    }
+  }
+
+  // Auto-select the (usually only) installation once the modal is open for
+  // a not-yet-connected project, so the common single-account case doesn't
+  // need an extra click to reach the repo list.
+  React.useEffect(() => {
+    if (!githubModalProjectId) return;
+    const proj = projects.find(p => p.id === githubModalProjectId);
+    if (!proj || proj.repoOwner) return;
+    if (githubInstallations.length > 0 && githubRepoPickerInstallationId === null) {
+      openRepoPicker(githubInstallations[0].installationId);
+    }
+  }, [githubModalProjectId, githubInstallations]);
 
   async function saveToDb(updatedMsgs: ChatMsg[], updatedTree: UINode, isFirst: boolean) {
     if (!isLoggedIn) return;
@@ -538,6 +747,133 @@ export default function BuilderPage() {
         </div>
       )}
 
+      {/* ── GitHub connect/push modal — project-scoped, opened from the
+          project group header's GitHub button ─────────────────────────── */}
+      {githubModalProjectId && (() => {
+        const proj = projects.find(p => p.id === githubModalProjectId);
+        if (!proj) return null;
+        const connected = !!(proj.repoOwner && proj.repoName);
+        return (
+          <div className="bld-modal-overlay" onClick={closeGithubModal}>
+            <div className="bld-modal bld-modal--github" onClick={e => e.stopPropagation()}>
+              <button className="bld-modal-close" onClick={closeGithubModal} title="Close">
+                <XIcon />
+              </button>
+              <div className="bld-modal-icon"><GithubIcon /></div>
+              <h2 className="bld-modal-title">GitHub — {proj.name}</h2>
+
+              {githubConfigured === false && (
+                <p className="bld-modal-body">
+                  GitHub integration isn&apos;t set up yet — a Sandhata admin needs to register the
+                  GitHub App before projects can push to a repository.
+                </p>
+              )}
+
+              {githubConfigured === null && (
+                <p className="bld-modal-body">Checking GitHub availability…</p>
+              )}
+
+              {githubConfigured && !connected && (
+                <div className="bld-github-connect">
+                  <p className="bld-modal-body">
+                    Connect this project to a GitHub repository to push its generated pages there.
+                  </p>
+
+                  {githubInstallations.length === 0 ? (
+                    <button className="bld-signin-btn bld-signin-btn--lg" onClick={() => startGithubInstall(proj.id)}>
+                      <GithubIcon /> Connect GitHub account
+                    </button>
+                  ) : (
+                    <div className="bld-github-repos">
+                      {githubInstallations.length > 1 && (
+                        <select
+                          className="bld-key-input bld-github-install-select"
+                          value={githubRepoPickerInstallationId ?? ""}
+                          onChange={e => openRepoPicker(Number(e.target.value))}
+                        >
+                          {githubInstallations.map(inst => (
+                            <option key={inst.id} value={inst.installationId}>
+                              {inst.accountLogin} ({inst.accountType})
+                            </option>
+                          ))}
+                        </select>
+                      )}
+
+                      {githubReposLoading && (
+                        <div className="bld-msg-bot">
+                          <div className="bld-dot-pulse"><span /><span /><span /></div>
+                          <span>Loading repositories…</span>
+                        </div>
+                      )}
+
+                      {!githubReposLoading && githubRepos.length > 0 && (
+                        <div className="bld-github-repo-list">
+                          {githubRepos.map(r => (
+                            <button
+                              key={r.fullName}
+                              className="bld-github-repo-item"
+                              disabled={githubConnecting}
+                              onClick={() => connectRepo(proj.id, githubRepoPickerInstallationId!, r.owner, r.name)}
+                            >
+                              <span>{r.fullName}</span>
+                              {r.private && <span className="bld-github-repo-private">Private</span>}
+                            </button>
+                          ))}
+                        </div>
+                      )}
+
+                      {!githubReposLoading && githubRepos.length === 0 && !githubModalError && (
+                        <p className="bld-history-empty">
+                          No repositories accessible — grant this App access to a repo from GitHub&apos;s installation settings.
+                        </p>
+                      )}
+
+                      <button className="bld-key-clear" onClick={() => startGithubInstall(proj.id)}>
+                        Manage installation / add repos →
+                      </button>
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {connected && (
+                <div className="bld-github-connected">
+                  <div className="bld-github-repo-badge">
+                    <GithubIcon />
+                    <span>{proj.repoOwner}/{proj.repoName}</span>
+                    <span className="bld-github-branch">{proj.workingBranch || `sandhata/${proj.name}`}</span>
+                  </div>
+                  {proj.lastSyncedAt && (
+                    <p className="bld-profile-key-note">Last synced {relativeTime(proj.lastSyncedAt)}</p>
+                  )}
+                  {proj.syncStatus === "error" && proj.lastSyncError && (
+                    <div className="bld-msg-error"><span>{proj.lastSyncError}</span></div>
+                  )}
+                  <div className="bld-modal-actions">
+                    <button
+                      className="bld-go-sm"
+                      onClick={() => pushToGithub(proj.id)}
+                      disabled={githubPushing === proj.id}
+                    >
+                      {githubPushing === proj.id ? (
+                        <span className="bld-msg-bot" style={{ color: "#fff" }}>
+                          <div className="bld-dot-pulse"><span /><span /><span /></div> Pushing…
+                        </span>
+                      ) : "Push to GitHub"}
+                    </button>
+                    <button className="bld-key-clear" onClick={() => disconnectRepo(proj.id)}>Disconnect</button>
+                  </div>
+                </div>
+              )}
+
+              {githubModalError && (
+                <div className="bld-msg-error"><span>{githubModalError}</span></div>
+              )}
+            </div>
+          </div>
+        );
+      })()}
+
       <div className="bld">
 
         {/* ── Left: chat + history panel ──────────────────────────── */}
@@ -654,6 +990,16 @@ export default function BuilderPage() {
             </div>
           </div>
 
+          {/* GitHub connect/push result banner — driven by the query params
+              /api/github/install/callback redirects back with, cleared on
+              read (see the mount effect above). */}
+          {githubNotice && (
+            <div className={`bld-github-notice bld-github-notice--${githubNotice.type}`}>
+              <span>{githubNotice.text}</span>
+              <button onClick={() => setGithubNotice(null)} title="Dismiss"><XIcon /></button>
+            </div>
+          )}
+
           {/* Projects + history panel */}
           {showHistory && isLoggedIn && (
             <div className="bld-history">
@@ -700,6 +1046,13 @@ export default function BuilderPage() {
                     <span className="bld-project-icon"><FolderIcon /></span>
                     <span className="bld-project-name">{p.name}</span>
                     <span className="bld-project-count">{p.sessionCount}</span>
+                    <button
+                      className={`bld-project-github-btn${p.repoOwner ? " connected" : ""}${p.syncStatus === "error" ? " error" : ""}`}
+                      onClick={(e) => { e.stopPropagation(); openGithubModal(p.id); }}
+                      title={p.repoOwner ? `${p.repoOwner}/${p.repoName}${p.syncStatus === "error" ? " — last push failed" : ""}` : "Connect GitHub"}
+                    >
+                      <GithubIcon />
+                    </button>
                     <button className="bld-history-del" onClick={(e) => deleteProject(p.id, e)} title="Delete project">
                       <XIcon />
                     </button>

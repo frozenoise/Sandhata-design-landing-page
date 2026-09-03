@@ -18,6 +18,16 @@ export async function GET() {
       createdAt: true,
       updatedAt: true,
       _count: { select: { sessions: true } },
+      // GitHub push integration (Phase 1) — surfaced here so the sidebar can
+      // render each project's connected/disconnected state without a
+      // separate round trip per project.
+      repoOwner: true,
+      repoName: true,
+      defaultBranch: true,
+      workingBranch: true,
+      syncStatus: true,
+      lastSyncedAt: true,
+      lastSyncError: true,
     },
   });
 
@@ -28,6 +38,13 @@ export async function GET() {
       createdAt: p.createdAt,
       updatedAt: p.updatedAt,
       sessionCount: p._count.sessions,
+      repoOwner: p.repoOwner,
+      repoName: p.repoName,
+      defaultBranch: p.defaultBranch,
+      workingBranch: p.workingBranch,
+      syncStatus: p.syncStatus,
+      lastSyncedAt: p.lastSyncedAt,
+      lastSyncError: p.lastSyncError,
     })),
   });
 }
