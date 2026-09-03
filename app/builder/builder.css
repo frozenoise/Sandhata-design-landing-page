@@ -257,6 +257,42 @@
   margin: auto; display: flex; flex-direction: column; align-items: center; gap: 12px;
   color: var(--text-caption); font: 14px/1.5 var(--font-normal); text-align: center;
 }
+
+/* ── Visual editor (Edit view) ─────────────────────────────────────────── */
+.bld-edit-undo-redo { display: flex; gap: 4px; }
+.bld-edit-undo-redo button {
+  width: 28px; height: 28px; border: 1px solid var(--doc-line); border-radius: var(--radius-sm);
+  background: var(--doc-bg); color: var(--text-body); font-size: 14px; cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+}
+.bld-edit-undo-redo button:hover:not(:disabled) { border-color: var(--colour-primaryblue-300); color: var(--colour-primaryblue-500); }
+.bld-edit-undo-redo button:disabled { opacity: 0.35; cursor: not-allowed; }
+
+.bld-edit-layout { flex: 1; display: flex; gap: 20px; align-items: flex-start; min-width: 0; }
+.bld-edit-canvas-wrap { flex: 1; min-width: 0; display: flex; }
+/* Selected/hovered outlines are injected as scoped rules (see the inline
+   <style> next to this wrapper in page.tsx) targeting [data-node-id] —
+   cursor:pointer here signals the whole canvas is click-to-select. */
+.bld-edit-canvas-wrap [data-node-id] { cursor: pointer; }
+
+.bld-prop-panel {
+  width: 260px; flex-shrink: 0; align-self: stretch;
+  background: var(--doc-surface); border: 1px solid var(--doc-line); border-radius: var(--radius-lg);
+  padding: 16px; overflow-y: auto;
+}
+.bld-prop-panel-head {
+  display: flex; align-items: center; justify-content: space-between;
+  margin-bottom: 14px; padding-bottom: 10px; border-bottom: 1px solid var(--doc-line);
+}
+.bld-prop-type { font: 700 13px/1 var(--font-bold); color: var(--text-title); }
+.bld-prop-empty { font: 12px/1.5 var(--font-normal); color: var(--text-caption); margin: 0; }
+.bld-prop-field { display: flex; flex-direction: column; gap: 5px; margin-bottom: 12px; }
+.bld-prop-field label {
+  font: 700 11px/1 var(--font-bold); color: var(--text-caption);
+  text-transform: uppercase; letter-spacing: 0.3px;
+}
+.bld-prop-field--bool { flex-direction: row; align-items: center; gap: 8px; cursor: pointer; }
+.bld-prop-field--bool input { margin: 0; }
 .bld-empty { color: var(--text-caption); }
 .bld-spinner {
   width: 28px; height: 28px; border-radius: 50%;

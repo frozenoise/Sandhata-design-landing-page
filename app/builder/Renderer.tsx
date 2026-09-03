@@ -43,8 +43,15 @@ let keyCounter = 0;
 
 export function RenderNode({ node }: { node: UINode }): React.ReactElement | null {
   if (!node || typeof node !== "object") return null;
-  const { type, props = {}, children } = node;
+  const { type, props = {}, children, id } = node;
   const key = `n${keyCounter++}`;
+  // Purely structural — no handlers, no state, so the zero-arg call sites
+  // (Preview tab, export/Code view) are completely unaffected. The visual
+  // editor (app/builder/page.tsx, "edit" view) resolves clicks/hover via a
+  // single delegated listener on its canvas wrapper using this attribute
+  // (`e.target.closest('[data-node-id]')`) rather than this component
+  // threading selection state/handlers through every branch below.
+  const nodeAttrs = id ? { "data-node-id": id } : {};
 
   const kids = typeof children === "string"
     ? children
@@ -54,24 +61,39 @@ export function RenderNode({ node }: { node: UINode }): React.ReactElement | nul
 
   // Layout primitives
   if (LAYOUT.has(type)) {
-    if (type === "Text")    return <p key={key} style={{ margin: 0, color: "var(--text-body)", font: "14px/1.6 var(--font-normal)", ...props.style }}>{kids}</p>;
+    if (type === "Text")    return <p key={key} {...nodeAttrs} style={{ margin: 0, color: "var(--text-body)", font: "14px/1.6 var(--font-normal)", ...props.style }}>{kids}</p>;
     if (type === "Heading") {
       const lvl = props.level ?? 2;
       const sizes: Record<number, string> = { 1: "28px", 2: "22px", 3: "18px", 4: "16px" };
-      return <div key={key} style={{ font: `700 ${sizes[lvl] ?? "22px"}/1.25 var(--font-bold)`, color: "var(--text-title)", ...props.style }}>{kids}</div>;
+      return <div key={key} {...nodeAttrs} style={{ font: `700 ${sizes[lvl] ?? "22px"}/1.25 var(--font-bold)`, color: "var(--text-title)", ...props.style }}>{kids}</div>;
     }
-    if (type === "Spacer")  return <div key={key} style={{ height: props.size ?? 16 }} />;
-    if (type === "Divider") return <div key={key} style={{ height: 1, background: "var(--border-subtle, #e5e7eb)", width: "100%", ...props.style }} />;
-    return <div key={key} style={layoutStyle(type, props)}>{kids}</div>;
+    if (type === "Spacer")  return <div key={key} {...nodeAttrs} style={{ height: props.size ?? 16 }} />;
+    if (type === "Divider") return <div key={key} {...nodeAttrs} style={{ height: 1, background: "var(--border-subtle, #e5e7eb)", width: "100%", ...props.style }} />;
+    return <div key={key} {...nodeAttrs} style={layoutStyle(type, props)}>{kids}</div>;
   }
 
   // Design-system components
   const Comp = DS[type];
   if (!Comp) {
-    return <div key={key} style={{ padding: 8, border: "1px dashed #d1d5db", borderRadius: 6, font: "12px var(--font-mono)", color: "#9aa0ac" }}>Unknown: {type}</div>;
+    return <div key={key} {...nodeAttrs} style={{ padding: 8, border: "1px dashed #d1d5db", borderRadius: 6, font: "12px var(--font-mono)", color: "#9aa0ac" }}>Unknown: {type}</div>;
   }
   const { style, ...rest } = props;
-  return <Comp key={key} style={style} {...rest}>{kids}</Comp>;
+  const comp = <Comp style={style} {...rest} {...nodeAttrs}>{kids}</Comp>;
+  // Not every DS component forwards unrecognized props onto a clickable
+  // element: some (Alert, Avatar, Tag, StatCard, Spinner, Tooltip) don't
+  // spread `...rest` at all, and Switch/Checkbox/Radio spread it onto a
+  // visually-hidden/overlay input rather than the element you actually see
+  // and click — in both cases `{...nodeAttrs}` above lands on something the
+  // visual editor's canvas delegation can never hit-test. A `display:contents`
+  // wrapper carrying the same id is layout-transparent (renders as if it
+  // weren't there — verified this doesn't change existing layout/CSS, only
+  // adds a DOM node) but is always a real, always-clickable ancestor, so
+  // selection works uniformly regardless of what the wrapped component does
+  // internally. Only pays for itself once a tree actually has ids (i.e. edit
+  // mode has been entered at least once for this tab) — id is undefined for
+  // any tree that predates that, so this is a no-op wrapper-per-node most of
+  // the time (Preview/Code, or any session that's never opened Edit).
+  return id ? <span key={key} data-node-id={id} style={{ display: "contents" }}>{comp}</span> : comp;
 }
 
 export function RenderTree({ tree }: { tree: UINode | null }) {

@@ -7,6 +7,8 @@ import "../_docs/docs.css";
 import "./builder.css";
 import { SdTopNav } from "../_docs/shell";
 import { RenderTree, treeToJSX, type UINode } from "./Renderer";
+import { ensureIds, findNodeById, updateNodeProps, updateNodeText, removeNodeById } from "./uiTree";
+import { PROP_SCHEMA, type PropField } from "./propSchema";
 
 type ChatMsg = {
   role: "user" | "assistant";
@@ -146,8 +148,17 @@ export default function BuilderPage() {
   const [keyDraft,      setKeyDraft]      = React.useState("");
   const [needsKey,      setNeedsKey]      = React.useState(false);
   const [tree,          setTree]          = React.useState<UINode | null>(null);
-  const [view,          setView]          = React.useState<"preview" | "code">("preview");
+  const [view,          setView]          = React.useState<"preview" | "code" | "edit">("preview");
   const [viewport,      setViewport]      = React.useState<"mobile" | "tablet" | "desktop">("tablet");
+  // ── Visual editor (edit view) — Phase 1: select + property-panel editing,
+  // no drag yet. Undo/redo is a snapshot stack, not a diff log — trees here
+  // are small (the AI's own system prompt caps them around ~200 nodes), so a
+  // structuredClone-cheap approach is simpler than a command log and doesn't
+  // need to be.
+  const [selectedNodeId, setSelectedNodeId] = React.useState<string | null>(null);
+  const [hoveredNodeId,  setHoveredNodeId]  = React.useState<string | null>(null);
+  const [editHistory,    setEditHistory]    = React.useState<UINode[]>([]);
+  const [editRedoStack,  setEditRedoStack]  = React.useState<UINode[]>([]);
   const [dbSessionId,   setDbSessionId]   = React.useState<string | null>(null);
   const [history,       setHistory]       = React.useState<HistoryItem[]>([]);
   const [showHistory,   setShowHistory]   = React.useState(false);
@@ -274,6 +285,104 @@ export default function BuilderPage() {
     if (!activeTabId) return;
     tabCacheRef.current[activeTabId] = { msgs, tree };
   }, [activeTabId, msgs, tree]);
+
+  // ── Visual editor: enter/leave "edit" view ──────────────────────────────
+  // Existing saved sessions' trees predate the `id` field on UINode — backfill
+  // lazily the moment edit mode is actually entered, rather than migrating
+  // every session up front. ensureIds returns the same reference if nothing
+  // needed adding, so this is a no-op re-render for an already-id'd tree.
+  React.useEffect(() => {
+    if (view !== "edit" || !tree) return;
+    const withIds = ensureIds(tree);
+    if (withIds !== tree) setTree(withIds);
+  }, [view, tree]);
+
+  // Undo/redo is scoped per open tab (matching tabCacheRef's per-tab
+  // caching) — switching tabs with edit history still pending would
+  // otherwise let you undo INTO a different page's tree.
+  React.useEffect(() => {
+    setSelectedNodeId(null);
+    setHoveredNodeId(null);
+    setEditHistory([]);
+    setEditRedoStack([]);
+  }, [activeTabId]);
+
+  const selectedNode = React.useMemo(
+    () => (tree && selectedNodeId ? findNodeById(tree, selectedNodeId) : null),
+    [tree, selectedNodeId]
+  );
+
+  // Every structural/property edit goes through this — pushes the
+  // pre-edit tree onto the undo stack, clears redo (a fresh edit
+  // invalidates whatever "future" redo pointed at), and commits.
+  function commitTreeEdit(nextTree: UINode | null) {
+    if (!tree) return;
+    setEditHistory(h => [...h, tree].slice(-50));
+    setEditRedoStack([]);
+    setTree(nextTree);
+  }
+
+  function undoEdit() {
+    if (!tree || editHistory.length === 0) return;
+    const prev = editHistory[editHistory.length - 1];
+    setEditHistory(h => h.slice(0, -1));
+    setEditRedoStack(r => [...r, tree]);
+    setTree(prev);
+  }
+
+  function redoEdit() {
+    if (!tree || editRedoStack.length === 0) return;
+    const next = editRedoStack[editRedoStack.length - 1];
+    setEditRedoStack(r => r.slice(0, -1));
+    setEditHistory(h => [...h, tree]);
+    setTree(next);
+  }
+
+  function updateSelectedProp(key: string, value: any) {
+    if (!tree || !selectedNodeId) return;
+    commitTreeEdit(updateNodeProps(tree, selectedNodeId, { [key]: value }));
+  }
+
+  function updateSelectedText(text: string) {
+    if (!tree || !selectedNodeId) return;
+    commitTreeEdit(updateNodeText(tree, selectedNodeId, text));
+  }
+
+  function deleteSelectedNode() {
+    if (!tree || !selectedNodeId) return;
+    const next = removeNodeById(tree, selectedNodeId);
+    setSelectedNodeId(null);
+    // next === null means the root itself was deleted (cleared canvas) —
+    // commitTreeEdit accepts that directly; it still goes through
+    // history/redo and gets flushed back into the chat like any other edit.
+    commitTreeEdit(next);
+  }
+
+  // Folds any edits made in "edit" view back into the chat transcript as a
+  // single synthetic assistant turn when you leave it — not on every
+  // keystroke/commit, which would spam the transcript. This is deliberately
+  // NOT a parallel/independent mutation path: send()'s system prompt already
+  // tells the model its prior JSON is in the conversation history as its own
+  // last assistant message and to modify it, so a visually-edited tree just
+  // becomes the AI's next starting point for free, same as any chat-driven
+  // edit — and it goes through the exact same saveToDb() the chat flow uses.
+  function flushVisualEditsToChat() {
+    if (editHistory.length === 0) return;
+    const isFirst = msgs.length === 0;
+    const updatedMsgs: ChatMsg[] = [
+      ...msgs,
+      { role: "assistant", content: tree ? JSON.stringify(tree) : "", label: "Edited visually", tree: tree ?? undefined },
+    ];
+    setMsgs(updatedMsgs);
+    if (tree) saveToDb(updatedMsgs, tree, isFirst, activeTabId);
+    setEditHistory([]);
+    setEditRedoStack([]);
+  }
+
+  function changeView(next: "preview" | "code" | "edit") {
+    if (view === "edit" && next !== "edit") flushVisualEditsToChat();
+    setView(next);
+  }
 
   // ── Auth modal: show once per session for unauthenticated users ────────
   React.useEffect(() => {
@@ -1116,6 +1225,57 @@ export default function BuilderPage() {
     );
   }
 
+  // One field row in the visual editor's property panel. Text/number fields
+  // commit on blur (not per-keystroke — an undo entry per keystroke would
+  // make undo useless), keyed on selectedNodeId+field.key so switching the
+  // selected node remounts the input with the new node's current value
+  // instead of an uncontrolled input carrying over stale text mid-edit.
+  function renderPropField(field: PropField, node: UINode) {
+    const current = node.props?.[field.key];
+    const fieldKey = `${node.id}:${field.key}`;
+    if (field.kind === "boolean") {
+      return (
+        <label key={fieldKey} className="bld-prop-field bld-prop-field--bool">
+          <input type="checkbox" checked={!!current} onChange={e => updateSelectedProp(field.key, e.target.checked)} />
+          {field.label}
+        </label>
+      );
+    }
+    if (field.kind === "select") {
+      return (
+        <div key={fieldKey} className="bld-prop-field">
+          <label>{field.label}</label>
+          <select className="bld-key-input" value={current ?? ""} onChange={e => updateSelectedProp(field.key, e.target.value || undefined)}>
+            <option value="">—</option>
+            {field.options.map(o => <option key={o} value={o}>{o}</option>)}
+          </select>
+        </div>
+      );
+    }
+    if (field.kind === "number") {
+      return (
+        <div key={fieldKey} className="bld-prop-field">
+          <label>{field.label}</label>
+          <input
+            key={fieldKey} className="bld-key-input" type="number"
+            defaultValue={current ?? ""}
+            onBlur={e => updateSelectedProp(field.key, e.target.value === "" ? undefined : Number(e.target.value))}
+          />
+        </div>
+      );
+    }
+    return (
+      <div key={fieldKey} className="bld-prop-field">
+        <label>{field.label}</label>
+        <input
+          key={fieldKey} className="bld-key-input" type="text"
+          defaultValue={current ?? ""}
+          onBlur={e => updateSelectedProp(field.key, e.target.value || undefined)}
+        />
+      </div>
+    );
+  }
+
   return (
     <div className="doc-root">
       <SdTopNav active="Builder" />
@@ -1677,8 +1837,9 @@ export default function BuilderPage() {
           )}
           <div className="bld-toolbar">
             <div className="bld-tabs">
-              <button className={view === "preview" ? "on" : ""} onClick={() => setView("preview")}>Preview</button>
-              <button className={view === "code" ? "on" : ""} onClick={() => setView("code")} disabled={!tree}>Code</button>
+              <button className={view === "preview" ? "on" : ""} onClick={() => changeView("preview")}>Preview</button>
+              <button className={view === "code" ? "on" : ""} onClick={() => changeView("code")} disabled={!tree}>Code</button>
+              <button className={view === "edit" ? "on" : ""} onClick={() => changeView("edit")} disabled={!tree} title="Click elements to select and edit their properties">Edit</button>
             </div>
             <div className="bld-toolbar-right">
               {view === "preview" && (
@@ -1692,6 +1853,12 @@ export default function BuilderPage() {
               )}
               {tree && view === "code" && (
                 <button className="bld-copy" onClick={() => navigator.clipboard.writeText(code)}>Copy</button>
+              )}
+              {view === "edit" && (
+                <div className="bld-edit-undo-redo">
+                  <button onClick={undoEdit} disabled={editHistory.length === 0} title="Undo">↶</button>
+                  <button onClick={redoEdit} disabled={editRedoStack.length === 0} title="Redo">↷</button>
+                </div>
               )}
               {tree && (
                 <button className="bld-export-btn" onClick={exportZip} title="Download component as ZIP">
@@ -1713,17 +1880,83 @@ export default function BuilderPage() {
                 <span>Generating interface…</span>
               </div>
             )}
-            {tree && (
-              view === "preview" ? (
+            {tree && view === "preview" && (
+              <div
+                className={`bld-surface bld-surface--${viewport}`}
+                style={{ opacity: loading ? 0.55 : 1, transition: "opacity 0.2s" }}
+              >
+                <RenderTree tree={tree} />
+              </div>
+            )}
+            {tree && view === "code" && (
+              <pre className="bld-code">{code}</pre>
+            )}
+            {tree && view === "edit" && (
+              <div className="bld-edit-layout">
+                {/* Selection/hover resolved via a single delegated listener
+                    here, using RenderNode's data-node-id attribute — not
+                    handlers threaded through every Renderer.tsx branch. This
+                    also blocks the underlying component's own interactivity
+                    (a Switch toggling, a link navigating) while in edit mode:
+                    stopPropagation on the capture phase never lets the click
+                    reach the real element's own bubble-phase handler. */}
                 <div
-                  className={`bld-surface bld-surface--${viewport}`}
-                  style={{ opacity: loading ? 0.55 : 1, transition: "opacity 0.2s" }}
+                  className="bld-edit-canvas-wrap"
+                  onClickCapture={(e) => {
+                    const el = (e.target as HTMLElement).closest("[data-node-id]");
+                    if (!el) { setSelectedNodeId(null); return; }
+                    e.preventDefault();
+                    e.stopPropagation();
+                    setSelectedNodeId(el.getAttribute("data-node-id"));
+                  }}
+                  onMouseOver={(e) => {
+                    const el = (e.target as HTMLElement).closest("[data-node-id]");
+                    setHoveredNodeId(el ? el.getAttribute("data-node-id") : null);
+                  }}
+                  onMouseLeave={() => setHoveredNodeId(null)}
                 >
-                  <RenderTree tree={tree} />
+                  {/* Highlight via a scoped attribute-selector rule rather
+                      than threading selected/hovered state into RenderNode —
+                      the whole tree already re-renders on every edit anyway,
+                      so this stays correct for free with no extra plumbing. */}
+                  <style>{[
+                    selectedNodeId && `.bld-edit-canvas-wrap [data-node-id="${selectedNodeId}"] { outline: 2px solid var(--colour-primaryblue-500) !important; outline-offset: 1px; }`,
+                    hoveredNodeId && hoveredNodeId !== selectedNodeId && `.bld-edit-canvas-wrap [data-node-id="${hoveredNodeId}"] { outline: 1px dashed var(--colour-primaryblue-300) !important; outline-offset: 1px; }`,
+                  ].filter(Boolean).join("\n")}</style>
+                  <div className={`bld-surface bld-surface--${viewport}`}>
+                    <RenderTree tree={tree} />
+                  </div>
                 </div>
-              ) : (
-                <pre className="bld-code">{code}</pre>
-              )
+
+                <div className="bld-prop-panel">
+                  {!selectedNode ? (
+                    <p className="bld-prop-empty">Click an element in the canvas to edit it.</p>
+                  ) : (
+                    <>
+                      <div className="bld-prop-panel-head">
+                        <span className="bld-prop-type">{selectedNode.type}</span>
+                        <button className="bld-history-del" onClick={deleteSelectedNode} title="Delete element">
+                          <XIcon />
+                        </button>
+                      </div>
+                      {typeof selectedNode.children === "string" && (
+                        <div className="bld-prop-field">
+                          <label>Text content</label>
+                          <input
+                            key={`${selectedNode.id}:__text`} className="bld-key-input" type="text"
+                            defaultValue={selectedNode.children}
+                            onBlur={e => updateSelectedText(e.target.value)}
+                          />
+                        </div>
+                      )}
+                      {(PROP_SCHEMA[selectedNode.type] ?? []).map(field => renderPropField(field, selectedNode))}
+                      {!PROP_SCHEMA[selectedNode.type] && typeof selectedNode.children !== "string" && (
+                        <p className="bld-prop-empty">No editable properties for this element yet.</p>
+                      )}
+                    </>
+                  )}
+                </div>
+              </div>
             )}
           </div>
         </main>
