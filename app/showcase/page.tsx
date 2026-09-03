@@ -340,10 +340,12 @@ function GaugeChart({ value, max=100, label }: { value:number; max?:number; labe
         <motion.path d={trackD} fill="none" stroke="var(--colour-primaryblue-500)" strokeWidth="13" strokeLinecap="round"
           initial={{ pathLength:0 }} animate={{ pathLength: inView ? value/max : 0 }}
           transition={{ duration:1.2, ease:"easeOut", delay:0.15 }}/>
+        {/* Same fix as the donut chart's centre text earlier this session:
+            hardcoded near-black had ~1.1:1 contrast against a dark card. */}
         <text x={cx} y={cy-4} textAnchor="middle" dominantBaseline="middle"
-          fontSize="20" fontWeight="700" fill="#0a0a14" fontFamily="var(--font-bold)">{value}%</text>
+          fontSize="20" fontWeight="700" fill="var(--text-title)" fontFamily="var(--font-bold)">{value}%</text>
         <text x={cx} y={cy+14} textAnchor="middle" dominantBaseline="middle"
-          fontSize="9" fill="#8a8f9b" fontFamily="var(--font-normal)">{label}</text>
+          fontSize="9" fill="var(--text-caption)" fontFamily="var(--font-normal)">{label}</text>
       </svg>
     </div>
   );
@@ -485,8 +487,16 @@ function InteractiveLineChart() {
         <div><div className="rtu-card-h">Line Chart · Interactive</div><div className="rtu-card-sub">Total visitors over 3 months — click a series to switch</div></div>
         <div className="rtu-line-stats">
           {(Object.keys(LC_SERIES) as SeriesKey[]).map(k=>(
+            // Was: inline `background:"#f4f5f7"` (always light) + hardcoded
+            // `borderLeft` on the active tab, both fighting the .rtu-stat.on /
+            // .rtu-stat CSS classes' own theme-aware values (inline style
+            // wins over any stylesheet rule, dark-mode overrides included) —
+            // the pill stayed light while its <strong> text correctly turned
+            // near-white in dark mode, making "24,828" unreadable. Only reset
+            // the button's own top/right/bottom chrome inline; leave
+            // background and border-left to the class so dark mode applies.
             <button key={k} onClick={()=>setActive(k)} className={`rtu-stat${active===k?" on":""}`}
-              style={{ border:"none",borderLeft:"1px solid rgba(10,10,20,0.08)",cursor:"pointer",background:active===k?"#f4f5f7":"transparent" }}>
+              style={{ borderTop:"none",borderRight:"none",borderBottom:"none",cursor:"pointer",background:active===k?undefined:"transparent" }}>
               <span style={{ display:"flex",alignItems:"center",gap:6 }}>
                 <span style={{ width:8,height:8,borderRadius:"50%",background:active===k?"var(--colour-primaryblue-500)":"#c2c6cf" }}/>
                 {LC_SERIES[k].label}
