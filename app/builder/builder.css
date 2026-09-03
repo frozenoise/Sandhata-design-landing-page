@@ -165,6 +165,42 @@
 /* ── Right panel ────────────────────────────────────────────── */
 .bld-main { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
 
+/* Instance tabs — one per open page, above the toolbar. Same rgba-tint
+   pattern as .bld-tabs button.on below (not a fixed opaque colour, so it
+   composites reasonably in both themes without the fixed-bg/adaptive-fg
+   mismatch documented elsewhere in this file). */
+.bld-instance-tabs {
+  display: flex; align-items: center; gap: 2px;
+  padding: 8px 12px 0; flex-shrink: 0;
+  border-bottom: 1px solid var(--doc-line);
+  overflow-x: auto;
+}
+.bld-instance-tab {
+  display: flex; align-items: center; gap: 6px;
+  max-width: 160px; padding: 7px 8px 7px 12px;
+  border-radius: var(--radius-sm) var(--radius-sm) 0 0;
+  font: 600 12px/1 var(--font-normal); color: var(--text-caption);
+  cursor: pointer; white-space: nowrap; flex-shrink: 0;
+  transition: background .1s, color .1s;
+}
+.bld-instance-tab:hover { background: rgba(20,22,24,0.05); }
+.bld-instance-tab.active { background: rgba(20,22,24,0.08); color: var(--text-title); }
+.bld-instance-tab-name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.bld-instance-tab-close {
+  width: 16px; height: 16px; border: none; background: none; padding: 0;
+  color: inherit; opacity: 0.5; cursor: pointer; border-radius: 3px;
+  display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+  transition: opacity .1s, background .1s;
+}
+.bld-instance-tab-close:hover { opacity: 1; background: var(--colour-error-100, #fee2e2); color: var(--colour-error-600); }
+.bld-instance-tab-add {
+  width: 26px; height: 26px; margin: 0 4px 6px; border: 1px solid var(--doc-line);
+  border-radius: var(--radius-sm); background: none; color: var(--text-caption);
+  cursor: pointer; display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0; transition: border-color .12s, color .12s;
+}
+.bld-instance-tab-add:hover { border-color: var(--colour-primaryblue-300); color: var(--colour-primaryblue-500); }
+
 .bld-toolbar {
   display: flex; align-items: center; justify-content: space-between;
   height: 52px; padding: 0 20px;
@@ -221,6 +257,75 @@
   margin: auto; display: flex; flex-direction: column; align-items: center; gap: 12px;
   color: var(--text-caption); font: 14px/1.5 var(--font-normal); text-align: center;
 }
+
+/* ── Visual editor (Edit view) ─────────────────────────────────────────── */
+.bld-edit-undo-redo { display: flex; gap: 4px; }
+.bld-edit-undo-redo button {
+  width: 28px; height: 28px; border: 1px solid var(--doc-line); border-radius: var(--radius-sm);
+  background: var(--doc-bg); color: var(--text-body); font-size: 14px; cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+}
+.bld-edit-undo-redo button:hover:not(:disabled) { border-color: var(--colour-primaryblue-300); color: var(--colour-primaryblue-500); }
+.bld-edit-undo-redo button:disabled { opacity: 0.35; cursor: not-allowed; }
+
+.bld-edit-layout { flex: 1; display: flex; gap: 20px; align-items: flex-start; min-width: 0; }
+.bld-edit-canvas-wrap { flex: 1; min-width: 0; display: flex; }
+/* Selected/hovered outlines are injected as scoped rules (see the inline
+   <style> next to this wrapper in page.tsx) targeting [data-node-id] —
+   cursor:pointer here signals the whole canvas is click-to-select. */
+.bld-edit-canvas-wrap [data-node-id] { cursor: grab; }
+.bld-edit-canvas-wrap [data-node-id]:active { cursor: grabbing; }
+
+.bld-prop-panel {
+  width: 260px; flex-shrink: 0; align-self: stretch;
+  background: var(--doc-surface); border: 1px solid var(--doc-line); border-radius: var(--radius-lg);
+  padding: 16px; overflow-y: auto;
+}
+.bld-prop-panel-head {
+  display: flex; align-items: center; justify-content: space-between;
+  margin-bottom: 14px; padding-bottom: 10px; border-bottom: 1px solid var(--doc-line);
+}
+.bld-prop-type { font: 700 13px/1 var(--font-bold); color: var(--text-title); }
+.bld-prop-empty { font: 12px/1.5 var(--font-normal); color: var(--text-caption); margin: 0; }
+.bld-prop-field { display: flex; flex-direction: column; gap: 5px; margin-bottom: 12px; }
+.bld-prop-field label {
+  font: 700 11px/1 var(--font-bold); color: var(--text-caption);
+  text-transform: uppercase; letter-spacing: 0.3px;
+}
+.bld-prop-field--bool { flex-direction: row; align-items: center; gap: 8px; cursor: pointer; }
+.bld-prop-field--bool input { margin: 0; }
+
+/* ── Phase 3: Insert/Properties tab switcher + component palette ────────── */
+.bld-inspector-tabs {
+  display: flex; gap: 4px; margin-bottom: 14px; padding-bottom: 10px;
+  border-bottom: 1px solid var(--doc-line);
+}
+.bld-inspector-tab {
+  flex: 1; padding: 6px 10px; border: 1px solid transparent; border-radius: var(--radius-sm);
+  background: transparent; color: var(--text-caption); font: 700 12px/1 var(--font-bold);
+  cursor: pointer;
+}
+.bld-inspector-tab:hover { color: var(--text-body); }
+.bld-inspector-tab--active {
+  background: var(--colour-primaryblue-50, #eef2ff); border-color: var(--colour-primaryblue-200);
+  color: var(--colour-primaryblue-600, var(--colour-primaryblue-500));
+}
+.bld-palette { display: flex; flex-direction: column; gap: 16px; }
+.bld-palette > .bld-prop-empty { margin-bottom: -4px; }
+.bld-palette-cat { display: flex; flex-direction: column; gap: 6px; }
+.bld-palette-cat-label {
+  font: 700 11px/1 var(--font-bold); color: var(--text-caption);
+  text-transform: uppercase; letter-spacing: 0.3px;
+}
+.bld-palette-chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.bld-palette-chip {
+  padding: 6px 10px; border: 1px solid var(--doc-line); border-radius: var(--radius-sm);
+  background: var(--doc-bg); color: var(--text-body); font: 12px/1 var(--font-normal);
+  cursor: grab; user-select: none;
+}
+.bld-palette-chip:active { cursor: grabbing; }
+.bld-palette-chip:hover { border-color: var(--colour-primaryblue-300); color: var(--colour-primaryblue-500); }
+
 .bld-empty { color: var(--text-caption); }
 .bld-spinner {
   width: 28px; height: 28px; border-radius: 50%;

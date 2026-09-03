@@ -7,6 +7,9 @@ import "../_docs/docs.css";
 import "./builder.css";
 import { SdTopNav } from "../_docs/shell";
 import { RenderTree, treeToJSX, type UINode } from "./Renderer";
+import { ensureIds, findNodeById, updateNodeProps, updateNodeText, removeNodeById, moveNode, insertNodeAt, createNode, CONTAINER_TYPES } from "./uiTree";
+import { PROP_SCHEMA, type PropField } from "./propSchema";
+import { PALETTE_CATEGORIES, paletteDefaults } from "./paletteDefaults";
 
 type ChatMsg = {
   role: "user" | "assistant";
@@ -95,6 +98,16 @@ const MSGS_STORAGE       = "sd-builder-msgs";
 const TREE_STORAGE       = "sd-builder-tree";
 const SESSION_ID_STORAGE = "sd-builder-session-id";
 const PROJECT_ID_STORAGE = "sd-builder-project-id";
+const OPEN_TABS_STORAGE  = "sd-builder-open-tabs";
+// Deliberately separate from SESSION_ID_STORAGE: that key only ever gets set
+// for a tab that's a real saved DB session (openTab's cache-hit branch,
+// loadSession's success path, or saveToDb) — a pure local draft tab (most of
+// signed-out use, or any brand-new page before its first successful save)
+// never touches it. Falling back to SESSION_ID_STORAGE to restore "which tab
+// was active" is wrong whenever the active tab was a draft: it'd resolve to
+// some other (or no) tab while msgs/tree correctly restore the real one,
+// activeTabId now disagreeing with what's on screen.
+const ACTIVE_TAB_STORAGE = "sd-builder-active-tab-id";
 
 function relativeTime(iso: string) {
   const diff = Date.now() - new Date(iso).getTime();
@@ -136,12 +149,47 @@ export default function BuilderPage() {
   const [keyDraft,      setKeyDraft]      = React.useState("");
   const [needsKey,      setNeedsKey]      = React.useState(false);
   const [tree,          setTree]          = React.useState<UINode | null>(null);
-  const [view,          setView]          = React.useState<"preview" | "code">("preview");
+  const [view,          setView]          = React.useState<"preview" | "code" | "edit">("preview");
   const [viewport,      setViewport]      = React.useState<"mobile" | "tablet" | "desktop">("tablet");
+  // ── Visual editor (edit view) — Phase 1: select + property-panel editing.
+  // Undo/redo is a snapshot stack, not a diff log — trees here are small
+  // (the AI's own system prompt caps them around ~200 nodes), so a
+  // structuredClone-cheap approach is simpler than a command log and doesn't
+  // need to be.
+  const [selectedNodeId, setSelectedNodeId] = React.useState<string | null>(null);
+  const [hoveredNodeId,  setHoveredNodeId]  = React.useState<string | null>(null);
+  const [editHistory,    setEditHistory]    = React.useState<UINode[]>([]);
+  const [editRedoStack,  setEditRedoStack]  = React.useState<UINode[]>([]);
+  // ── Phase 2: drag-to-reorder. Native HTML5 drag-and-drop, delegated on the
+  // canvas wrapper (same philosophy as click/hover selection above) rather
+  // than a per-node drag library — RenderNode already only needs one extra
+  // conditional attribute (`draggable`, gated on `editable`) to support this,
+  // with all position math and the actual tree mutation living here.
+  const [draggingNodeId, setDraggingNodeId] = React.useState<string | null>(null);
+  const [dropTarget, setDropTarget] = React.useState<{ id: string; position: "before" | "after" | "inside" } | null>(null);
+  // ── Phase 3: component palette + drag-to-insert. A drag is either an
+  // existing node (draggingNodeId, Phase 2) or a fresh palette chip
+  // (draggingPaletteType) — never both; onDragStart on each source clears
+  // the other. Both share the same onDragOver/onDrop position math and
+  // dropTarget state, branching only at the very end on which one is set.
+  const [draggingPaletteType, setDraggingPaletteType] = React.useState<string | null>(null);
+  // The right-side inspector panel context-switches between "insert a new
+  // element" and "edit the selected one" rather than adding a whole extra
+  // column — auto-follows selection (see the effect below) but the user can
+  // still switch to Insert manually to add a sibling near the current spot.
+  const [inspectorTab, setInspectorTab] = React.useState<"insert" | "properties">("insert");
   const [dbSessionId,   setDbSessionId]   = React.useState<string | null>(null);
   const [history,       setHistory]       = React.useState<HistoryItem[]>([]);
   const [showHistory,   setShowHistory]   = React.useState(false);
   const [histLoading,   setHistLoading]   = React.useState(false);
+  // ── Tabs: multiple open "instances" above the canvas, so switching between
+  // pages you're actively iterating on is one click, not a trip into History.
+  // tabCacheRef holds each open tab's msgs/tree in memory (a ref, not state —
+  // it doesn't need to trigger a render on its own) so re-focusing a tab you
+  // already visited this session is instant, no re-fetch.
+  const [openTabs,   setOpenTabs]   = React.useState<HistoryItem[]>([]);
+  const [activeTabId, setActiveTabId] = React.useState<string | null>(null);
+  const tabCacheRef = React.useRef<Record<string, { msgs: ChatMsg[]; tree: UINode | null }>>({});
   const [projects,        setProjects]        = React.useState<ProjectItem[]>([]);
   const [projLoading,     setProjLoading]     = React.useState(false);
   const [activeProjectId, setActiveProjectId] = React.useState<string | null>(null);
@@ -192,9 +240,10 @@ export default function BuilderPage() {
     setApiKey(savedKey);
     setKeyDraft(savedKey);
 
+    let hadRestoredMsgs = false;
     try {
       const rawMsgs = localStorage.getItem(MSGS_STORAGE);
-      if (rawMsgs) setMsgs(JSON.parse(rawMsgs));
+      if (rawMsgs) { setMsgs(JSON.parse(rawMsgs)); hadRestoredMsgs = JSON.parse(rawMsgs).length > 0; }
     } catch {}
 
     try {
@@ -207,7 +256,163 @@ export default function BuilderPage() {
 
     const savedProjectId = localStorage.getItem(PROJECT_ID_STORAGE);
     if (savedProjectId) setActiveProjectId(savedProjectId);
+
+    let restoredTabs: HistoryItem[] = [];
+    try {
+      const rawTabs = localStorage.getItem(OPEN_TABS_STORAGE);
+      if (rawTabs) restoredTabs = JSON.parse(rawTabs);
+    } catch {}
+    // Back-compat for a reload from before tabs existed — a saved session or
+    // an unsent draft that was active but never made it into a tab list —
+    // seed a single tab from whatever was restored above, rather than
+    // showing an empty tab strip while the canvas clearly has content in it.
+    if (restoredTabs.length === 0 && (savedId || hadRestoredMsgs)) {
+      const seedId = savedId ?? `draft-${Date.now()}`;
+      restoredTabs = [{ id: seedId, name: "Untitled", createdAt: new Date().toISOString(), updatedAt: new Date().toISOString(), projectId: savedProjectId ?? null }];
+    }
+    if (restoredTabs.length > 0) {
+      setOpenTabs(restoredTabs);
+      // The tab that was actually on screen at reload time, NOT whichever
+      // one happens to be a real saved session — see the ACTIVE_TAB_STORAGE
+      // comment above for why SESSION_ID_STORAGE alone isn't reliable here.
+      const savedActiveTabId = localStorage.getItem(ACTIVE_TAB_STORAGE);
+      setActiveTabId(savedActiveTabId ?? savedId ?? restoredTabs[0].id);
+    }
   }, []);
+
+  React.useEffect(() => {
+    activeTabId
+      ? localStorage.setItem(ACTIVE_TAB_STORAGE, activeTabId)
+      : localStorage.removeItem(ACTIVE_TAB_STORAGE);
+  }, [activeTabId]);
+
+  React.useEffect(() => {
+    openTabs.length > 0
+      ? localStorage.setItem(OPEN_TABS_STORAGE, JSON.stringify(openTabs))
+      : localStorage.removeItem(OPEN_TABS_STORAGE);
+  }, [openTabs]);
+
+  // Continuously mirrors the active tab's live content into tabCacheRef.
+  // Without this, only tabs that went through loadSession (a real DB fetch)
+  // or saveToDb (signed-in only) ever got cached — an unsaved draft tab
+  // (most of the signed-out flow, and any brand-new page before its first
+  // successful save) had nothing written for it, so switching back to it
+  // silently no-opped instead of restoring its content. This is what
+  // actually makes "switch between several open pages" work regardless of
+  // login/save state, not just for already-persisted sessions.
+  React.useEffect(() => {
+    if (!activeTabId) return;
+    tabCacheRef.current[activeTabId] = { msgs, tree };
+  }, [activeTabId, msgs, tree]);
+
+  // ── Visual editor: enter/leave "edit" view ──────────────────────────────
+  // Existing saved sessions' trees predate the `id` field on UINode — backfill
+  // lazily the moment edit mode is actually entered, rather than migrating
+  // every session up front. ensureIds returns the same reference if nothing
+  // needed adding, so this is a no-op re-render for an already-id'd tree.
+  React.useEffect(() => {
+    if (view !== "edit" || !tree) return;
+    const withIds = ensureIds(tree);
+    if (withIds !== tree) setTree(withIds);
+  }, [view, tree]);
+
+  // Undo/redo is scoped per open tab (matching tabCacheRef's per-tab
+  // caching) — switching tabs with edit history still pending would
+  // otherwise let you undo INTO a different page's tree.
+  React.useEffect(() => {
+    setSelectedNodeId(null);
+    setHoveredNodeId(null);
+    setEditHistory([]);
+    setEditRedoStack([]);
+    setDraggingNodeId(null);
+    setDraggingPaletteType(null);
+    setDropTarget(null);
+    setInspectorTab("insert");
+  }, [activeTabId]);
+
+  // Selecting something (by click, or right after a palette insert below)
+  // brings the inspector to Properties automatically — you shouldn't have to
+  // manually flip the tab every time just to see what you clicked.
+  React.useEffect(() => {
+    if (selectedNodeId) setInspectorTab("properties");
+  }, [selectedNodeId]);
+
+  const selectedNode = React.useMemo(
+    () => (tree && selectedNodeId ? findNodeById(tree, selectedNodeId) : null),
+    [tree, selectedNodeId]
+  );
+
+  // Every structural/property edit goes through this — pushes the
+  // pre-edit tree onto the undo stack, clears redo (a fresh edit
+  // invalidates whatever "future" redo pointed at), and commits.
+  function commitTreeEdit(nextTree: UINode | null) {
+    if (!tree) return;
+    setEditHistory(h => [...h, tree].slice(-50));
+    setEditRedoStack([]);
+    setTree(nextTree);
+  }
+
+  function undoEdit() {
+    if (!tree || editHistory.length === 0) return;
+    const prev = editHistory[editHistory.length - 1];
+    setEditHistory(h => h.slice(0, -1));
+    setEditRedoStack(r => [...r, tree]);
+    setTree(prev);
+  }
+
+  function redoEdit() {
+    if (!tree || editRedoStack.length === 0) return;
+    const next = editRedoStack[editRedoStack.length - 1];
+    setEditRedoStack(r => r.slice(0, -1));
+    setEditHistory(h => [...h, tree]);
+    setTree(next);
+  }
+
+  function updateSelectedProp(key: string, value: any) {
+    if (!tree || !selectedNodeId) return;
+    commitTreeEdit(updateNodeProps(tree, selectedNodeId, { [key]: value }));
+  }
+
+  function updateSelectedText(text: string) {
+    if (!tree || !selectedNodeId) return;
+    commitTreeEdit(updateNodeText(tree, selectedNodeId, text));
+  }
+
+  function deleteSelectedNode() {
+    if (!tree || !selectedNodeId) return;
+    const next = removeNodeById(tree, selectedNodeId);
+    setSelectedNodeId(null);
+    // next === null means the root itself was deleted (cleared canvas) —
+    // commitTreeEdit accepts that directly; it still goes through
+    // history/redo and gets flushed back into the chat like any other edit.
+    commitTreeEdit(next);
+  }
+
+  // Folds any edits made in "edit" view back into the chat transcript as a
+  // single synthetic assistant turn when you leave it — not on every
+  // keystroke/commit, which would spam the transcript. This is deliberately
+  // NOT a parallel/independent mutation path: send()'s system prompt already
+  // tells the model its prior JSON is in the conversation history as its own
+  // last assistant message and to modify it, so a visually-edited tree just
+  // becomes the AI's next starting point for free, same as any chat-driven
+  // edit — and it goes through the exact same saveToDb() the chat flow uses.
+  function flushVisualEditsToChat() {
+    if (editHistory.length === 0) return;
+    const isFirst = msgs.length === 0;
+    const updatedMsgs: ChatMsg[] = [
+      ...msgs,
+      { role: "assistant", content: tree ? JSON.stringify(tree) : "", label: "Edited visually", tree: tree ?? undefined },
+    ];
+    setMsgs(updatedMsgs);
+    if (tree) saveToDb(updatedMsgs, tree, isFirst, activeTabId);
+    setEditHistory([]);
+    setEditRedoStack([]);
+  }
+
+  function changeView(next: "preview" | "code" | "edit") {
+    if (view === "edit" && next !== "edit") flushVisualEditsToChat();
+    setView(next);
+  }
 
   // ── Auth modal: show once per session for unauthenticated users ────────
   React.useEffect(() => {
@@ -329,6 +534,10 @@ export default function BuilderPage() {
     }
   }
 
+  // Fetches a session's full content from the network and applies it as the
+  // active tab. Populates tabCacheRef so re-visiting this tab later this
+  // session skips the fetch entirely — call openTab() for that fast path,
+  // not this directly, unless you specifically need a forced refetch.
   async function loadSession(id: string) {
     setShowHistory(false);
     const res = await fetch(`/api/sessions/${id}`);
@@ -336,15 +545,68 @@ export default function BuilderPage() {
     const { session: s } = await res.json();
     const loadedMsgs: ChatMsg[] = s.messages ?? [];
     const lastTree = [...loadedMsgs].reverse().find(m => m.role === "assistant" && m.tree)?.tree ?? null;
+    tabCacheRef.current[id] = { msgs: loadedMsgs, tree: lastTree as UINode | null };
     setMsgs(loadedMsgs);
     setTree(lastTree as UINode | null);
     setDbSessionId(id);
+    setActiveTabId(id);
     setView("preview");
     localStorage.setItem(SESSION_ID_STORAGE, id);
     // Follow the session into its project's context — switching pages
     // within a project (the "quick switch" part of Projects v1) should
     // leave you positioned in that project, not wherever you were before.
     setActiveProjectId(s.projectId ?? null);
+    setOpenTabs(tabs => {
+      const entry: HistoryItem = { id, name: s.name, createdAt: s.createdAt, updatedAt: s.updatedAt, projectId: s.projectId ?? null };
+      const exists = tabs.some(t => t.id === id);
+      return exists ? tabs.map(t => (t.id === id ? entry : t)) : [...tabs, entry];
+    });
+  }
+
+  // Opens (or focuses, if already open) a tab for the given session. Restores
+  // instantly from tabCacheRef when available — the actual "quick switch
+  // between several pages you're iterating on" payoff of having tabs at all —
+  // and only falls back to loadSession's network fetch on a genuine first open.
+  function openTab(item: HistoryItem) {
+    setShowHistory(false);
+    setOpenTabs(tabs => (tabs.some(t => t.id === item.id) ? tabs : [...tabs, item]));
+    const cached = tabCacheRef.current[item.id];
+    if (cached) {
+      setMsgs(cached.msgs);
+      setTree(cached.tree);
+      setDbSessionId(item.id);
+      setActiveTabId(item.id);
+      setView("preview");
+      localStorage.setItem(SESSION_ID_STORAGE, item.id);
+      setActiveProjectId(item.projectId ?? null);
+    } else {
+      loadSession(item.id);
+    }
+  }
+
+  // Closes a tab (just removes it from the strip — the saved session itself
+  // is untouched). If it was the active tab, focuses a neighbor, or clears
+  // the canvas if that was the last tab open.
+  function closeTab(id: string, e: React.MouseEvent) {
+    e.stopPropagation();
+    delete tabCacheRef.current[id];
+    const idx = openTabs.findIndex(t => t.id === id);
+    const next = openTabs.filter(t => t.id !== id);
+    setOpenTabs(next);
+    if (activeTabId === id) {
+      const neighbor = next[idx] ?? next[idx - 1] ?? null;
+      if (neighbor) openTab(neighbor); else reset();
+    }
+  }
+
+  // Opens a new blank draft tab. Distinct from reset() (which just clears the
+  // canvas with no tab bookkeeping) — this is the user-facing "+" action.
+  function newTab() {
+    const draftId = `draft-${Date.now()}`;
+    const draft: HistoryItem = { id: draftId, name: "Untitled", createdAt: new Date().toISOString(), updatedAt: new Date().toISOString(), projectId: activeProjectId };
+    setOpenTabs(tabs => [...tabs, draft]);
+    reset();
+    setActiveTabId(draftId);
   }
 
   async function deleteSession(id: string, e: React.MouseEvent) {
@@ -355,7 +617,18 @@ export default function BuilderPage() {
     if (deleted?.projectId) {
       setProjects(ps => ps.map(p => p.id === deleted.projectId ? { ...p, sessionCount: Math.max(0, p.sessionCount - 1) } : p));
     }
-    if (dbSessionId === id) reset();
+    delete tabCacheRef.current[id];
+    const idx = openTabs.findIndex(t => t.id === id);
+    if (idx !== -1) {
+      const next = openTabs.filter(t => t.id !== id);
+      setOpenTabs(next);
+      if (activeTabId === id) {
+        const neighbor = next[idx] ?? next[idx - 1] ?? null;
+        if (neighbor) openTab(neighbor); else reset();
+      }
+    } else if (dbSessionId === id) {
+      reset();
+    }
   }
 
   // ── Project helpers ──────────────────────────────────────────────────────
@@ -400,7 +673,12 @@ export default function BuilderPage() {
     setProjects(ps => ps.filter(p => p.id !== id));
     setHistory(h => h.filter(s => s.projectId !== id));
     if (activeProjectId === id) setActiveProjectId(null);
-    if (dbSessionId && containedIds.includes(dbSessionId)) reset();
+    containedIds.forEach(cid => delete tabCacheRef.current[cid]);
+    const remainingTabs = openTabs.filter(t => !containedIds.includes(t.id));
+    setOpenTabs(remainingTabs);
+    if (dbSessionId && containedIds.includes(dbSessionId)) {
+      if (remainingTabs[0]) openTab(remainingTabs[0]); else reset();
+    }
   }
 
   function toggleProjectExpand(id: string) {
@@ -705,7 +983,12 @@ export default function BuilderPage() {
     }
   }, [githubModalProjectId, githubInstallations]);
 
-  async function saveToDb(updatedMsgs: ChatMsg[], updatedTree: UINode, isFirst: boolean) {
+  // `currentTabId` is passed explicitly rather than read from the
+  // `activeTabId` closure: when called from send() right after that same
+  // call created a draft tab, the state update hasn't flushed into this
+  // closure yet (same synchronous invocation, not yet re-rendered) — reading
+  // `activeTabId` here would still see the pre-draft value (often null).
+  async function saveToDb(updatedMsgs: ChatMsg[], updatedTree: UINode, isFirst: boolean, currentTabId: string | null) {
     if (!isLoggedIn) return;
     const name = updatedMsgs.find(m => m.role === "user")?.content?.slice(0, 120) || "Untitled";
     try {
@@ -718,12 +1001,26 @@ export default function BuilderPage() {
         if (res.ok) {
           const d = await res.json();
           const newId = d.session.id;
+          const oldTabId = currentTabId ?? dbSessionId ?? activeTabId; // the draft tab this content was living under
           setDbSessionId(newId);
+          setActiveTabId(newId);
           localStorage.setItem(SESSION_ID_STORAGE, newId);
           setHistory(h => [d.session, ...h]);
           if (activeProjectId) {
             setProjects(ps => ps.map(p => p.id === activeProjectId ? { ...p, sessionCount: p.sessionCount + 1 } : p));
           }
+          // The draft tab's synthetic id needs to become the real session id
+          // now that one exists — same tab, same open position, real identity.
+          // Falls back to appending rather than silently dropping the tab if,
+          // for some reason, no tab was tracking this content yet.
+          tabCacheRef.current[newId] = { msgs: updatedMsgs, tree: updatedTree };
+          if (oldTabId) delete tabCacheRef.current[oldTabId];
+          setOpenTabs(tabs => {
+            const matched = tabs.some(t => t.id === oldTabId);
+            return matched
+              ? tabs.map(t => (t.id === oldTabId ? { ...d.session, name } : t))
+              : [...tabs, { ...d.session, name }];
+          });
         }
       } else {
         await fetch(`/api/sessions/${dbSessionId}`, {
@@ -731,9 +1028,11 @@ export default function BuilderPage() {
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ messages: updatedMsgs, tree: updatedTree }),
         });
+        tabCacheRef.current[dbSessionId] = { msgs: updatedMsgs, tree: updatedTree };
         setHistory(h =>
           h.map(s => s.id === dbSessionId ? { ...s, updatedAt: new Date().toISOString() } : s)
         );
+        setOpenTabs(tabs => tabs.map(t => (t.id === dbSessionId ? { ...t, updatedAt: new Date().toISOString() } : t)));
       }
     } catch {}
   }
@@ -784,6 +1083,19 @@ export default function BuilderPage() {
     setInput("");
     setNeedsKey(false);
 
+    // A first message sent with no tab open yet (page just loaded, nothing
+    // clicked "+" or opened from History) still needs one — otherwise the
+    // session this creates has nowhere to show up in the tab strip. Resolve
+    // synchronously into a local var: setActiveTabId below won't be visible
+    // via the `activeTabId` closure until next render, so saveToDb (called
+    // later in this same invocation) needs it passed explicitly, not re-read.
+    let currentTabId = activeTabId;
+    if (!currentTabId) {
+      currentTabId = `draft-${Date.now()}`;
+      setActiveTabId(currentTabId);
+      setOpenTabs(tabs => [...tabs, { id: currentTabId!, name: "Untitled", createdAt: new Date().toISOString(), updatedAt: new Date().toISOString(), projectId: activeProjectId }]);
+    }
+
     const userMsg: ChatMsg = { role: "user", content: txt };
     const next = [...msgs, userMsg];
     setMsgs(next);
@@ -811,7 +1123,7 @@ export default function BuilderPage() {
           { role: "assistant", content: data.raw || JSON.stringify(newTree), label: isFirst ? "Interface generated" : "Interface updated", tree: newTree },
         ];
         setMsgs(updatedMsgs);
-        await saveToDb(updatedMsgs, newTree, isFirst);
+        await saveToDb(updatedMsgs, newTree, isFirst, currentTabId);
       }
     } catch (e: any) {
       setMsgs(prev => [...prev, { role: "assistant", content: "", isError: true, errorText: e?.message || "Network error" }]);
@@ -830,6 +1142,7 @@ export default function BuilderPage() {
     setNeedsKey(false);
     setInput("");
     setDbSessionId(null);
+    setActiveTabId(null);
     localStorage.removeItem(MSGS_STORAGE);
     localStorage.removeItem(TREE_STORAGE);
     localStorage.removeItem(SESSION_ID_STORAGE);
@@ -920,7 +1233,7 @@ export default function BuilderPage() {
   // into a different project (or out of one) without deleting/recreating it.
   function renderSessionRow(s: HistoryItem) {
     return (
-      <div key={s.id} className={`bld-history-item${s.id === dbSessionId ? " active" : ""}`} onClick={() => loadSession(s.id)}>
+      <div key={s.id} className={`bld-history-item${s.id === dbSessionId ? " active" : ""}`} onClick={() => openTab(s)}>
         <span className="bld-history-name">{s.name}</span>
         <div className="bld-history-meta">
           <span className="bld-history-time">{relativeTime(s.updatedAt)}</span>
@@ -938,6 +1251,57 @@ export default function BuilderPage() {
             <XIcon />
           </button>
         </div>
+      </div>
+    );
+  }
+
+  // One field row in the visual editor's property panel. Text/number fields
+  // commit on blur (not per-keystroke — an undo entry per keystroke would
+  // make undo useless), keyed on selectedNodeId+field.key so switching the
+  // selected node remounts the input with the new node's current value
+  // instead of an uncontrolled input carrying over stale text mid-edit.
+  function renderPropField(field: PropField, node: UINode) {
+    const current = node.props?.[field.key];
+    const fieldKey = `${node.id}:${field.key}`;
+    if (field.kind === "boolean") {
+      return (
+        <label key={fieldKey} className="bld-prop-field bld-prop-field--bool">
+          <input type="checkbox" checked={!!current} onChange={e => updateSelectedProp(field.key, e.target.checked)} />
+          {field.label}
+        </label>
+      );
+    }
+    if (field.kind === "select") {
+      return (
+        <div key={fieldKey} className="bld-prop-field">
+          <label>{field.label}</label>
+          <select className="bld-key-input" value={current ?? ""} onChange={e => updateSelectedProp(field.key, e.target.value || undefined)}>
+            <option value="">—</option>
+            {field.options.map(o => <option key={o} value={o}>{o}</option>)}
+          </select>
+        </div>
+      );
+    }
+    if (field.kind === "number") {
+      return (
+        <div key={fieldKey} className="bld-prop-field">
+          <label>{field.label}</label>
+          <input
+            key={fieldKey} className="bld-key-input" type="number"
+            defaultValue={current ?? ""}
+            onBlur={e => updateSelectedProp(field.key, e.target.value === "" ? undefined : Number(e.target.value))}
+          />
+        </div>
+      );
+    }
+    return (
+      <div key={fieldKey} className="bld-prop-field">
+        <label>{field.label}</label>
+        <input
+          key={fieldKey} className="bld-key-input" type="text"
+          defaultValue={current ?? ""}
+          onBlur={e => updateSelectedProp(field.key, e.target.value || undefined)}
+        />
       </div>
     );
   }
@@ -1188,7 +1552,7 @@ export default function BuilderPage() {
                   </button>
                 )}
                 {msgs.length > 0 && (
-                  <button className="bld-new-btn" onClick={reset}>New</button>
+                  <button className="bld-new-btn" onClick={newTab}>New</button>
                 )}
 
                 {/* Profile menu — sign in/out + API key live here, off the main chat */}
@@ -1475,10 +1839,37 @@ export default function BuilderPage() {
 
         {/* ── Right: canvas ───────────────────────────────────────── */}
         <main className="bld-main">
+          {/* Instance tabs — replaces having to dig into History to switch
+              between pages you're actively working on. Each tab caches its
+              own msgs/tree (tabCacheRef) so re-focusing one already visited
+              this session is instant, not a re-fetch. Not gated behind
+              isLoggedIn: an unsent draft still gets a tab, matching how the
+              canvas already worked pre-tabs for signed-out use. */}
+          {openTabs.length > 0 && (
+            <div className="bld-instance-tabs">
+              {openTabs.map(t => (
+                <div
+                  key={t.id}
+                  className={`bld-instance-tab${t.id === activeTabId ? " active" : ""}`}
+                  onClick={() => openTab(t)}
+                  title={t.name}
+                >
+                  <span className="bld-instance-tab-name">{t.name}</span>
+                  <button className="bld-instance-tab-close" onClick={(e) => closeTab(t.id, e)} title="Close tab">
+                    <XIcon />
+                  </button>
+                </div>
+              ))}
+              <button className="bld-instance-tab-add" onClick={newTab} title="New page">
+                <PlusIcon />
+              </button>
+            </div>
+          )}
           <div className="bld-toolbar">
             <div className="bld-tabs">
-              <button className={view === "preview" ? "on" : ""} onClick={() => setView("preview")}>Preview</button>
-              <button className={view === "code" ? "on" : ""} onClick={() => setView("code")} disabled={!tree}>Code</button>
+              <button className={view === "preview" ? "on" : ""} onClick={() => changeView("preview")}>Preview</button>
+              <button className={view === "code" ? "on" : ""} onClick={() => changeView("code")} disabled={!tree}>Code</button>
+              <button className={view === "edit" ? "on" : ""} onClick={() => changeView("edit")} disabled={!tree} title="Click to select and edit properties, drag to reorder">Edit</button>
             </div>
             <div className="bld-toolbar-right">
               {view === "preview" && (
@@ -1492,6 +1883,12 @@ export default function BuilderPage() {
               )}
               {tree && view === "code" && (
                 <button className="bld-copy" onClick={() => navigator.clipboard.writeText(code)}>Copy</button>
+              )}
+              {view === "edit" && (
+                <div className="bld-edit-undo-redo">
+                  <button onClick={undoEdit} disabled={editHistory.length === 0} title="Undo">↶</button>
+                  <button onClick={redoEdit} disabled={editRedoStack.length === 0} title="Redo">↷</button>
+                </div>
               )}
               {tree && (
                 <button className="bld-export-btn" onClick={exportZip} title="Download component as ZIP">
@@ -1513,17 +1910,208 @@ export default function BuilderPage() {
                 <span>Generating interface…</span>
               </div>
             )}
-            {tree && (
-              view === "preview" ? (
+            {tree && view === "preview" && (
+              <div
+                className={`bld-surface bld-surface--${viewport}`}
+                style={{ opacity: loading ? 0.55 : 1, transition: "opacity 0.2s" }}
+              >
+                <RenderTree tree={tree} />
+              </div>
+            )}
+            {tree && view === "code" && (
+              <pre className="bld-code">{code}</pre>
+            )}
+            {tree && view === "edit" && (
+              <div className="bld-edit-layout">
+                {/* Selection/hover resolved via a single delegated listener
+                    here, using RenderNode's data-node-id attribute — not
+                    handlers threaded through every Renderer.tsx branch. This
+                    also blocks the underlying component's own interactivity
+                    (a Switch toggling, a link navigating) while in edit mode:
+                    stopPropagation on the capture phase never lets the click
+                    reach the real element's own bubble-phase handler. */}
                 <div
-                  className={`bld-surface bld-surface--${viewport}`}
-                  style={{ opacity: loading ? 0.55 : 1, transition: "opacity 0.2s" }}
+                  className="bld-edit-canvas-wrap"
+                  onClickCapture={(e) => {
+                    // A real drag ends with a native `dragend`/`drop`, not a
+                    // `click` — but some browsers still fire a trailing click
+                    // right after, which would otherwise re-select whatever's
+                    // under the cursor at drop time. Swallow it once.
+                    if (draggingNodeId) { e.preventDefault(); e.stopPropagation(); return; }
+                    const el = (e.target as HTMLElement).closest("[data-node-id]");
+                    if (!el) { setSelectedNodeId(null); return; }
+                    e.preventDefault();
+                    e.stopPropagation();
+                    setSelectedNodeId(el.getAttribute("data-node-id"));
+                  }}
+                  onMouseOver={(e) => {
+                    const el = (e.target as HTMLElement).closest("[data-node-id]");
+                    setHoveredNodeId(el ? el.getAttribute("data-node-id") : null);
+                  }}
+                  onMouseLeave={() => setHoveredNodeId(null)}
+                  onDragStart={(e) => {
+                    const el = (e.target as HTMLElement).closest("[data-node-id]");
+                    const id = el?.getAttribute("data-node-id");
+                    if (!id) return;
+                    setSelectedNodeId(id);
+                    setDraggingNodeId(id);
+                    setDraggingPaletteType(null); // mutually exclusive with a palette drag
+                    e.dataTransfer.effectAllowed = "move";
+                    // Firefox requires setData to actually start a drag; the
+                    // payload itself is unused — the real source of truth is
+                    // `draggingNodeId` React state, read directly in onDrop.
+                    e.dataTransfer.setData("text/plain", id);
+                  }}
+                  onDragOver={(e) => {
+                    // One position calculation serves both drag sources
+                    // (Phase 2 reorder and Phase 3 palette insert) — same
+                    // "hover a real node, read before/after/inside from
+                    // cursor position within it" logic either way.
+                    if ((!draggingNodeId && !draggingPaletteType) || !tree) return;
+                    e.preventDefault(); // required for onDrop to ever fire
+                    const el = (e.target as HTMLElement).closest("[data-node-id]") as HTMLElement | null;
+                    const targetId = el?.getAttribute("data-node-id");
+                    if (!el || !targetId || targetId === draggingNodeId) { setDropTarget(null); return; }
+                    const targetNode = findNodeById(tree, targetId);
+                    if (!targetNode) { setDropTarget(null); return; }
+                    const rect = el.getBoundingClientRect();
+                    const relY = rect.height > 0 ? (e.clientY - rect.top) / rect.height : 0.5;
+                    const isContainer = CONTAINER_TYPES.has(targetNode.type);
+                    // A container gets a dead zone in its middle 50% that means
+                    // "drop inside me" — its top/bottom quarters still mean
+                    // "insert as my sibling", same as a non-container leaf.
+                    const position: "before" | "after" | "inside" =
+                      isContainer ? (relY < 0.25 ? "before" : relY > 0.75 ? "after" : "inside")
+                                   : (relY < 0.5 ? "before" : "after");
+                    setDropTarget(prev => (prev?.id === targetId && prev.position === position ? prev : { id: targetId, position }));
+                  }}
+                  onDragLeave={(e) => {
+                    if (!(e.currentTarget as HTMLElement).contains(e.relatedTarget as Node)) setDropTarget(null);
+                  }}
+                  onDrop={(e) => {
+                    e.preventDefault();
+                    if (dropTarget && tree) {
+                      if (draggingPaletteType) {
+                        const defaults = paletteDefaults(draggingPaletteType);
+                        const newNode = createNode(draggingPaletteType, defaults.props, defaults.children);
+                        commitTreeEdit(insertNodeAt(tree, dropTarget.id, dropTarget.position, newNode));
+                        setSelectedNodeId(newNode.id ?? null); // see what you just placed, right away
+                      } else if (draggingNodeId) {
+                        // Refuse a drop that would nest the dragged subtree
+                        // inside itself — moveNode() already guards against
+                        // silently losing the node in that case, but checking
+                        // here first avoids even attempting a doomed move.
+                        const draggedNode = findNodeById(tree, draggingNodeId);
+                        const dropsIntoOwnSubtree = draggedNode ? !!findNodeById(draggedNode, dropTarget.id) : true;
+                        if (!dropsIntoOwnSubtree) {
+                          commitTreeEdit(moveNode(tree, draggingNodeId, dropTarget.id, dropTarget.position));
+                        }
+                      }
+                    }
+                    setDraggingNodeId(null);
+                    setDraggingPaletteType(null);
+                    setDropTarget(null);
+                  }}
+                  onDragEnd={() => { setDraggingNodeId(null); setDraggingPaletteType(null); setDropTarget(null); }}
                 >
-                  <RenderTree tree={tree} />
+                  {/* Highlight via a scoped attribute-selector rule rather
+                      than threading selected/hovered state into RenderNode —
+                      the whole tree already re-renders on every edit anyway,
+                      so this stays correct for free with no extra plumbing. */}
+                  <style>{[
+                    selectedNodeId && `.bld-edit-canvas-wrap [data-node-id="${selectedNodeId}"] { outline: 2px solid var(--colour-primaryblue-500) !important; outline-offset: 1px; }`,
+                    hoveredNodeId && hoveredNodeId !== selectedNodeId && !draggingNodeId && `.bld-edit-canvas-wrap [data-node-id="${hoveredNodeId}"] { outline: 1px dashed var(--colour-primaryblue-300) !important; outline-offset: 1px; }`,
+                    draggingNodeId && `.bld-edit-canvas-wrap [data-node-id="${draggingNodeId}"] { opacity: 0.4; }`,
+                    // Drop indicator: a solid edge for a before/after sibling
+                    // insert, a dashed outline for dropping inside a container
+                    // — inset box-shadow rather than border/outline so it
+                    // doesn't shift layout or fight the selection/hover outline
+                    // on the same element.
+                    dropTarget?.position === "before" && `.bld-edit-canvas-wrap [data-node-id="${dropTarget.id}"] { box-shadow: inset 0 3px 0 0 var(--colour-primaryblue-500) !important; }`,
+                    dropTarget?.position === "after" && `.bld-edit-canvas-wrap [data-node-id="${dropTarget.id}"] { box-shadow: inset 0 -3px 0 0 var(--colour-primaryblue-500) !important; }`,
+                    dropTarget?.position === "inside" && `.bld-edit-canvas-wrap [data-node-id="${dropTarget.id}"] { outline: 2px dashed var(--colour-primaryblue-500) !important; outline-offset: -2px; }`,
+                  ].filter(Boolean).join("\n")}</style>
+                  <div className={`bld-surface bld-surface--${viewport}`}>
+                    <RenderTree tree={tree} editable />
+                  </div>
                 </div>
-              ) : (
-                <pre className="bld-code">{code}</pre>
-              )
+
+                <div className="bld-prop-panel">
+                  {/* Insert vs Properties share this one panel rather than
+                      adding a fourth layout column — selecting an element
+                      auto-flips here to Properties (effect above), but the
+                      user can flip back to Insert manually to drop a sibling
+                      near whatever's currently selected. */}
+                  <div className="bld-inspector-tabs">
+                    <button
+                      className={`bld-inspector-tab${inspectorTab === "insert" ? " bld-inspector-tab--active" : ""}`}
+                      onClick={() => setInspectorTab("insert")}
+                    >
+                      Insert
+                    </button>
+                    <button
+                      className={`bld-inspector-tab${inspectorTab === "properties" ? " bld-inspector-tab--active" : ""}`}
+                      onClick={() => setInspectorTab("properties")}
+                    >
+                      Properties
+                    </button>
+                  </div>
+
+                  {inspectorTab === "insert" ? (
+                    <div className="bld-palette">
+                      <p className="bld-prop-empty">Drag a component onto the canvas to add it.</p>
+                      {PALETTE_CATEGORIES.map(cat => (
+                        <div key={cat.label} className="bld-palette-cat">
+                          <span className="bld-palette-cat-label">{cat.label}</span>
+                          <div className="bld-palette-chips">
+                            {cat.types.map(type => (
+                              <div
+                                key={type}
+                                className="bld-palette-chip"
+                                draggable
+                                onDragStart={(e) => {
+                                  setDraggingPaletteType(type);
+                                  setDraggingNodeId(null); // mutually exclusive with reordering an existing node
+                                  e.dataTransfer.effectAllowed = "copy";
+                                  e.dataTransfer.setData("text/plain", `palette:${type}`);
+                                }}
+                                onDragEnd={() => { setDraggingPaletteType(null); setDropTarget(null); }}
+                              >
+                                {type}
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  ) : !selectedNode ? (
+                    <p className="bld-prop-empty">Click an element in the canvas to edit it.</p>
+                  ) : (
+                    <>
+                      <div className="bld-prop-panel-head">
+                        <span className="bld-prop-type">{selectedNode.type}</span>
+                        <button className="bld-history-del" onClick={deleteSelectedNode} title="Delete element">
+                          <XIcon />
+                        </button>
+                      </div>
+                      {typeof selectedNode.children === "string" && (
+                        <div className="bld-prop-field">
+                          <label>Text content</label>
+                          <input
+                            key={`${selectedNode.id}:__text`} className="bld-key-input" type="text"
+                            defaultValue={selectedNode.children}
+                            onBlur={e => updateSelectedText(e.target.value)}
+                          />
+                        </div>
+                      )}
+                      {(PROP_SCHEMA[selectedNode.type] ?? []).map(field => renderPropField(field, selectedNode))}
+                      {!PROP_SCHEMA[selectedNode.type] && typeof selectedNode.children !== "string" && (
+                        <p className="bld-prop-empty">No editable properties for this element yet.</p>
+                      )}
+                    </>
+                  )}
+                </div>
+              </div>
             )}
           </div>
         </main>
