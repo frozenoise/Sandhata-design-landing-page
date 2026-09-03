@@ -95,6 +95,16 @@ const MSGS_STORAGE       = "sd-builder-msgs";
 const TREE_STORAGE       = "sd-builder-tree";
 const SESSION_ID_STORAGE = "sd-builder-session-id";
 const PROJECT_ID_STORAGE = "sd-builder-project-id";
+const OPEN_TABS_STORAGE  = "sd-builder-open-tabs";
+// Deliberately separate from SESSION_ID_STORAGE: that key only ever gets set
+// for a tab that's a real saved DB session (openTab's cache-hit branch,
+// loadSession's success path, or saveToDb) — a pure local draft tab (most of
+// signed-out use, or any brand-new page before its first successful save)
+// never touches it. Falling back to SESSION_ID_STORAGE to restore "which tab
+// was active" is wrong whenever the active tab was a draft: it'd resolve to
+// some other (or no) tab while msgs/tree correctly restore the real one,
+// activeTabId now disagreeing with what's on screen.
+const ACTIVE_TAB_STORAGE = "sd-builder-active-tab-id";
 
 function relativeTime(iso: string) {
   const diff = Date.now() - new Date(iso).getTime();
@@ -142,6 +152,14 @@ export default function BuilderPage() {
   const [history,       setHistory]       = React.useState<HistoryItem[]>([]);
   const [showHistory,   setShowHistory]   = React.useState(false);
   const [histLoading,   setHistLoading]   = React.useState(false);
+  // ── Tabs: multiple open "instances" above the canvas, so switching between
+  // pages you're actively iterating on is one click, not a trip into History.
+  // tabCacheRef holds each open tab's msgs/tree in memory (a ref, not state —
+  // it doesn't need to trigger a render on its own) so re-focusing a tab you
+  // already visited this session is instant, no re-fetch.
+  const [openTabs,   setOpenTabs]   = React.useState<HistoryItem[]>([]);
+  const [activeTabId, setActiveTabId] = React.useState<string | null>(null);
+  const tabCacheRef = React.useRef<Record<string, { msgs: ChatMsg[]; tree: UINode | null }>>({});
   const [projects,        setProjects]        = React.useState<ProjectItem[]>([]);
   const [projLoading,     setProjLoading]     = React.useState(false);
   const [activeProjectId, setActiveProjectId] = React.useState<string | null>(null);
@@ -192,9 +210,10 @@ export default function BuilderPage() {
     setApiKey(savedKey);
     setKeyDraft(savedKey);
 
+    let hadRestoredMsgs = false;
     try {
       const rawMsgs = localStorage.getItem(MSGS_STORAGE);
-      if (rawMsgs) setMsgs(JSON.parse(rawMsgs));
+      if (rawMsgs) { setMsgs(JSON.parse(rawMsgs)); hadRestoredMsgs = JSON.parse(rawMsgs).length > 0; }
     } catch {}
 
     try {
@@ -207,7 +226,54 @@ export default function BuilderPage() {
 
     const savedProjectId = localStorage.getItem(PROJECT_ID_STORAGE);
     if (savedProjectId) setActiveProjectId(savedProjectId);
+
+    let restoredTabs: HistoryItem[] = [];
+    try {
+      const rawTabs = localStorage.getItem(OPEN_TABS_STORAGE);
+      if (rawTabs) restoredTabs = JSON.parse(rawTabs);
+    } catch {}
+    // Back-compat for a reload from before tabs existed — a saved session or
+    // an unsent draft that was active but never made it into a tab list —
+    // seed a single tab from whatever was restored above, rather than
+    // showing an empty tab strip while the canvas clearly has content in it.
+    if (restoredTabs.length === 0 && (savedId || hadRestoredMsgs)) {
+      const seedId = savedId ?? `draft-${Date.now()}`;
+      restoredTabs = [{ id: seedId, name: "Untitled", createdAt: new Date().toISOString(), updatedAt: new Date().toISOString(), projectId: savedProjectId ?? null }];
+    }
+    if (restoredTabs.length > 0) {
+      setOpenTabs(restoredTabs);
+      // The tab that was actually on screen at reload time, NOT whichever
+      // one happens to be a real saved session — see the ACTIVE_TAB_STORAGE
+      // comment above for why SESSION_ID_STORAGE alone isn't reliable here.
+      const savedActiveTabId = localStorage.getItem(ACTIVE_TAB_STORAGE);
+      setActiveTabId(savedActiveTabId ?? savedId ?? restoredTabs[0].id);
+    }
   }, []);
+
+  React.useEffect(() => {
+    activeTabId
+      ? localStorage.setItem(ACTIVE_TAB_STORAGE, activeTabId)
+      : localStorage.removeItem(ACTIVE_TAB_STORAGE);
+  }, [activeTabId]);
+
+  React.useEffect(() => {
+    openTabs.length > 0
+      ? localStorage.setItem(OPEN_TABS_STORAGE, JSON.stringify(openTabs))
+      : localStorage.removeItem(OPEN_TABS_STORAGE);
+  }, [openTabs]);
+
+  // Continuously mirrors the active tab's live content into tabCacheRef.
+  // Without this, only tabs that went through loadSession (a real DB fetch)
+  // or saveToDb (signed-in only) ever got cached — an unsaved draft tab
+  // (most of the signed-out flow, and any brand-new page before its first
+  // successful save) had nothing written for it, so switching back to it
+  // silently no-opped instead of restoring its content. This is what
+  // actually makes "switch between several open pages" work regardless of
+  // login/save state, not just for already-persisted sessions.
+  React.useEffect(() => {
+    if (!activeTabId) return;
+    tabCacheRef.current[activeTabId] = { msgs, tree };
+  }, [activeTabId, msgs, tree]);
 
   // ── Auth modal: show once per session for unauthenticated users ────────
   React.useEffect(() => {
@@ -329,6 +395,10 @@ export default function BuilderPage() {
     }
   }
 
+  // Fetches a session's full content from the network and applies it as the
+  // active tab. Populates tabCacheRef so re-visiting this tab later this
+  // session skips the fetch entirely — call openTab() for that fast path,
+  // not this directly, unless you specifically need a forced refetch.
   async function loadSession(id: string) {
     setShowHistory(false);
     const res = await fetch(`/api/sessions/${id}`);
@@ -336,15 +406,68 @@ export default function BuilderPage() {
     const { session: s } = await res.json();
     const loadedMsgs: ChatMsg[] = s.messages ?? [];
     const lastTree = [...loadedMsgs].reverse().find(m => m.role === "assistant" && m.tree)?.tree ?? null;
+    tabCacheRef.current[id] = { msgs: loadedMsgs, tree: lastTree as UINode | null };
     setMsgs(loadedMsgs);
     setTree(lastTree as UINode | null);
     setDbSessionId(id);
+    setActiveTabId(id);
     setView("preview");
     localStorage.setItem(SESSION_ID_STORAGE, id);
     // Follow the session into its project's context — switching pages
     // within a project (the "quick switch" part of Projects v1) should
     // leave you positioned in that project, not wherever you were before.
     setActiveProjectId(s.projectId ?? null);
+    setOpenTabs(tabs => {
+      const entry: HistoryItem = { id, name: s.name, createdAt: s.createdAt, updatedAt: s.updatedAt, projectId: s.projectId ?? null };
+      const exists = tabs.some(t => t.id === id);
+      return exists ? tabs.map(t => (t.id === id ? entry : t)) : [...tabs, entry];
+    });
+  }
+
+  // Opens (or focuses, if already open) a tab for the given session. Restores
+  // instantly from tabCacheRef when available — the actual "quick switch
+  // between several pages you're iterating on" payoff of having tabs at all —
+  // and only falls back to loadSession's network fetch on a genuine first open.
+  function openTab(item: HistoryItem) {
+    setShowHistory(false);
+    setOpenTabs(tabs => (tabs.some(t => t.id === item.id) ? tabs : [...tabs, item]));
+    const cached = tabCacheRef.current[item.id];
+    if (cached) {
+      setMsgs(cached.msgs);
+      setTree(cached.tree);
+      setDbSessionId(item.id);
+      setActiveTabId(item.id);
+      setView("preview");
+      localStorage.setItem(SESSION_ID_STORAGE, item.id);
+      setActiveProjectId(item.projectId ?? null);
+    } else {
+      loadSession(item.id);
+    }
+  }
+
+  // Closes a tab (just removes it from the strip — the saved session itself
+  // is untouched). If it was the active tab, focuses a neighbor, or clears
+  // the canvas if that was the last tab open.
+  function closeTab(id: string, e: React.MouseEvent) {
+    e.stopPropagation();
+    delete tabCacheRef.current[id];
+    const idx = openTabs.findIndex(t => t.id === id);
+    const next = openTabs.filter(t => t.id !== id);
+    setOpenTabs(next);
+    if (activeTabId === id) {
+      const neighbor = next[idx] ?? next[idx - 1] ?? null;
+      if (neighbor) openTab(neighbor); else reset();
+    }
+  }
+
+  // Opens a new blank draft tab. Distinct from reset() (which just clears the
+  // canvas with no tab bookkeeping) — this is the user-facing "+" action.
+  function newTab() {
+    const draftId = `draft-${Date.now()}`;
+    const draft: HistoryItem = { id: draftId, name: "Untitled", createdAt: new Date().toISOString(), updatedAt: new Date().toISOString(), projectId: activeProjectId };
+    setOpenTabs(tabs => [...tabs, draft]);
+    reset();
+    setActiveTabId(draftId);
   }
 
   async function deleteSession(id: string, e: React.MouseEvent) {
@@ -355,7 +478,18 @@ export default function BuilderPage() {
     if (deleted?.projectId) {
       setProjects(ps => ps.map(p => p.id === deleted.projectId ? { ...p, sessionCount: Math.max(0, p.sessionCount - 1) } : p));
     }
-    if (dbSessionId === id) reset();
+    delete tabCacheRef.current[id];
+    const idx = openTabs.findIndex(t => t.id === id);
+    if (idx !== -1) {
+      const next = openTabs.filter(t => t.id !== id);
+      setOpenTabs(next);
+      if (activeTabId === id) {
+        const neighbor = next[idx] ?? next[idx - 1] ?? null;
+        if (neighbor) openTab(neighbor); else reset();
+      }
+    } else if (dbSessionId === id) {
+      reset();
+    }
   }
 
   // ── Project helpers ──────────────────────────────────────────────────────
@@ -400,7 +534,12 @@ export default function BuilderPage() {
     setProjects(ps => ps.filter(p => p.id !== id));
     setHistory(h => h.filter(s => s.projectId !== id));
     if (activeProjectId === id) setActiveProjectId(null);
-    if (dbSessionId && containedIds.includes(dbSessionId)) reset();
+    containedIds.forEach(cid => delete tabCacheRef.current[cid]);
+    const remainingTabs = openTabs.filter(t => !containedIds.includes(t.id));
+    setOpenTabs(remainingTabs);
+    if (dbSessionId && containedIds.includes(dbSessionId)) {
+      if (remainingTabs[0]) openTab(remainingTabs[0]); else reset();
+    }
   }
 
   function toggleProjectExpand(id: string) {
@@ -705,7 +844,12 @@ export default function BuilderPage() {
     }
   }, [githubModalProjectId, githubInstallations]);
 
-  async function saveToDb(updatedMsgs: ChatMsg[], updatedTree: UINode, isFirst: boolean) {
+  // `currentTabId` is passed explicitly rather than read from the
+  // `activeTabId` closure: when called from send() right after that same
+  // call created a draft tab, the state update hasn't flushed into this
+  // closure yet (same synchronous invocation, not yet re-rendered) — reading
+  // `activeTabId` here would still see the pre-draft value (often null).
+  async function saveToDb(updatedMsgs: ChatMsg[], updatedTree: UINode, isFirst: boolean, currentTabId: string | null) {
     if (!isLoggedIn) return;
     const name = updatedMsgs.find(m => m.role === "user")?.content?.slice(0, 120) || "Untitled";
     try {
@@ -718,12 +862,26 @@ export default function BuilderPage() {
         if (res.ok) {
           const d = await res.json();
           const newId = d.session.id;
+          const oldTabId = currentTabId ?? dbSessionId ?? activeTabId; // the draft tab this content was living under
           setDbSessionId(newId);
+          setActiveTabId(newId);
           localStorage.setItem(SESSION_ID_STORAGE, newId);
           setHistory(h => [d.session, ...h]);
           if (activeProjectId) {
             setProjects(ps => ps.map(p => p.id === activeProjectId ? { ...p, sessionCount: p.sessionCount + 1 } : p));
           }
+          // The draft tab's synthetic id needs to become the real session id
+          // now that one exists — same tab, same open position, real identity.
+          // Falls back to appending rather than silently dropping the tab if,
+          // for some reason, no tab was tracking this content yet.
+          tabCacheRef.current[newId] = { msgs: updatedMsgs, tree: updatedTree };
+          if (oldTabId) delete tabCacheRef.current[oldTabId];
+          setOpenTabs(tabs => {
+            const matched = tabs.some(t => t.id === oldTabId);
+            return matched
+              ? tabs.map(t => (t.id === oldTabId ? { ...d.session, name } : t))
+              : [...tabs, { ...d.session, name }];
+          });
         }
       } else {
         await fetch(`/api/sessions/${dbSessionId}`, {
@@ -731,9 +889,11 @@ export default function BuilderPage() {
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ messages: updatedMsgs, tree: updatedTree }),
         });
+        tabCacheRef.current[dbSessionId] = { msgs: updatedMsgs, tree: updatedTree };
         setHistory(h =>
           h.map(s => s.id === dbSessionId ? { ...s, updatedAt: new Date().toISOString() } : s)
         );
+        setOpenTabs(tabs => tabs.map(t => (t.id === dbSessionId ? { ...t, updatedAt: new Date().toISOString() } : t)));
       }
     } catch {}
   }
@@ -784,6 +944,19 @@ export default function BuilderPage() {
     setInput("");
     setNeedsKey(false);
 
+    // A first message sent with no tab open yet (page just loaded, nothing
+    // clicked "+" or opened from History) still needs one — otherwise the
+    // session this creates has nowhere to show up in the tab strip. Resolve
+    // synchronously into a local var: setActiveTabId below won't be visible
+    // via the `activeTabId` closure until next render, so saveToDb (called
+    // later in this same invocation) needs it passed explicitly, not re-read.
+    let currentTabId = activeTabId;
+    if (!currentTabId) {
+      currentTabId = `draft-${Date.now()}`;
+      setActiveTabId(currentTabId);
+      setOpenTabs(tabs => [...tabs, { id: currentTabId!, name: "Untitled", createdAt: new Date().toISOString(), updatedAt: new Date().toISOString(), projectId: activeProjectId }]);
+    }
+
     const userMsg: ChatMsg = { role: "user", content: txt };
     const next = [...msgs, userMsg];
     setMsgs(next);
@@ -811,7 +984,7 @@ export default function BuilderPage() {
           { role: "assistant", content: data.raw || JSON.stringify(newTree), label: isFirst ? "Interface generated" : "Interface updated", tree: newTree },
         ];
         setMsgs(updatedMsgs);
-        await saveToDb(updatedMsgs, newTree, isFirst);
+        await saveToDb(updatedMsgs, newTree, isFirst, currentTabId);
       }
     } catch (e: any) {
       setMsgs(prev => [...prev, { role: "assistant", content: "", isError: true, errorText: e?.message || "Network error" }]);
@@ -830,6 +1003,7 @@ export default function BuilderPage() {
     setNeedsKey(false);
     setInput("");
     setDbSessionId(null);
+    setActiveTabId(null);
     localStorage.removeItem(MSGS_STORAGE);
     localStorage.removeItem(TREE_STORAGE);
     localStorage.removeItem(SESSION_ID_STORAGE);
@@ -920,7 +1094,7 @@ export default function BuilderPage() {
   // into a different project (or out of one) without deleting/recreating it.
   function renderSessionRow(s: HistoryItem) {
     return (
-      <div key={s.id} className={`bld-history-item${s.id === dbSessionId ? " active" : ""}`} onClick={() => loadSession(s.id)}>
+      <div key={s.id} className={`bld-history-item${s.id === dbSessionId ? " active" : ""}`} onClick={() => openTab(s)}>
         <span className="bld-history-name">{s.name}</span>
         <div className="bld-history-meta">
           <span className="bld-history-time">{relativeTime(s.updatedAt)}</span>
@@ -1188,7 +1362,7 @@ export default function BuilderPage() {
                   </button>
                 )}
                 {msgs.length > 0 && (
-                  <button className="bld-new-btn" onClick={reset}>New</button>
+                  <button className="bld-new-btn" onClick={newTab}>New</button>
                 )}
 
                 {/* Profile menu — sign in/out + API key live here, off the main chat */}
@@ -1475,6 +1649,32 @@ export default function BuilderPage() {
 
         {/* ── Right: canvas ───────────────────────────────────────── */}
         <main className="bld-main">
+          {/* Instance tabs — replaces having to dig into History to switch
+              between pages you're actively working on. Each tab caches its
+              own msgs/tree (tabCacheRef) so re-focusing one already visited
+              this session is instant, not a re-fetch. Not gated behind
+              isLoggedIn: an unsent draft still gets a tab, matching how the
+              canvas already worked pre-tabs for signed-out use. */}
+          {openTabs.length > 0 && (
+            <div className="bld-instance-tabs">
+              {openTabs.map(t => (
+                <div
+                  key={t.id}
+                  className={`bld-instance-tab${t.id === activeTabId ? " active" : ""}`}
+                  onClick={() => openTab(t)}
+                  title={t.name}
+                >
+                  <span className="bld-instance-tab-name">{t.name}</span>
+                  <button className="bld-instance-tab-close" onClick={(e) => closeTab(t.id, e)} title="Close tab">
+                    <XIcon />
+                  </button>
+                </div>
+              ))}
+              <button className="bld-instance-tab-add" onClick={newTab} title="New page">
+                <PlusIcon />
+              </button>
+            </div>
+          )}
           <div className="bld-toolbar">
             <div className="bld-tabs">
               <button className={view === "preview" ? "on" : ""} onClick={() => setView("preview")}>Preview</button>
