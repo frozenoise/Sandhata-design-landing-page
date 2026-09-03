@@ -22,6 +22,15 @@ type HistoryItem = {
   name: string;
   updatedAt: string;
   createdAt: string;
+  projectId: string | null;
+};
+
+type ProjectItem = {
+  id: string;
+  name: string;
+  updatedAt: string;
+  createdAt: string;
+  sessionCount: number;
 };
 
 const EXAMPLES = [
@@ -35,6 +44,7 @@ const KEY_STORAGE        = "sd-builder-api-key";
 const MSGS_STORAGE       = "sd-builder-msgs";
 const TREE_STORAGE       = "sd-builder-tree";
 const SESSION_ID_STORAGE = "sd-builder-session-id";
+const PROJECT_ID_STORAGE = "sd-builder-project-id";
 
 function relativeTime(iso: string) {
   const diff = Date.now() - new Date(iso).getTime();
@@ -58,6 +68,9 @@ const XIcon        = () => (<svg width="12" height="12" viewBox="0 0 24 24" fill
 const DownloadIcon = () => (<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>);
 const GoogleIcon   = () => (<svg width="14" height="14" viewBox="0 0 24 24"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z"/><path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/></svg>);
 const GithubIcon   = () => (<svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.531 1.032 1.531 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0022 12.017C22 6.484 17.522 2 12 2z"/></svg>);
+const FolderIcon   = () => (<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 7a2 2 0 012-2h4l2 2h8a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2V7z"/></svg>);
+const ChevronIcon  = () => (<svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="9 18 15 12 9 6"/></svg>);
+const PlusIcon     = () => (<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>);
 
 export default function BuilderPage() {
   const { data: session, status } = useSession();
@@ -77,6 +90,12 @@ export default function BuilderPage() {
   const [history,       setHistory]       = React.useState<HistoryItem[]>([]);
   const [showHistory,   setShowHistory]   = React.useState(false);
   const [histLoading,   setHistLoading]   = React.useState(false);
+  const [projects,        setProjects]        = React.useState<ProjectItem[]>([]);
+  const [projLoading,     setProjLoading]     = React.useState(false);
+  const [activeProjectId, setActiveProjectId] = React.useState<string | null>(null);
+  const [expandedProjects, setExpandedProjects] = React.useState<Set<string>>(new Set());
+  const [showNewProject,  setShowNewProject]  = React.useState(false);
+  const [newProjectName,  setNewProjectName]  = React.useState("");
   const [showAuthModal, setShowAuthModal] = React.useState(false);
   const [showProfile,   setShowProfile]   = React.useState(false);
   const [hasAccountKey, setHasAccountKey] = React.useState(false);
@@ -105,6 +124,9 @@ export default function BuilderPage() {
 
     const savedId = localStorage.getItem(SESSION_ID_STORAGE);
     if (savedId) setDbSessionId(savedId);
+
+    const savedProjectId = localStorage.getItem(PROJECT_ID_STORAGE);
+    if (savedProjectId) setActiveProjectId(savedProjectId);
   }, []);
 
   // ── Auth modal: show once per session for unauthenticated users ────────
@@ -134,10 +156,16 @@ export default function BuilderPage() {
       : localStorage.removeItem(TREE_STORAGE);
   }, [tree]);
 
-  // ── Load history when authenticated ────────────────────────────────────
   React.useEffect(() => {
-    if (isLoggedIn) loadHistory();
-    else setHistory([]);
+    activeProjectId
+      ? localStorage.setItem(PROJECT_ID_STORAGE, activeProjectId)
+      : localStorage.removeItem(PROJECT_ID_STORAGE);
+  }, [activeProjectId]);
+
+  // ── Load history + projects when authenticated ───────────────────────────
+  React.useEffect(() => {
+    if (isLoggedIn) { loadHistory(); loadProjects(); }
+    else { setHistory([]); setProjects([]); }
   }, [isLoggedIn]);
 
   // ── Clear any pending debounced key-save on unmount ──────────────────────
@@ -198,13 +226,96 @@ export default function BuilderPage() {
     setDbSessionId(id);
     setView("preview");
     localStorage.setItem(SESSION_ID_STORAGE, id);
+    // Follow the session into its project's context — switching pages
+    // within a project (the "quick switch" part of Projects v1) should
+    // leave you positioned in that project, not wherever you were before.
+    setActiveProjectId(s.projectId ?? null);
   }
 
   async function deleteSession(id: string, e: React.MouseEvent) {
     e.stopPropagation();
+    const deleted = history.find(s => s.id === id);
     await fetch(`/api/sessions/${id}`, { method: "DELETE" });
     setHistory(h => h.filter(s => s.id !== id));
+    if (deleted?.projectId) {
+      setProjects(ps => ps.map(p => p.id === deleted.projectId ? { ...p, sessionCount: Math.max(0, p.sessionCount - 1) } : p));
+    }
     if (dbSessionId === id) reset();
+  }
+
+  // ── Project helpers ──────────────────────────────────────────────────────
+  async function loadProjects() {
+    setProjLoading(true);
+    try {
+      const res = await fetch("/api/projects");
+      if (res.ok) {
+        const d = await res.json();
+        setProjects(d.projects ?? []);
+      }
+    } finally {
+      setProjLoading(false);
+    }
+  }
+
+  async function createProject() {
+    const name = newProjectName.trim();
+    if (!name) return;
+    const res = await fetch("/api/projects", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ name }),
+    });
+    if (res.ok) {
+      const d = await res.json();
+      setProjects(ps => [d.project, ...ps]);
+      setActiveProjectId(d.project.id);
+      setExpandedProjects(ex => new Set(ex).add(d.project.id));
+    }
+    setNewProjectName("");
+    setShowNewProject(false);
+  }
+
+  async function deleteProject(id: string, e: React.MouseEvent) {
+    e.stopPropagation();
+    const proj = projects.find(p => p.id === id);
+    if (!window.confirm(`Delete "${proj?.name ?? "this project"}" and all ${proj?.sessionCount ?? 0} page(s) inside it? This can't be undone.`)) return;
+
+    const containedIds = history.filter(s => s.projectId === id).map(s => s.id);
+    await fetch(`/api/projects/${id}`, { method: "DELETE" });
+    setProjects(ps => ps.filter(p => p.id !== id));
+    setHistory(h => h.filter(s => s.projectId !== id));
+    if (activeProjectId === id) setActiveProjectId(null);
+    if (dbSessionId && containedIds.includes(dbSessionId)) reset();
+  }
+
+  function toggleProjectExpand(id: string) {
+    setExpandedProjects(ex => {
+      const next = new Set(ex);
+      next.has(id) ? next.delete(id) : next.add(id);
+      return next;
+    });
+  }
+
+  function selectProject(id: string | null) {
+    setActiveProjectId(id);
+    if (id) setExpandedProjects(ex => new Set(ex).add(id));
+  }
+
+  async function moveSessionToProject(sessionId: string, projectId: string | null) {
+    const prevProjectId = history.find(s => s.id === sessionId)?.projectId ?? null;
+    if (prevProjectId === projectId) return;
+    const res = await fetch(`/api/sessions/${sessionId}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ projectId }),
+    });
+    if (!res.ok) return;
+    setHistory(h => h.map(s => s.id === sessionId ? { ...s, projectId } : s));
+    setProjects(ps => ps.map(p => {
+      if (p.id === prevProjectId) return { ...p, sessionCount: Math.max(0, p.sessionCount - 1) };
+      if (p.id === projectId)     return { ...p, sessionCount: p.sessionCount + 1 };
+      return p;
+    }));
   }
 
   async function saveToDb(updatedMsgs: ChatMsg[], updatedTree: UINode, isFirst: boolean) {
@@ -215,7 +326,7 @@ export default function BuilderPage() {
         const res = await fetch("/api/sessions", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ name, messages: updatedMsgs, tree: updatedTree }),
+          body: JSON.stringify({ name, messages: updatedMsgs, tree: updatedTree, projectId: activeProjectId }),
         });
         if (res.ok) {
           const d = await res.json();
@@ -223,6 +334,9 @@ export default function BuilderPage() {
           setDbSessionId(newId);
           localStorage.setItem(SESSION_ID_STORAGE, newId);
           setHistory(h => [d.session, ...h]);
+          if (activeProjectId) {
+            setProjects(ps => ps.map(p => p.id === activeProjectId ? { ...p, sessionCount: p.sessionCount + 1 } : p));
+          }
         }
       } else {
         await fetch(`/api/sessions/${dbSessionId}`, {
@@ -319,6 +433,10 @@ export default function BuilderPage() {
     }
   }
 
+  // Deliberately does NOT clear activeProjectId — "New" while inside a
+  // project should start a fresh page still grouped under that project
+  // (the "iterate across multiple pages in one project" workflow). To start
+  // a genuinely ungrouped session, select "Ungrouped" in the sidebar first.
   function reset() {
     setMsgs([]);
     setTree(null);
@@ -359,6 +477,34 @@ export default function BuilderPage() {
   }
 
   const isEmpty = msgs.length === 0 && !loading;
+  const ungroupedSessions = history.filter(s => !s.projectId);
+
+  // Shared row markup for a session under a project group or the
+  // "Ungrouped" bucket — the move-select lets you re-file an existing page
+  // into a different project (or out of one) without deleting/recreating it.
+  function renderSessionRow(s: HistoryItem) {
+    return (
+      <div key={s.id} className={`bld-history-item${s.id === dbSessionId ? " active" : ""}`} onClick={() => loadSession(s.id)}>
+        <span className="bld-history-name">{s.name}</span>
+        <div className="bld-history-meta">
+          <span className="bld-history-time">{relativeTime(s.updatedAt)}</span>
+          <select
+            className="bld-history-move"
+            value={s.projectId ?? ""}
+            onClick={e => e.stopPropagation()}
+            onChange={e => moveSessionToProject(s.id, e.target.value || null)}
+            title="Move to project"
+          >
+            <option value="">Ungrouped</option>
+            {projects.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
+          </select>
+          <button className="bld-history-del" onClick={(e) => deleteSession(s.id, e)} title="Delete">
+            <XIcon />
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="doc-root">
@@ -400,7 +546,17 @@ export default function BuilderPage() {
           {/* Header row */}
           <div className="bld-header">
             <div className="bld-header-row">
-              <h1 className="bld-title">AI Builder</h1>
+              <div>
+                <h1 className="bld-title">AI Builder</h1>
+                {/* Tells you where "New" will file the next page — otherwise
+                    silent context is easy to lose track of once you've been
+                    switching between several projects. */}
+                {isLoggedIn && activeProjectId && (
+                  <div className="bld-active-project">
+                    <FolderIcon /> {projects.find(p => p.id === activeProjectId)?.name ?? "Project"}
+                  </div>
+                )}
+              </div>
               <div className="bld-header-actions">
                 {isLoggedIn && (
                   <button
@@ -498,27 +654,84 @@ export default function BuilderPage() {
             </div>
           </div>
 
-          {/* History panel */}
+          {/* Projects + history panel */}
           {showHistory && isLoggedIn && (
             <div className="bld-history">
               <div className="bld-history-header">
-                <span className="bld-examples-label">History</span>
-                {histLoading && <span className="bld-history-loading">Loading…</span>}
+                <span className="bld-examples-label">Projects</span>
+                {(histLoading || projLoading) && <span className="bld-history-loading">Loading…</span>}
               </div>
-              {history.length === 0 && !histLoading && (
-                <p className="bld-history-empty">No saved sessions yet.</p>
+
+              {showNewProject ? (
+                <div className="bld-project-new">
+                  <input
+                    className="bld-key-input"
+                    placeholder="Project name…"
+                    value={newProjectName}
+                    onChange={e => setNewProjectName(e.target.value)}
+                    onKeyDown={e => {
+                      if (e.key === "Enter") createProject();
+                      if (e.key === "Escape") { setShowNewProject(false); setNewProjectName(""); }
+                    }}
+                    autoFocus
+                  />
+                  <button className="bld-new-btn" onClick={createProject} disabled={!newProjectName.trim()}>Add</button>
+                  <button className="bld-icon-btn" onClick={() => { setShowNewProject(false); setNewProjectName(""); }} title="Cancel">
+                    <XIcon />
+                  </button>
+                </div>
+              ) : (
+                <button className="bld-chip bld-project-add" onClick={() => setShowNewProject(true)}>
+                  <PlusIcon /> New project
+                </button>
               )}
-              {history.map(s => (
-                <div key={s.id} className={`bld-history-item${s.id === dbSessionId ? " active" : ""}`} onClick={() => loadSession(s.id)}>
-                  <span className="bld-history-name">{s.name}</span>
-                  <div className="bld-history-meta">
-                    <span className="bld-history-time">{relativeTime(s.updatedAt)}</span>
-                    <button className="bld-history-del" onClick={(e) => deleteSession(s.id, e)} title="Delete">
+
+              {projects.length === 0 && history.length === 0 && !histLoading && !projLoading && (
+                <p className="bld-history-empty">No projects or saved sessions yet.</p>
+              )}
+
+              {projects.map(p => (
+                <div key={p.id} className="bld-project-group">
+                  <div
+                    className={`bld-project-head${activeProjectId === p.id ? " active" : ""}`}
+                    onClick={() => { selectProject(p.id); toggleProjectExpand(p.id); }}
+                  >
+                    <span className={`bld-project-chevron${expandedProjects.has(p.id) ? " open" : ""}`}><ChevronIcon /></span>
+                    <span className="bld-project-icon"><FolderIcon /></span>
+                    <span className="bld-project-name">{p.name}</span>
+                    <span className="bld-project-count">{p.sessionCount}</span>
+                    <button className="bld-history-del" onClick={(e) => deleteProject(p.id, e)} title="Delete project">
                       <XIcon />
                     </button>
                   </div>
+                  {expandedProjects.has(p.id) && (
+                    <div className="bld-project-sessions">
+                      {history.filter(s => s.projectId === p.id).map(renderSessionRow)}
+                      {history.filter(s => s.projectId === p.id).length === 0 && (
+                        <p className="bld-history-empty bld-project-empty">No pages yet — start one below.</p>
+                      )}
+                    </div>
+                  )}
                 </div>
               ))}
+
+              {ungroupedSessions.length > 0 && (
+                <div className="bld-project-group">
+                  <div
+                    className={`bld-project-head${activeProjectId === null ? " active" : ""}`}
+                    onClick={() => { selectProject(null); toggleProjectExpand("__ungrouped"); }}
+                  >
+                    <span className={`bld-project-chevron${expandedProjects.has("__ungrouped") ? " open" : ""}`}><ChevronIcon /></span>
+                    <span className="bld-project-name">Ungrouped</span>
+                    <span className="bld-project-count">{ungroupedSessions.length}</span>
+                  </div>
+                  {expandedProjects.has("__ungrouped") && (
+                    <div className="bld-project-sessions">
+                      {ungroupedSessions.map(renderSessionRow)}
+                    </div>
+                  )}
+                </div>
+              )}
             </div>
           )}
 

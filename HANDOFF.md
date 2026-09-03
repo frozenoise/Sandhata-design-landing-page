@@ -198,6 +198,20 @@ components — if you change a chart, keep both in sync (or factor them out).
 - Charts are duplicated between `app/page.tsx` and `app/showcase/page.tsx` — a
   shared `app/_charts/` module would remove the drift risk.
 - `/pricing` is a "coming soon" stub.
+- ~~`/builder` needs a "Projects" concept~~ — **shipped** (2026-09-03): a
+  `Project` model (`prisma/schema.prisma`) groups multiple `BuilderSession`
+  "pages" as a folder; `BuilderSession.projectId` is a nullable FK (existing
+  ungrouped sessions keep working) with `onDelete: Cascade` (deleting a
+  project deletes its pages — folder semantics, confirmed with a
+  `window.confirm` in the UI). New routes: `app/api/projects/route.ts`
+  (list/create), `app/api/projects/[id]/route.ts` (get-with-sessions/rename/
+  delete); `app/api/sessions/*` extended to accept/return `projectId`. UI:
+  the builder sidebar's history panel groups sessions under collapsible
+  project headers + an "Ungrouped" bucket, with a per-session move-to-project
+  `<select>` and a project-name subline under "AI Builder" showing which
+  project "New" will file into. **v1 scope is organize + quick-switch only**
+  — no simultaneous multi-pane/tabbed editing (that was the explicitly
+  descoped option; revisit if real usage wants it).
 
 Questions on intent or design decisions: check the Figma referenced in `readme.md`,
 or ping the repo owner.

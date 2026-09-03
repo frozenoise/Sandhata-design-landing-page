@@ -21,6 +21,7 @@ model User {
   accounts       Account[]
   sessions       Session[]
   builderSessions BuilderSession[]
+  projects        Project[]
 }
 
 model Account {
@@ -58,12 +59,36 @@ model VerificationToken {
   @@unique([identifier, token])
 }
 
+// ── Builder projects ──────────────────────────────────────────────────────────
+// A project is a folder grouping multiple BuilderSessions (pages/functions)
+// so a user can organize and switch between related work-in-progress pieces
+// instead of one flat, ungrouped session list. v1 scope: organize + quick
+// switch — no simultaneous multi-pane editing (see HANDOFF.md §9).
+
+model Project {
+  id        String           @id @default(cuid())
+  userId    String
+  user      User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  name      String
+  createdAt DateTime         @default(now())
+  updatedAt DateTime         @updatedAt
+  sessions  BuilderSession[]
+
+  @@index([userId, updatedAt])
+}
+
 // ── Builder sessions ─────────────────────────────────────────────────────────
 
 model BuilderSession {
   id        String   @id @default(cuid())
   userId    String
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  // Nullable: a session doesn't have to belong to a project (existing
+  // pre-Projects sessions stay ungrouped rather than orphaned/migrated).
+  // Cascade: deleting a project's "folder" deletes the pages inside it,
+  // matching the folder metaphor — not a soft unlink.
+  projectId String?
+  project   Project? @relation(fields: [projectId], references: [id], onDelete: Cascade)
   name      String   // First user message used as title
   messages  Json     // ChatMsg[]
   tree      Json?    // Latest UINode tree
@@ -71,4 +96,5 @@ model BuilderSession {
   updatedAt DateTime @updatedAt
 
   @@index([userId, updatedAt])
+  @@index([projectId, updatedAt])
 }
