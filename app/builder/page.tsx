@@ -7,8 +7,9 @@ import "../_docs/docs.css";
 import "./builder.css";
 import { SdTopNav } from "../_docs/shell";
 import { RenderTree, treeToJSX, type UINode } from "./Renderer";
-import { ensureIds, findNodeById, updateNodeProps, updateNodeText, removeNodeById, moveNode, CONTAINER_TYPES } from "./uiTree";
+import { ensureIds, findNodeById, updateNodeProps, updateNodeText, removeNodeById, moveNode, insertNodeAt, createNode, CONTAINER_TYPES } from "./uiTree";
 import { PROP_SCHEMA, type PropField } from "./propSchema";
+import { PALETTE_CATEGORIES, paletteDefaults } from "./paletteDefaults";
 
 type ChatMsg = {
   role: "user" | "assistant";
@@ -166,6 +167,17 @@ export default function BuilderPage() {
   // with all position math and the actual tree mutation living here.
   const [draggingNodeId, setDraggingNodeId] = React.useState<string | null>(null);
   const [dropTarget, setDropTarget] = React.useState<{ id: string; position: "before" | "after" | "inside" } | null>(null);
+  // ── Phase 3: component palette + drag-to-insert. A drag is either an
+  // existing node (draggingNodeId, Phase 2) or a fresh palette chip
+  // (draggingPaletteType) — never both; onDragStart on each source clears
+  // the other. Both share the same onDragOver/onDrop position math and
+  // dropTarget state, branching only at the very end on which one is set.
+  const [draggingPaletteType, setDraggingPaletteType] = React.useState<string | null>(null);
+  // The right-side inspector panel context-switches between "insert a new
+  // element" and "edit the selected one" rather than adding a whole extra
+  // column — auto-follows selection (see the effect below) but the user can
+  // still switch to Insert manually to add a sibling near the current spot.
+  const [inspectorTab, setInspectorTab] = React.useState<"insert" | "properties">("insert");
   const [dbSessionId,   setDbSessionId]   = React.useState<string | null>(null);
   const [history,       setHistory]       = React.useState<HistoryItem[]>([]);
   const [showHistory,   setShowHistory]   = React.useState(false);
@@ -313,8 +325,17 @@ export default function BuilderPage() {
     setEditHistory([]);
     setEditRedoStack([]);
     setDraggingNodeId(null);
+    setDraggingPaletteType(null);
     setDropTarget(null);
+    setInspectorTab("insert");
   }, [activeTabId]);
+
+  // Selecting something (by click, or right after a palette insert below)
+  // brings the inspector to Properties automatically — you shouldn't have to
+  // manually flip the tab every time just to see what you clicked.
+  React.useEffect(() => {
+    if (selectedNodeId) setInspectorTab("properties");
+  }, [selectedNodeId]);
 
   const selectedNode = React.useMemo(
     () => (tree && selectedNodeId ? findNodeById(tree, selectedNodeId) : null),
@@ -1934,6 +1955,7 @@ export default function BuilderPage() {
                     if (!id) return;
                     setSelectedNodeId(id);
                     setDraggingNodeId(id);
+                    setDraggingPaletteType(null); // mutually exclusive with a palette drag
                     e.dataTransfer.effectAllowed = "move";
                     // Firefox requires setData to actually start a drag; the
                     // payload itself is unused — the real source of truth is
@@ -1941,7 +1963,11 @@ export default function BuilderPage() {
                     e.dataTransfer.setData("text/plain", id);
                   }}
                   onDragOver={(e) => {
-                    if (!draggingNodeId || !tree) return;
+                    // One position calculation serves both drag sources
+                    // (Phase 2 reorder and Phase 3 palette insert) — same
+                    // "hover a real node, read before/after/inside from
+                    // cursor position within it" logic either way.
+                    if ((!draggingNodeId && !draggingPaletteType) || !tree) return;
                     e.preventDefault(); // required for onDrop to ever fire
                     const el = (e.target as HTMLElement).closest("[data-node-id]") as HTMLElement | null;
                     const targetId = el?.getAttribute("data-node-id");
@@ -1964,21 +1990,29 @@ export default function BuilderPage() {
                   }}
                   onDrop={(e) => {
                     e.preventDefault();
-                    if (draggingNodeId && dropTarget && tree) {
-                      // Refuse a drop that would nest the dragged subtree
-                      // inside itself — moveNode() already guards against
-                      // silently losing the node in that case, but checking
-                      // here first avoids even attempting a doomed move.
-                      const draggedNode = findNodeById(tree, draggingNodeId);
-                      const dropsIntoOwnSubtree = draggedNode ? !!findNodeById(draggedNode, dropTarget.id) : true;
-                      if (!dropsIntoOwnSubtree) {
-                        commitTreeEdit(moveNode(tree, draggingNodeId, dropTarget.id, dropTarget.position));
+                    if (dropTarget && tree) {
+                      if (draggingPaletteType) {
+                        const defaults = paletteDefaults(draggingPaletteType);
+                        const newNode = createNode(draggingPaletteType, defaults.props, defaults.children);
+                        commitTreeEdit(insertNodeAt(tree, dropTarget.id, dropTarget.position, newNode));
+                        setSelectedNodeId(newNode.id ?? null); // see what you just placed, right away
+                      } else if (draggingNodeId) {
+                        // Refuse a drop that would nest the dragged subtree
+                        // inside itself — moveNode() already guards against
+                        // silently losing the node in that case, but checking
+                        // here first avoids even attempting a doomed move.
+                        const draggedNode = findNodeById(tree, draggingNodeId);
+                        const dropsIntoOwnSubtree = draggedNode ? !!findNodeById(draggedNode, dropTarget.id) : true;
+                        if (!dropsIntoOwnSubtree) {
+                          commitTreeEdit(moveNode(tree, draggingNodeId, dropTarget.id, dropTarget.position));
+                        }
                       }
                     }
                     setDraggingNodeId(null);
+                    setDraggingPaletteType(null);
                     setDropTarget(null);
                   }}
-                  onDragEnd={() => { setDraggingNodeId(null); setDropTarget(null); }}
+                  onDragEnd={() => { setDraggingNodeId(null); setDraggingPaletteType(null); setDropTarget(null); }}
                 >
                   {/* Highlight via a scoped attribute-selector rule rather
                       than threading selected/hovered state into RenderNode —
@@ -2003,7 +2037,54 @@ export default function BuilderPage() {
                 </div>
 
                 <div className="bld-prop-panel">
-                  {!selectedNode ? (
+                  {/* Insert vs Properties share this one panel rather than
+                      adding a fourth layout column — selecting an element
+                      auto-flips here to Properties (effect above), but the
+                      user can flip back to Insert manually to drop a sibling
+                      near whatever's currently selected. */}
+                  <div className="bld-inspector-tabs">
+                    <button
+                      className={`bld-inspector-tab${inspectorTab === "insert" ? " bld-inspector-tab--active" : ""}`}
+                      onClick={() => setInspectorTab("insert")}
+                    >
+                      Insert
+                    </button>
+                    <button
+                      className={`bld-inspector-tab${inspectorTab === "properties" ? " bld-inspector-tab--active" : ""}`}
+                      onClick={() => setInspectorTab("properties")}
+                    >
+                      Properties
+                    </button>
+                  </div>
+
+                  {inspectorTab === "insert" ? (
+                    <div className="bld-palette">
+                      <p className="bld-prop-empty">Drag a component onto the canvas to add it.</p>
+                      {PALETTE_CATEGORIES.map(cat => (
+                        <div key={cat.label} className="bld-palette-cat">
+                          <span className="bld-palette-cat-label">{cat.label}</span>
+                          <div className="bld-palette-chips">
+                            {cat.types.map(type => (
+                              <div
+                                key={type}
+                                className="bld-palette-chip"
+                                draggable
+                                onDragStart={(e) => {
+                                  setDraggingPaletteType(type);
+                                  setDraggingNodeId(null); // mutually exclusive with reordering an existing node
+                                  e.dataTransfer.effectAllowed = "copy";
+                                  e.dataTransfer.setData("text/plain", `palette:${type}`);
+                                }}
+                                onDragEnd={() => { setDraggingPaletteType(null); setDropTarget(null); }}
+                              >
+                                {type}
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  ) : !selectedNode ? (
                     <p className="bld-prop-empty">Click an element in the canvas to edit it.</p>
                   ) : (
                     <>

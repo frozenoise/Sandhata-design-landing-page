@@ -39,6 +39,14 @@ function genNodeId(): string {
   return `n${Date.now().toString(36)}${idCounter.toString(36)}${Math.random().toString(36).slice(2, 6)}`;
 }
 
+/** Builds a fresh node with a real id — the palette's insert-a-new-component
+ * path (Phase 3) uses this instead of writing `{ id: undefined, ... }` and
+ * relying on a later ensureIds pass, since the node needs a real id
+ * immediately (to select it right after insertion, before any re-render). */
+export function createNode(type: string, props?: Record<string, any>, children?: UINode[] | string): UINode {
+  return { id: genNodeId(), type, props, children };
+}
+
 /** Backfills `id` on every node that doesn't already have one. Returns the
  * same reference if the tree was already fully id'd (cheap no-op check),
  * otherwise a new tree — same immutability contract as the rest of this file. */
@@ -121,6 +129,40 @@ export function removeNodeById(node: UINode, id: string): UINode | null {
 // having to validate/reject that shape everywhere else the tree is used.
 export const CONTAINER_TYPES = new Set(["Stack", "Row", "Grid", "Box", "Card"]);
 
+/** Shared by moveNode (Phase 2) and insertNodeAt (Phase 3) — both ultimately
+ * do the same "place this node before/after/inside a target" walk, just with
+ * a node that already existed elsewhere in the tree (moveNode, after
+ * extracting it) vs. one that's brand new (insertNodeAt). Kept as one
+ * function so the two never drift out of sync with each other. */
+function insertRelativeTo(tree: UINode, targetId: string, position: "before" | "after" | "inside", node: UINode): { tree: UINode; inserted: boolean } {
+  let inserted = false;
+  function walk(n: UINode): UINode {
+    if (n.id === targetId && position === "inside") {
+      inserted = true;
+      const kids = Array.isArray(n.children) ? n.children : [];
+      return { ...n, children: [...kids, node] };
+    }
+    if (!Array.isArray(n.children)) return n;
+    const idx = n.children.findIndex((c) => c.id === targetId);
+    if (idx !== -1 && position !== "inside") {
+      inserted = true;
+      const at = position === "before" ? idx : idx + 1;
+      return { ...n, children: [...n.children.slice(0, at), node, ...n.children.slice(at)] };
+    }
+    const nextChildren = n.children.map(walk);
+    return nextChildren.some((c, i) => c !== (n.children as UINode[])[i]) ? { ...n, children: nextChildren } : n;
+  }
+  return { tree: walk(tree), inserted };
+}
+
+/** Inserts a brand-new node (from the Phase 3 component palette — build one
+ * with `createNode`, not by hand, so it gets a real id) relative to
+ * `targetId`. Returns the tree UNCHANGED if `targetId` doesn't exist. */
+export function insertNodeAt(tree: UINode, targetId: string, position: "before" | "after" | "inside", node: UINode): UINode {
+  const { tree: result, inserted } = insertRelativeTo(tree, targetId, position, node);
+  return inserted ? result : tree;
+}
+
 /** Moves the node matching `nodeId` to a new position relative to `targetId`
  * — "before"/"after" as a sibling of the target, or "inside" as the target's
  * last child (only meaningful when the target is a CONTAINER_TYPES type,
@@ -150,24 +192,7 @@ export function moveNode(tree: UINode, nodeId: string, targetId: string, positio
   const withoutNode = extract(tree);
   if (!extracted) return tree; // nodeId not found, or was the tree root itself
 
-  let inserted = false;
-  function insertRel(node: UINode): UINode {
-    if (node.id === targetId && position === "inside") {
-      inserted = true;
-      const kids = Array.isArray(node.children) ? node.children : [];
-      return { ...node, children: [...kids, extracted as UINode] };
-    }
-    if (!Array.isArray(node.children)) return node;
-    const idx = node.children.findIndex((c) => c.id === targetId);
-    if (idx !== -1 && position !== "inside") {
-      inserted = true;
-      const at = position === "before" ? idx : idx + 1;
-      return { ...node, children: [...node.children.slice(0, at), extracted as UINode, ...node.children.slice(at)] };
-    }
-    const nextChildren = node.children.map(insertRel);
-    return nextChildren.some((c, i) => c !== (node.children as UINode[])[i]) ? { ...node, children: nextChildren } : node;
-  }
-  const result = insertRel(withoutNode);
+  const { tree: result, inserted } = insertRelativeTo(withoutNode, targetId, position, extracted);
   return inserted ? result : tree; // target vanished (e.g. was inside the dragged subtree) — refuse, don't lose the node
 }
 

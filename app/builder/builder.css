@@ -294,6 +294,38 @@
 }
 .bld-prop-field--bool { flex-direction: row; align-items: center; gap: 8px; cursor: pointer; }
 .bld-prop-field--bool input { margin: 0; }
+
+/* ── Phase 3: Insert/Properties tab switcher + component palette ────────── */
+.bld-inspector-tabs {
+  display: flex; gap: 4px; margin-bottom: 14px; padding-bottom: 10px;
+  border-bottom: 1px solid var(--doc-line);
+}
+.bld-inspector-tab {
+  flex: 1; padding: 6px 10px; border: 1px solid transparent; border-radius: var(--radius-sm);
+  background: transparent; color: var(--text-caption); font: 700 12px/1 var(--font-bold);
+  cursor: pointer;
+}
+.bld-inspector-tab:hover { color: var(--text-body); }
+.bld-inspector-tab--active {
+  background: var(--colour-primaryblue-50, #eef2ff); border-color: var(--colour-primaryblue-200);
+  color: var(--colour-primaryblue-600, var(--colour-primaryblue-500));
+}
+.bld-palette { display: flex; flex-direction: column; gap: 16px; }
+.bld-palette > .bld-prop-empty { margin-bottom: -4px; }
+.bld-palette-cat { display: flex; flex-direction: column; gap: 6px; }
+.bld-palette-cat-label {
+  font: 700 11px/1 var(--font-bold); color: var(--text-caption);
+  text-transform: uppercase; letter-spacing: 0.3px;
+}
+.bld-palette-chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.bld-palette-chip {
+  padding: 6px 10px; border: 1px solid var(--doc-line); border-radius: var(--radius-sm);
+  background: var(--doc-bg); color: var(--text-body); font: 12px/1 var(--font-normal);
+  cursor: grab; user-select: none;
+}
+.bld-palette-chip:active { cursor: grabbing; }
+.bld-palette-chip:hover { border-color: var(--colour-primaryblue-300); color: var(--colour-primaryblue-500); }
+
 .bld-empty { color: var(--text-caption); }
 .bld-spinner {
   width: 28px; height: 28px; border-radius: 50%;
