@@ -273,7 +273,8 @@
 /* Selected/hovered outlines are injected as scoped rules (see the inline
    <style> next to this wrapper in page.tsx) targeting [data-node-id] —
    cursor:pointer here signals the whole canvas is click-to-select. */
-.bld-edit-canvas-wrap [data-node-id] { cursor: pointer; }
+.bld-edit-canvas-wrap [data-node-id] { cursor: grab; }
+.bld-edit-canvas-wrap [data-node-id]:active { cursor: grabbing; }
 
 .bld-prop-panel {
   width: 260px; flex-shrink: 0; align-self: stretch;

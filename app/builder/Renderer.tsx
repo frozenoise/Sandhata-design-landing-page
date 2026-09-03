@@ -41,22 +41,28 @@ function layoutStyle(type: string, props: Record<string, any> = {}): React.CSSPr
 
 let keyCounter = 0;
 
-export function RenderNode({ node }: { node: UINode }): React.ReactElement | null {
+export function RenderNode({ node, editable = false }: { node: UINode; editable?: boolean }): React.ReactElement | null {
   if (!node || typeof node !== "object") return null;
   const { type, props = {}, children, id } = node;
   const key = `n${keyCounter++}`;
   // Purely structural — no handlers, no state, so the zero-arg call sites
-  // (Preview tab, export/Code view) are completely unaffected. The visual
-  // editor (app/builder/page.tsx, "edit" view) resolves clicks/hover via a
-  // single delegated listener on its canvas wrapper using this attribute
-  // (`e.target.closest('[data-node-id]')`) rather than this component
-  // threading selection state/handlers through every branch below.
-  const nodeAttrs = id ? { "data-node-id": id } : {};
+  // (Preview tab, export/Code view — both omit `editable`, defaulting it to
+  // false) are completely unaffected: their output is byte-identical to
+  // before this existed. The visual editor (app/builder/page.tsx, "edit"
+  // view) resolves clicks/hover/drag via delegated listeners on its canvas
+  // wrapper using these attributes (`e.target.closest('[data-node-id]')`),
+  // not by this component threading selection/drag state through every
+  // branch below. `draggable` is the one attribute that genuinely needs to
+  // be conditional rather than always-on: unconditionally draggable would
+  // make Preview-view elements (once a tree has ids from a past Edit visit)
+  // start native browser drag-ghosting on a plain click-drag, with no drop
+  // handling registered to make sense of it outside Edit view.
+  const nodeAttrs: Record<string, any> = id ? { "data-node-id": id, ...(editable ? { draggable: true } : {}) } : {};
 
   const kids = typeof children === "string"
     ? children
     : Array.isArray(children)
-      ? children.map((c, i) => <RenderNode key={i} node={c} />)
+      ? children.map((c, i) => <RenderNode key={i} node={c} editable={editable} />)
       : null;
 
   // Layout primitives
@@ -93,11 +99,11 @@ export function RenderNode({ node }: { node: UINode }): React.ReactElement | nul
   // mode has been entered at least once for this tab) — id is undefined for
   // any tree that predates that, so this is a no-op wrapper-per-node most of
   // the time (Preview/Code, or any session that's never opened Edit).
-  return id ? <span key={key} data-node-id={id} style={{ display: "contents" }}>{comp}</span> : comp;
+  return id ? <span key={key} {...nodeAttrs} style={{ display: "contents" }}>{comp}</span> : comp;
 }
 
-export function RenderTree({ tree }: { tree: UINode | null }) {
+export function RenderTree({ tree, editable = false }: { tree: UINode | null; editable?: boolean }) {
   keyCounter = 0;
   if (!tree) return null;
-  return <RenderNode node={tree} />;
+  return <RenderNode node={tree} editable={editable} />;
 }

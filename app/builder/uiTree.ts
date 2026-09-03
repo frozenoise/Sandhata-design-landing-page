@@ -110,6 +110,67 @@ export function removeNodeById(node: UINode, id: string): UINode | null {
   return node;
 }
 
+// Phase 2 (drag-to-reorder): node types that legitimately hold children for
+// layout purposes, i.e. valid drop-*inside* targets — everything else (a
+// Button, a Badge, an Input…) can still be dragged and reordered as a
+// sibling ("before"/"after"), but can't receive a node dropped *inside* it.
+// This is deliberately an editor-side allowlist, not a schema constraint —
+// the UINode type itself places no restriction on what can parent what (see
+// the type's own comment); enforcing it here keeps drag-drop from producing
+// a structurally nonsensical tree (e.g. a Card nested inside a Badge) without
+// having to validate/reject that shape everywhere else the tree is used.
+export const CONTAINER_TYPES = new Set(["Stack", "Row", "Grid", "Box", "Card"]);
+
+/** Moves the node matching `nodeId` to a new position relative to `targetId`
+ * — "before"/"after" as a sibling of the target, or "inside" as the target's
+ * last child (only meaningful when the target is a CONTAINER_TYPES type,
+ * enforced by the caller, not this function). Returns the tree UNCHANGED
+ * (not a partially-mutated one) if the move can't be completed — most
+ * importantly, if `targetId` turns out to be `nodeId` itself or live inside
+ * the subtree being moved (dropping a container into its own child), the
+ * extract-then-reinsert below would otherwise silently delete the dragged
+ * node instead of moving it, since the target it's searching for to
+ * reinsert next to would no longer exist in the tree post-extraction. This
+ * function refuses that outcome itself rather than relying on every caller
+ * to pre-check it correctly. */
+export function moveNode(tree: UINode, nodeId: string, targetId: string, position: "before" | "after" | "inside"): UINode {
+  if (nodeId === targetId) return tree;
+
+  let extracted: UINode | null = null;
+  function extract(node: UINode): UINode {
+    if (!Array.isArray(node.children)) return node;
+    const idx = node.children.findIndex((c) => c.id === nodeId);
+    if (idx !== -1) {
+      extracted = node.children[idx];
+      return { ...node, children: [...node.children.slice(0, idx), ...node.children.slice(idx + 1)] };
+    }
+    const nextChildren = node.children.map(extract);
+    return nextChildren.some((c, i) => c !== (node.children as UINode[])[i]) ? { ...node, children: nextChildren } : node;
+  }
+  const withoutNode = extract(tree);
+  if (!extracted) return tree; // nodeId not found, or was the tree root itself
+
+  let inserted = false;
+  function insertRel(node: UINode): UINode {
+    if (node.id === targetId && position === "inside") {
+      inserted = true;
+      const kids = Array.isArray(node.children) ? node.children : [];
+      return { ...node, children: [...kids, extracted as UINode] };
+    }
+    if (!Array.isArray(node.children)) return node;
+    const idx = node.children.findIndex((c) => c.id === targetId);
+    if (idx !== -1 && position !== "inside") {
+      inserted = true;
+      const at = position === "before" ? idx : idx + 1;
+      return { ...node, children: [...node.children.slice(0, at), extracted as UINode, ...node.children.slice(at)] };
+    }
+    const nextChildren = node.children.map(insertRel);
+    return nextChildren.some((c, i) => c !== (node.children as UINode[])[i]) ? { ...node, children: nextChildren } : node;
+  }
+  const result = insertRel(withoutNode);
+  return inserted ? result : tree; // target vanished (e.g. was inside the dragged subtree) — refuse, don't lose the node
+}
+
 /* Pretty-print the tree as copyable JSX using the same component names. */
 export function treeToJSX(node: UINode | null, depth = 0): string {
   if (!node) return "";

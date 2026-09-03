@@ -7,7 +7,7 @@ import "../_docs/docs.css";
 import "./builder.css";
 import { SdTopNav } from "../_docs/shell";
 import { RenderTree, treeToJSX, type UINode } from "./Renderer";
-import { ensureIds, findNodeById, updateNodeProps, updateNodeText, removeNodeById } from "./uiTree";
+import { ensureIds, findNodeById, updateNodeProps, updateNodeText, removeNodeById, moveNode, CONTAINER_TYPES } from "./uiTree";
 import { PROP_SCHEMA, type PropField } from "./propSchema";
 
 type ChatMsg = {
@@ -150,15 +150,22 @@ export default function BuilderPage() {
   const [tree,          setTree]          = React.useState<UINode | null>(null);
   const [view,          setView]          = React.useState<"preview" | "code" | "edit">("preview");
   const [viewport,      setViewport]      = React.useState<"mobile" | "tablet" | "desktop">("tablet");
-  // ── Visual editor (edit view) — Phase 1: select + property-panel editing,
-  // no drag yet. Undo/redo is a snapshot stack, not a diff log — trees here
-  // are small (the AI's own system prompt caps them around ~200 nodes), so a
+  // ── Visual editor (edit view) — Phase 1: select + property-panel editing.
+  // Undo/redo is a snapshot stack, not a diff log — trees here are small
+  // (the AI's own system prompt caps them around ~200 nodes), so a
   // structuredClone-cheap approach is simpler than a command log and doesn't
   // need to be.
   const [selectedNodeId, setSelectedNodeId] = React.useState<string | null>(null);
   const [hoveredNodeId,  setHoveredNodeId]  = React.useState<string | null>(null);
   const [editHistory,    setEditHistory]    = React.useState<UINode[]>([]);
   const [editRedoStack,  setEditRedoStack]  = React.useState<UINode[]>([]);
+  // ── Phase 2: drag-to-reorder. Native HTML5 drag-and-drop, delegated on the
+  // canvas wrapper (same philosophy as click/hover selection above) rather
+  // than a per-node drag library — RenderNode already only needs one extra
+  // conditional attribute (`draggable`, gated on `editable`) to support this,
+  // with all position math and the actual tree mutation living here.
+  const [draggingNodeId, setDraggingNodeId] = React.useState<string | null>(null);
+  const [dropTarget, setDropTarget] = React.useState<{ id: string; position: "before" | "after" | "inside" } | null>(null);
   const [dbSessionId,   setDbSessionId]   = React.useState<string | null>(null);
   const [history,       setHistory]       = React.useState<HistoryItem[]>([]);
   const [showHistory,   setShowHistory]   = React.useState(false);
@@ -305,6 +312,8 @@ export default function BuilderPage() {
     setHoveredNodeId(null);
     setEditHistory([]);
     setEditRedoStack([]);
+    setDraggingNodeId(null);
+    setDropTarget(null);
   }, [activeTabId]);
 
   const selectedNode = React.useMemo(
@@ -1839,7 +1848,7 @@ export default function BuilderPage() {
             <div className="bld-tabs">
               <button className={view === "preview" ? "on" : ""} onClick={() => changeView("preview")}>Preview</button>
               <button className={view === "code" ? "on" : ""} onClick={() => changeView("code")} disabled={!tree}>Code</button>
-              <button className={view === "edit" ? "on" : ""} onClick={() => changeView("edit")} disabled={!tree} title="Click elements to select and edit their properties">Edit</button>
+              <button className={view === "edit" ? "on" : ""} onClick={() => changeView("edit")} disabled={!tree} title="Click to select and edit properties, drag to reorder">Edit</button>
             </div>
             <div className="bld-toolbar-right">
               {view === "preview" && (
@@ -1903,6 +1912,11 @@ export default function BuilderPage() {
                 <div
                   className="bld-edit-canvas-wrap"
                   onClickCapture={(e) => {
+                    // A real drag ends with a native `dragend`/`drop`, not a
+                    // `click` — but some browsers still fire a trailing click
+                    // right after, which would otherwise re-select whatever's
+                    // under the cursor at drop time. Swallow it once.
+                    if (draggingNodeId) { e.preventDefault(); e.stopPropagation(); return; }
                     const el = (e.target as HTMLElement).closest("[data-node-id]");
                     if (!el) { setSelectedNodeId(null); return; }
                     e.preventDefault();
@@ -1914,6 +1928,57 @@ export default function BuilderPage() {
                     setHoveredNodeId(el ? el.getAttribute("data-node-id") : null);
                   }}
                   onMouseLeave={() => setHoveredNodeId(null)}
+                  onDragStart={(e) => {
+                    const el = (e.target as HTMLElement).closest("[data-node-id]");
+                    const id = el?.getAttribute("data-node-id");
+                    if (!id) return;
+                    setSelectedNodeId(id);
+                    setDraggingNodeId(id);
+                    e.dataTransfer.effectAllowed = "move";
+                    // Firefox requires setData to actually start a drag; the
+                    // payload itself is unused — the real source of truth is
+                    // `draggingNodeId` React state, read directly in onDrop.
+                    e.dataTransfer.setData("text/plain", id);
+                  }}
+                  onDragOver={(e) => {
+                    if (!draggingNodeId || !tree) return;
+                    e.preventDefault(); // required for onDrop to ever fire
+                    const el = (e.target as HTMLElement).closest("[data-node-id]") as HTMLElement | null;
+                    const targetId = el?.getAttribute("data-node-id");
+                    if (!el || !targetId || targetId === draggingNodeId) { setDropTarget(null); return; }
+                    const targetNode = findNodeById(tree, targetId);
+                    if (!targetNode) { setDropTarget(null); return; }
+                    const rect = el.getBoundingClientRect();
+                    const relY = rect.height > 0 ? (e.clientY - rect.top) / rect.height : 0.5;
+                    const isContainer = CONTAINER_TYPES.has(targetNode.type);
+                    // A container gets a dead zone in its middle 50% that means
+                    // "drop inside me" — its top/bottom quarters still mean
+                    // "insert as my sibling", same as a non-container leaf.
+                    const position: "before" | "after" | "inside" =
+                      isContainer ? (relY < 0.25 ? "before" : relY > 0.75 ? "after" : "inside")
+                                   : (relY < 0.5 ? "before" : "after");
+                    setDropTarget(prev => (prev?.id === targetId && prev.position === position ? prev : { id: targetId, position }));
+                  }}
+                  onDragLeave={(e) => {
+                    if (!(e.currentTarget as HTMLElement).contains(e.relatedTarget as Node)) setDropTarget(null);
+                  }}
+                  onDrop={(e) => {
+                    e.preventDefault();
+                    if (draggingNodeId && dropTarget && tree) {
+                      // Refuse a drop that would nest the dragged subtree
+                      // inside itself — moveNode() already guards against
+                      // silently losing the node in that case, but checking
+                      // here first avoids even attempting a doomed move.
+                      const draggedNode = findNodeById(tree, draggingNodeId);
+                      const dropsIntoOwnSubtree = draggedNode ? !!findNodeById(draggedNode, dropTarget.id) : true;
+                      if (!dropsIntoOwnSubtree) {
+                        commitTreeEdit(moveNode(tree, draggingNodeId, dropTarget.id, dropTarget.position));
+                      }
+                    }
+                    setDraggingNodeId(null);
+                    setDropTarget(null);
+                  }}
+                  onDragEnd={() => { setDraggingNodeId(null); setDropTarget(null); }}
                 >
                   {/* Highlight via a scoped attribute-selector rule rather
                       than threading selected/hovered state into RenderNode —
@@ -1921,10 +1986,19 @@ export default function BuilderPage() {
                       so this stays correct for free with no extra plumbing. */}
                   <style>{[
                     selectedNodeId && `.bld-edit-canvas-wrap [data-node-id="${selectedNodeId}"] { outline: 2px solid var(--colour-primaryblue-500) !important; outline-offset: 1px; }`,
-                    hoveredNodeId && hoveredNodeId !== selectedNodeId && `.bld-edit-canvas-wrap [data-node-id="${hoveredNodeId}"] { outline: 1px dashed var(--colour-primaryblue-300) !important; outline-offset: 1px; }`,
+                    hoveredNodeId && hoveredNodeId !== selectedNodeId && !draggingNodeId && `.bld-edit-canvas-wrap [data-node-id="${hoveredNodeId}"] { outline: 1px dashed var(--colour-primaryblue-300) !important; outline-offset: 1px; }`,
+                    draggingNodeId && `.bld-edit-canvas-wrap [data-node-id="${draggingNodeId}"] { opacity: 0.4; }`,
+                    // Drop indicator: a solid edge for a before/after sibling
+                    // insert, a dashed outline for dropping inside a container
+                    // — inset box-shadow rather than border/outline so it
+                    // doesn't shift layout or fight the selection/hover outline
+                    // on the same element.
+                    dropTarget?.position === "before" && `.bld-edit-canvas-wrap [data-node-id="${dropTarget.id}"] { box-shadow: inset 0 3px 0 0 var(--colour-primaryblue-500) !important; }`,
+                    dropTarget?.position === "after" && `.bld-edit-canvas-wrap [data-node-id="${dropTarget.id}"] { box-shadow: inset 0 -3px 0 0 var(--colour-primaryblue-500) !important; }`,
+                    dropTarget?.position === "inside" && `.bld-edit-canvas-wrap [data-node-id="${dropTarget.id}"] { outline: 2px dashed var(--colour-primaryblue-500) !important; outline-offset: -2px; }`,
                   ].filter(Boolean).join("\n")}</style>
                   <div className={`bld-surface bld-surface--${viewport}`}>
-                    <RenderTree tree={tree} />
+                    <RenderTree tree={tree} editable />
                   </div>
                 </div>
 
