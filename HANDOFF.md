@@ -1,6 +1,6 @@
-# Sandhata Design System — Developer Handoff
+# Spectra — Sandhata Design System Developer Handoff
 
-A handoff guide for picking up the **Sandhata Design System** website. This is the
+A handoff guide for picking up the **Spectra** (Sandhata Design System) website. This is the
 practical "how do I run it and where is everything" doc. (The older `readme.md`
 describes the original pre-Next.js compiler architecture and is now out of date —
 use **this** file to get started.)
@@ -12,7 +12,7 @@ Live: deployed on Vercel.
 
 ## 1. What this is
 
-A marketing + documentation site for the Sandhata Design System, built as a
+A marketing + documentation site for Spectra, Sandhata's design system, built as a
 **Next.js 14 (App Router) + TypeScript** app. It ships the design system's React
 primitives, design tokens, full landing page, docs, an AI "prompt → UI" builder,
 and an interactive component showcase.

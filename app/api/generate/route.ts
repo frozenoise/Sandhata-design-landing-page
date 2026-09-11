@@ -7,7 +7,19 @@ import { decryptSecret } from "@/lib/crypto";
 export const runtime = "nodejs";
 export const maxDuration = 60;
 
-const SYSTEM = `You are a UI generator for the Sandhata Design System. Given a description, output a SINGLE JSON object describing an interface built ONLY from the allowed components. Output JSON only — no prose, no markdown fences.
+// Models the client is allowed to request. Never trust the client's `model`
+// string directly — validate against this allowlist server-side and fall
+// back to the default for anything unrecognized (typo, stale client build,
+// or a deliberately crafted request).
+const ALLOWED_MODELS = [
+  "claude-sonnet-5",
+  "claude-opus-5",
+  "claude-fable-5",
+  "claude-haiku-4-5-20251001",
+] as const;
+const DEFAULT_MODEL: (typeof ALLOWED_MODELS)[number] = "claude-sonnet-5";
+
+const SYSTEM = `You are a UI generator for Spectra, Sandhata's design system. Given a description, output a SINGLE JSON object describing an interface built ONLY from the allowed components. Output JSON only — no prose, no markdown fences.
 
 The JSON is a recursive node:
 { "type": <ComponentName>, "props"?: {...}, "children"?: [<node>, ...] | "text" }
@@ -56,10 +68,14 @@ RULES:
 export async function POST(req: Request) {
   let messages: { role: string; content: string }[] = [];
   let clientKey = "";
+  let model: string = DEFAULT_MODEL;
 
   try {
     const body = await req.json();
     clientKey = body.apiKey || "";
+    if (typeof body.model === "string" && (ALLOWED_MODELS as readonly string[]).includes(body.model)) {
+      model = body.model;
+    }
     if (Array.isArray(body.messages) && body.messages.length) {
       messages = body.messages;
     } else if (typeof body.prompt === "string" && body.prompt.trim()) {
@@ -107,7 +123,7 @@ export async function POST(req: Request) {
   try {
     const client = new Anthropic({ apiKey: key });
     const msg = await client.messages.create({
-      model: "claude-sonnet-4-6",
+      model,
       max_tokens: 8192,
       system: SYSTEM,
       messages: messages as any,

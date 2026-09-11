@@ -2,7 +2,7 @@
 
 > One token set. Every client's brand. Zero forking.
 
-React component primitives for the Sandhata Design System. Plain inline-style-object components styled entirely through CSS custom properties — no CSS-in-JS runtime, no Tailwind, framework-agnostic (no Next.js-specific imports; works under Vite or any React 18 bundler).
+React component primitives for Spectra, Sandhata's design system. Plain inline-style-object components styled entirely through CSS custom properties — no CSS-in-JS runtime, no Tailwind, framework-agnostic (no Next.js-specific imports; works under Vite or any React 18 bundler).
 
 ## Install
 
