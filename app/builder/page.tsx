@@ -6,6 +6,7 @@ import { useSession, signIn, signOut } from "next-auth/react";
 import "../_docs/docs.css";
 import "./builder.css";
 import { SdTopNav } from "../_docs/shell";
+import { sdHighlightLines } from "../_docs/highlight";
 import { RenderTree, treeToJSX, type UINode } from "./Renderer";
 import { ensureIds, findNodeById, updateNodeProps, updateNodeText, removeNodeById, moveNode, insertNodeAt, createNode, CONTAINER_TYPES } from "./uiTree";
 import { PROP_SCHEMA, type PropField } from "./propSchema";
@@ -93,6 +94,18 @@ const EXAMPLES = [
   "A dashboard header with three stat cards and a status alert",
 ];
 
+const MODEL_STORAGE      = "sd-builder-model";
+// Mirrors the server's ALLOWED_MODELS allowlist (app/api/generate/route.ts)
+// — kept in sync by hand since the client and route are separate bundles.
+// The route re-validates against its own copy regardless, so a stale list
+// here only limits what shows in the picker, never a real trust boundary.
+const AVAILABLE_MODELS = [
+  { id: "claude-sonnet-5",             label: "Claude Sonnet 5" },
+  { id: "claude-opus-5",               label: "Claude Opus 5" },
+  { id: "claude-fable-5",              label: "Claude Fable 5" },
+  { id: "claude-haiku-4-5-20251001",   label: "Claude Haiku 4.5" },
+];
+const DEFAULT_MODEL = AVAILABLE_MODELS[0].id;
 const KEY_STORAGE        = "sd-builder-api-key";
 const MSGS_STORAGE       = "sd-builder-msgs";
 const TREE_STORAGE       = "sd-builder-tree";
@@ -136,6 +149,9 @@ const ChevronIcon  = () => (<svg width="10" height="10" viewBox="0 0 24 24" fill
 const PlusIcon     = () => (<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>);
 const AdoIcon      = () => (<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 16V8a2 2 0 00-1-1.73l-7-4a2 2 0 00-2 0l-7 4A2 2 0 003 8v8a2 2 0 001 1.73l7 4a2 2 0 002 0l7-4A2 2 0 0021 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></svg>);
 const ExternalIcon = () => (<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>);
+const EyeIcon      = () => (<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7-11-7-11-7z"/><circle cx="12" cy="12" r="3"/></svg>);
+const CodeIcon     = () => (<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>);
+const EditIcon     = () => (<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 013 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>);
 
 export default function BuilderPage() {
   const { data: session, status } = useSession();
@@ -146,6 +162,7 @@ export default function BuilderPage() {
   const [input,         setInput]         = React.useState("");
   const [loading,       setLoading]       = React.useState(false);
   const [apiKey,        setApiKey]        = React.useState("");
+  const [model,         setModel]         = React.useState(DEFAULT_MODEL);
   const [keyDraft,      setKeyDraft]      = React.useState("");
   const [needsKey,      setNeedsKey]      = React.useState(false);
   const [tree,          setTree]          = React.useState<UINode | null>(null);
@@ -174,10 +191,17 @@ export default function BuilderPage() {
   // dropTarget state, branching only at the very end on which one is set.
   const [draggingPaletteType, setDraggingPaletteType] = React.useState<string | null>(null);
   // The right-side inspector panel context-switches between "insert a new
-  // element" and "edit the selected one" rather than adding a whole extra
-  // column — auto-follows selection (see the effect below) but the user can
-  // still switch to Insert manually to add a sibling near the current spot.
-  const [inspectorTab, setInspectorTab] = React.useState<"insert" | "properties">("insert");
+  // element", "edit the selected one", and "browse the tree" rather than
+  // adding a whole extra column — auto-follows selection (see the effect
+  // below) but the user can still switch to Insert manually to add a sibling
+  // near the current spot.
+  const [inspectorTab, setInspectorTab] = React.useState<"insert" | "properties" | "layers">("insert");
+  // Layers tab: which container nodes are collapsed, by id. Starts empty
+  // (everything expanded) — a generated tree is capped around ~200 nodes by
+  // the AI's own system prompt, so a full expand-by-default is cheap and,
+  // more importantly, means a freshly-inserted node is never hidden inside
+  // a container the user forgot they'd collapsed.
+  const [collapsedLayerIds, setCollapsedLayerIds] = React.useState<Set<string>>(() => new Set());
   const [dbSessionId,   setDbSessionId]   = React.useState<string | null>(null);
   const [history,       setHistory]       = React.useState<HistoryItem[]>([]);
   const [showHistory,   setShowHistory]   = React.useState(false);
@@ -239,6 +263,9 @@ export default function BuilderPage() {
     const savedKey = localStorage.getItem(KEY_STORAGE) || "";
     setApiKey(savedKey);
     setKeyDraft(savedKey);
+
+    const savedModel = localStorage.getItem(MODEL_STORAGE) || "";
+    if (AVAILABLE_MODELS.some(m => m.id === savedModel)) setModel(savedModel);
 
     let hadRestoredMsgs = false;
     try {
@@ -1077,6 +1104,11 @@ export default function BuilderPage() {
     setHasAccountKey(false);
   }
 
+  function chooseModel(id: string) {
+    setModel(id);
+    localStorage.setItem(MODEL_STORAGE, id);
+  }
+
   async function send(text?: string) {
     const txt = (text ?? input).trim();
     if (!txt || loading) return;
@@ -1106,7 +1138,7 @@ export default function BuilderPage() {
       const res = await fetch("/api/generate", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ messages: apiMessages, apiKey }),
+        body: JSON.stringify({ messages: apiMessages, apiKey, model }),
       });
       const data = await res.json();
 
@@ -1302,6 +1334,53 @@ export default function BuilderPage() {
           defaultValue={current ?? ""}
           onBlur={e => updateSelectedProp(field.key, e.target.value || undefined)}
         />
+      </div>
+    );
+  }
+
+  // Layers tab: a collapsible tree of the whole document, so a node that's
+  // hard to reach on canvas (behind another element, inside an empty-looking
+  // container) can still be found and selected. Clicking a row reuses the
+  // exact same selectedNodeId/hoveredNodeId state canvas click/hover already
+  // drive — the outline-highlight CSS and the auto-flip-to-Properties effect
+  // both keep working unmodified, this is just a second way to set them.
+  function renderLayerRow(node: UINode, depth: number): React.ReactNode {
+    const id = node.id;
+    if (!id) return null;
+    const hasChildren = Array.isArray(node.children) && node.children.length > 0;
+    const collapsed = collapsedLayerIds.has(id);
+    const textPreview = typeof node.children === "string" ? node.children : null;
+    return (
+      <div key={id}>
+        <div
+          className={`bld-layer-row${selectedNodeId === id ? " bld-layer-row--selected" : ""}${hoveredNodeId === id && selectedNodeId !== id ? " bld-layer-row--hovered" : ""}`}
+          style={{ paddingLeft: 8 + depth * 14 }}
+          onClick={() => setSelectedNodeId(id)}
+          onMouseEnter={() => setHoveredNodeId(id)}
+          onMouseLeave={() => setHoveredNodeId(prev => (prev === id ? null : prev))}
+        >
+          {hasChildren ? (
+            <button
+              className={`bld-layer-toggle${collapsed ? " bld-layer-toggle--collapsed" : ""}`}
+              onClick={(e) => {
+                e.stopPropagation(); // toggling shouldn't also select the row
+                setCollapsedLayerIds(prev => {
+                  const next = new Set(prev);
+                  if (next.has(id)) next.delete(id); else next.add(id);
+                  return next;
+                });
+              }}
+              title={collapsed ? "Expand" : "Collapse"}
+            >
+              <ChevronIcon />
+            </button>
+          ) : (
+            <span className="bld-layer-toggle-spacer" />
+          )}
+          <span className="bld-layer-type">{node.type}</span>
+          {textPreview && <span className="bld-layer-text">{textPreview}</span>}
+        </div>
+        {hasChildren && !collapsed && (node.children as UINode[]).map(child => renderLayerRow(child, depth + 1))}
       </div>
     );
   }
@@ -1625,6 +1704,22 @@ export default function BuilderPage() {
                         </p>
                       </div>
 
+                      <div className="bld-profile-divider" />
+
+                      <div className="bld-profile-section">
+                        <div className="bld-profile-section-label">Model</div>
+                        <select
+                          className="bld-key-input"
+                          value={model}
+                          onChange={e => chooseModel(e.target.value)}
+                        >
+                          {AVAILABLE_MODELS.map(m => (
+                            <option key={m.id} value={m.id}>{m.label}</option>
+                          ))}
+                        </select>
+                        <p className="bld-profile-key-note">Saved in this browser, applies to every generation from here on.</p>
+                      </div>
+
                       {isLoggedIn && (
                         <>
                           <div className="bld-profile-divider" />
@@ -1867,9 +1962,9 @@ export default function BuilderPage() {
           )}
           <div className="bld-toolbar">
             <div className="bld-tabs">
-              <button className={view === "preview" ? "on" : ""} onClick={() => changeView("preview")}>Preview</button>
-              <button className={view === "code" ? "on" : ""} onClick={() => changeView("code")} disabled={!tree}>Code</button>
-              <button className={view === "edit" ? "on" : ""} onClick={() => changeView("edit")} disabled={!tree} title="Click to select and edit properties, drag to reorder">Edit</button>
+              <button className={view === "preview" ? "on" : ""} onClick={() => changeView("preview")}><EyeIcon /> Preview</button>
+              <button className={view === "code" ? "on" : ""} onClick={() => changeView("code")} disabled={!tree}><CodeIcon /> Code</button>
+              <button className={view === "edit" ? "on" : ""} onClick={() => changeView("edit")} disabled={!tree} title="Click to select and edit properties, drag to reorder"><EditIcon /> Edit</button>
             </div>
             <div className="bld-toolbar-right">
               {view === "preview" && (
@@ -1919,7 +2014,13 @@ export default function BuilderPage() {
               </div>
             )}
             {tree && view === "code" && (
-              <pre className="bld-code">{code}</pre>
+              <pre className="bld-code">
+                {/* Same hand-rolled tokenizer + Cursor-sourced colours as the
+                    docs code blocks (app/_docs/highlight.ts) — reused rather
+                    than duplicated, see the .c-* overrides in builder.css for
+                    why the colour values themselves are redeclared locally. */}
+                <code className="doc-code-lines" dangerouslySetInnerHTML={{ __html: sdHighlightLines(code) }} />
+              </pre>
             )}
             {tree && view === "edit" && (
               <div className="bld-edit-layout">
@@ -2037,11 +2138,12 @@ export default function BuilderPage() {
                 </div>
 
                 <div className="bld-prop-panel">
-                  {/* Insert vs Properties share this one panel rather than
-                      adding a fourth layout column — selecting an element
-                      auto-flips here to Properties (effect above), but the
-                      user can flip back to Insert manually to drop a sibling
-                      near whatever's currently selected. */}
+                  {/* Insert, Properties, and Layers share this one panel
+                      rather than adding extra layout columns — selecting an
+                      element (from canvas or from the Layers tree) auto-flips
+                      here to Properties (effect above), but the user can flip
+                      back to Insert manually to drop a sibling near whatever's
+                      currently selected, or to Layers to keep browsing. */}
                   <div className="bld-inspector-tabs">
                     <button
                       className={`bld-inspector-tab${inspectorTab === "insert" ? " bld-inspector-tab--active" : ""}`}
@@ -2055,9 +2157,19 @@ export default function BuilderPage() {
                     >
                       Properties
                     </button>
+                    <button
+                      className={`bld-inspector-tab${inspectorTab === "layers" ? " bld-inspector-tab--active" : ""}`}
+                      onClick={() => setInspectorTab("layers")}
+                    >
+                      Layers
+                    </button>
                   </div>
 
-                  {inspectorTab === "insert" ? (
+                  {inspectorTab === "layers" ? (
+                    <div className="bld-layers">
+                      {renderLayerRow(tree, 0)}
+                    </div>
+                  ) : inspectorTab === "insert" ? (
                     <div className="bld-palette">
                       <p className="bld-prop-empty">Drag a component onto the canvas to add it.</p>
                       {PALETTE_CATEGORIES.map(cat => (

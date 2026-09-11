@@ -7,12 +7,22 @@
    only the dark-theme set was sourced that way; light-theme is unchanged. */
 export function sdHighlight(src: string): string {
   const esc = String(src).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
-  const RX = /(\/\/[^\n]*)|("[^"]*"|'[^']*')|\b(import|from|const|let|return|export|default|function|useState|null|true|false)\b|(&lt;\/?[A-Za-z][\w.]*)|([A-Za-z_][\w]*)(?=={|="|=')|([A-Za-z_][\w]*)(?=\()|\b([A-Za-z_][\w]*)\b/g;
-  return esc.replace(RX, function (m, com, str, kw, tag, prop, func, variable) {
+  // The `entity` alt below exists only because the bare-identifier fallback
+  // (last alt) is a plain \b[A-Za-z_][\w]*\b — with no HTML awareness, it
+  // doesn't know "gt" inside "&gt;" isn't a real identifier: "&" and ";" are
+  // both non-word characters, so \b still fires on either side of "gt",
+  // and it gets wrapped in its own <span>, splitting the entity in two.
+  // dangerouslySetInnerHTML then parses that broken markup as literal text
+  // ("&gt;" visibly on screen) instead of resolving it to ">". Matching
+  // "&gt;"/"&amp;"/"&lt;" as one atomic, unhighlighted token first (JSX/TSX
+  // punctuation isn't colour-coded here anyway) keeps them intact.
+  const RX = /(\/\/[^\n]*)|("[^"]*"|'[^']*')|\b(import|from|const|let|return|export|default|function|useState|null|true|false)\b|(&lt;\/?[A-Za-z][\w.]*)|(&(?:gt|amp|lt);)|([A-Za-z_][\w]*)(?=={|="|=')|([A-Za-z_][\w]*)(?=\()|\b([A-Za-z_][\w]*)\b/g;
+  return esc.replace(RX, function (m, com, str, kw, tag, entity, prop, func, variable) {
     if (com) return '<span class="c-com">' + com + "</span>";
     if (str) return '<span class="c-str">' + str + "</span>";
     if (kw) return '<span class="c-kw">' + kw + "</span>";
     if (tag) return '<span class="c-tag">' + tag + "</span>";
+    if (entity) return entity;
     if (prop) return '<span class="c-prop">' + prop + "</span>";
     if (func) return '<span class="c-func">' + func + "</span>";
     if (variable) return '<span class="c-var">' + variable + "</span>";

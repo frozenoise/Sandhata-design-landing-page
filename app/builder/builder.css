@@ -208,9 +208,12 @@
 }
 .bld-tabs { display: flex; gap: 4px; }
 .bld-tabs button {
+  display: inline-flex; align-items: center; gap: 6px;
   height: 32px; padding: 0 14px; border: none; background: none; border-radius: var(--radius-sm);
   font: 700 13px/1 var(--font-bold); color: var(--text-caption); cursor: pointer;
 }
+.bld-tabs button svg { flex-shrink: 0; opacity: 0.7; }
+.bld-tabs button.on svg { opacity: 1; }
 .bld-tabs button.on { background: rgba(20,22,24,0.08); color: var(--text-title); }
 .bld-tabs button:disabled { opacity: 0.35; cursor: not-allowed; }
 .bld-toolbar-right { display: flex; align-items: center; gap: 10px; }
@@ -251,7 +254,21 @@
   margin: 0; width: 100%; align-self: stretch;
   background: #0d1117; color: #e6edf3; border-radius: var(--radius-lg);
   padding: 22px; font: 12.5px/1.7 var(--font-mono); overflow: auto; white-space: pre;
+  /* Cursor's dark-theme token colours (app/_docs/highlight.ts's sdHighlight
+     classes, values sourced in the docs-code-block work — see docs.css) —
+     redeclared locally rather than inherited from the page's own --c-* vars,
+     since this surface is always dark regardless of the site's light/dark
+     theme toggle, but --c-* itself DOES flip with that toggle. */
+  --c-kw: #82AAFF; --c-str: #9ECE6A; --c-tag: #E0C285; --c-prop: #7FDBCA;
+  --c-func: #DCC48E; --c-var: #B4BEC9; --c-com: #6B7280;
 }
+.bld-code .c-kw   { color: var(--c-kw); }
+.bld-code .c-str  { color: var(--c-str); }
+.bld-code .c-tag  { color: var(--c-tag); }
+.bld-code .c-prop { color: var(--c-prop); }
+.bld-code .c-func { color: var(--c-func); }
+.bld-code .c-var  { color: var(--c-var); }
+.bld-code .c-com  { color: var(--c-com); }
 
 .bld-state {
   margin: auto; display: flex; flex-direction: column; align-items: center; gap: 12px;
@@ -310,6 +327,11 @@
   background: var(--colour-primaryblue-50, #eef2ff); border-color: var(--colour-primaryblue-200);
   color: var(--colour-primaryblue-600, var(--colour-primaryblue-500));
 }
+/* :hover above and --active here have equal specificity (one class each) —
+   without this, hovering an already-active tab lets :hover's color win by
+   source order, silently swapping the active tab's text to near-invisible
+   caption-grey against its own light lavender background. */
+.bld-inspector-tab--active:hover { color: var(--colour-primaryblue-600, var(--colour-primaryblue-500)); }
 .bld-palette { display: flex; flex-direction: column; gap: 16px; }
 .bld-palette > .bld-prop-empty { margin-bottom: -4px; }
 .bld-palette-cat { display: flex; flex-direction: column; gap: 6px; }
@@ -325,6 +347,31 @@
 }
 .bld-palette-chip:active { cursor: grabbing; }
 .bld-palette-chip:hover { border-color: var(--colour-primaryblue-300); color: var(--colour-primaryblue-500); }
+
+/* ── Layers tab: collapsible tree of the whole document ──────────────── */
+.bld-layers { display: flex; flex-direction: column; gap: 1px; margin: 0 -8px; }
+.bld-layer-row {
+  display: flex; align-items: center; gap: 6px; padding: 5px 8px; border-radius: var(--radius-sm);
+  cursor: pointer; user-select: none;
+}
+.bld-layer-row:hover { background: var(--doc-bg); }
+.bld-layer-row--hovered { background: var(--doc-bg); }
+.bld-layer-row--selected, .bld-layer-row--selected:hover {
+  background: var(--colour-primaryblue-50, #eef2ff); color: var(--colour-primaryblue-600, var(--colour-primaryblue-500));
+}
+.bld-layer-toggle {
+  display: flex; align-items: center; justify-content: center; width: 14px; height: 14px; flex-shrink: 0;
+  border: none; background: transparent; padding: 0; color: var(--text-caption); cursor: pointer;
+}
+.bld-layer-toggle svg { transition: transform 0.12s ease; transform: rotate(90deg); }
+.bld-layer-toggle--collapsed svg { transform: rotate(0deg); }
+.bld-layer-toggle-spacer { width: 14px; flex-shrink: 0; }
+.bld-layer-type { font: 700 12px/1.3 var(--font-bold); color: var(--text-body); flex-shrink: 0; }
+.bld-layer-row--selected .bld-layer-type { color: inherit; }
+.bld-layer-text {
+  font: 12px/1.3 var(--font-normal); color: var(--text-caption); overflow: hidden;
+  text-overflow: ellipsis; white-space: nowrap; min-width: 0;
+}
 
 .bld-empty { color: var(--text-caption); }
 .bld-spinner {

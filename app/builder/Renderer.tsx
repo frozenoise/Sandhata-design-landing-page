@@ -84,7 +84,14 @@ export function RenderNode({ node, editable = false }: { node: UINode; editable?
     return <div key={key} {...nodeAttrs} style={{ padding: 8, border: "1px dashed #d1d5db", borderRadius: 6, font: "12px var(--font-mono)", color: "#9aa0ac" }}>Unknown: {type}</div>;
   }
   const { style, ...rest } = props;
-  const comp = <Comp style={style} {...rest} {...nodeAttrs}>{kids}</Comp>;
+  // Checkbox/Switch/Radio are always-controlled (checked always lands on
+  // the native input, no defaultChecked escape hatch — see their source in
+  // packages/spectra/src/forms/*.jsx). This Renderer is a preview surface
+  // with no interactivity by design (see comment block above), so whenever
+  // AI-generated props include `checked` with no onChange, supply a no-op
+  // one rather than let React treat it as a broken controlled input.
+  const controlledProps = "checked" in rest && rest.onChange === undefined ? { onChange: () => {} } : undefined;
+  const comp = <Comp style={style} {...rest} {...controlledProps} {...nodeAttrs}>{kids}</Comp>;
   // Not every DS component forwards unrecognized props onto a clickable
   // element: some (Alert, Avatar, Tag, StatCard, Spinner, Tooltip) don't
   // spread `...rest` at all, and Switch/Checkbox/Radio spread it onto a
