@@ -20,4 +20,4 @@ export interface InputProps extends Omit<React.InputHTMLAttributes<HTMLInputElem
   disabled?: boolean;
 }
 
-export function Input(props: InputProps): JSX.Element;
+export function Input(props: InputProps): React.JSX.Element;

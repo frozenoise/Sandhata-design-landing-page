@@ -28,4 +28,4 @@ export interface TableProps {
   emptyState?: React.ReactNode;
   style?: React.CSSProperties;
 }
-export function Table(props: TableProps): JSX.Element;
+export function Table(props: TableProps): React.JSX.Element;

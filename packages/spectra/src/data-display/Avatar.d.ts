@@ -1,3 +1,5 @@
+import * as React from "react";
+
 /** Circular avatar: image (`src`) or auto initials from `name`. */
 export interface AvatarProps {
   name?: string;
@@ -5,4 +7,4 @@ export interface AvatarProps {
   size?: number;
   tone?: "action" | "purple" | "neutral";
 }
-export function Avatar(props: AvatarProps): JSX.Element;
+export function Avatar(props: AvatarProps): React.JSX.Element;

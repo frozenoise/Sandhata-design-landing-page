@@ -50,7 +50,7 @@ const CheckIco = () => <I size={13} sw={2} d={<polyline points="20 6 9 17 4 12"/
    since this is landing-page-local, not docs chrome. */
 function EcoSnippet({ text }: { text: string }) {
   const [copied, setCopied] = React.useState(false);
-  const timeoutRef = React.useRef<ReturnType<typeof setTimeout>>();
+  const timeoutRef = React.useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
   const onCopy = async () => {
     try {
       await navigator.clipboard.writeText(text);

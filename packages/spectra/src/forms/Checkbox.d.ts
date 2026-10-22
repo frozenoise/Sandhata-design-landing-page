@@ -8,4 +8,4 @@ export interface CheckboxProps {
   disabled?: boolean;
   onChange?: React.ChangeEventHandler<HTMLInputElement>;
 }
-export function Checkbox(props: CheckboxProps): JSX.Element;
+export function Checkbox(props: CheckboxProps): React.JSX.Element;

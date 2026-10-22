@@ -16,4 +16,4 @@ export interface CardProps extends React.HTMLAttributes<HTMLDivElement> {
   padding?: number;
   children?: React.ReactNode;
 }
-export function Card(props: CardProps): JSX.Element;
+export function Card(props: CardProps): React.JSX.Element;

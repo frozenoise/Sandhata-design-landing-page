@@ -4,7 +4,7 @@ import { prisma } from "@/lib/prisma";
 import { decryptSecret } from "@/lib/crypto";
 import { AdoApiError, updateWorkItemState, type BuilderStatus, type StateMappingForType } from "@/lib/ado";
 
-type Params = { params: { linkId: string } };
+type Params = { params: Promise<{ linkId: string }> };
 
 const VALID_STATUSES: BuilderStatus[] = ["new", "in_progress", "completed"];
 
@@ -13,7 +13,8 @@ const VALID_STATUSES: BuilderStatus[] = ["new", "in_progress", "completed"];
 // state name) and does the real PATCH to Azure DevOps. On an ADO validation
 // error (e.g. an illegal state transition for that work item's workflow),
 // the ADO message is passed straight through rather than swallowed.
-export async function PATCH(req: Request, { params }: Params) {
+export async function PATCH(req: Request, props: Params) {
+  const params = await props.params;
   const session = await auth();
   if (!session?.user?.id) return NextResponse.json({ error: "unauthenticated" }, { status: 401 });
 

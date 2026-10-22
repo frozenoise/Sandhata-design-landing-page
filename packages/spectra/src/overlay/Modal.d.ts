@@ -16,4 +16,4 @@ export interface ModalProps {
   size?: "small" | "medium" | "large";
   style?: React.CSSProperties;
 }
-export function Modal(props: ModalProps): JSX.Element | null;
+export function Modal(props: ModalProps): React.JSX.Element | null;

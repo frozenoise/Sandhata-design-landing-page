@@ -12,4 +12,4 @@ export interface IconButtonProps {
   onClick?: React.MouseEventHandler<HTMLButtonElement>;
 }
 
-export function IconButton(props: IconButtonProps): JSX.Element;
+export function IconButton(props: IconButtonProps): React.JSX.Element;

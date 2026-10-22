@@ -8,4 +8,4 @@ export interface BadgeProps {
   dot?: boolean;
   children?: React.ReactNode;
 }
-export function Badge(props: BadgeProps): JSX.Element;
+export function Badge(props: BadgeProps): React.JSX.Element;

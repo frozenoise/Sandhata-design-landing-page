@@ -17,4 +17,4 @@ export interface AccordionProps {
   onToggle?: (id: string, open: boolean) => void;
   style?: React.CSSProperties;
 }
-export function Accordion(props: AccordionProps): JSX.Element;
+export function Accordion(props: AccordionProps): React.JSX.Element;

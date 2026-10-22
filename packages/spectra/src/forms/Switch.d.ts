@@ -1,3 +1,5 @@
+import * as React from "react";
+
 /** Toggle switch. Controlled via `checked` + `onChange(next: boolean)`. */
 export interface SwitchProps {
   checked?: boolean;
@@ -5,4 +7,4 @@ export interface SwitchProps {
   label?: string;
   onChange?: (checked: boolean) => void;
 }
-export function Switch(props: SwitchProps): JSX.Element;
+export function Switch(props: SwitchProps): React.JSX.Element;

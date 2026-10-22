@@ -54,7 +54,7 @@ DESIGN-SYSTEM COMPONENTS (use real product UI, not lorem):
 - "Avatar"   props: { name:string, tone?:"blue"|"purple"|"neutral" }
 - "StatCard" props: { label:string, value:string, trend?:string }
 - "Spinner"  props: { size?:number }
-- "Tabs"     props: { tabs?:string[] }
+- "Tabs"     props: { value:string, tabs?:{value:string,label:string}[] }
 
 RULES:
 - Wrap the whole UI in a single "Stack" (or "Card") root with sensible gap.

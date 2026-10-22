@@ -52,7 +52,7 @@ function inferCodeLanguage(code: string): string {
 function SdCodeBlock({ code, language }: { code: string; language?: string }) {
   const [copied, setCopied] = React.useState(false);
   const lang = language || inferCodeLanguage(code);
-  const timeoutRef = React.useRef<ReturnType<typeof setTimeout>>();
+  const timeoutRef = React.useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
 
   const onCopy = async () => {
     try {

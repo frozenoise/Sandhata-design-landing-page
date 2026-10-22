@@ -14,4 +14,4 @@ export interface SelectProps {
   disabled?: boolean;
   onChange?: React.ChangeEventHandler<HTMLSelectElement>;
 }
-export function Select(props: SelectProps): JSX.Element;
+export function Select(props: SelectProps): React.JSX.Element;

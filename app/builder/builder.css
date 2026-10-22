@@ -186,6 +186,11 @@
 .bld-instance-tab:hover { background: rgba(20,22,24,0.05); }
 .bld-instance-tab.active { background: rgba(20,22,24,0.08); color: var(--text-title); }
 .bld-instance-tab-name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.bld-instance-tab-rename {
+  width: 100px; border: none; outline: none; padding: 0; margin: 0;
+  background: var(--doc-surface); color: var(--text-title);
+  font: 600 12px/1 var(--font-normal);
+}
 .bld-instance-tab-close {
   width: 16px; height: 16px; border: none; background: none; padding: 0;
   color: inherit; opacity: 0.5; cursor: pointer; border-radius: 3px;
@@ -274,6 +279,39 @@
   margin: auto; display: flex; flex-direction: column; align-items: center; gap: 12px;
   color: var(--text-caption); font: 14px/1.5 var(--font-normal); text-align: center;
 }
+
+/* ── Report tab: elements outside the design system ──────────────────── */
+.bld-report-badge {
+  display: inline-flex; align-items: center; justify-content: center;
+  min-width: 16px; height: 16px; padding: 0 4px; margin-left: 2px;
+  border-radius: 999px; background: var(--colour-error-600, #dc2626);
+  color: #fff; font: 700 10px/1 var(--font-bold);
+}
+.bld-report { margin: auto; width: 100%; max-width: 640px; display: flex; flex-direction: column; gap: 16px; }
+.bld-report-clean {
+  margin: auto; display: flex; flex-direction: column; align-items: center; gap: 12px;
+  color: var(--colour-success-600, #1a7f4b); font: 14px/1.5 var(--font-normal); text-align: center;
+  max-width: 360px;
+}
+.bld-report-summary { font: 700 13px/1.4 var(--font-bold); color: var(--colour-error-600, #dc2626); margin: 0; }
+.bld-report-list { display: flex; flex-direction: column; gap: 1px; border: 1px solid var(--doc-line); border-radius: var(--radius-md); overflow: hidden; }
+.bld-report-row {
+  display: flex; align-items: center; justify-content: space-between; gap: 12px;
+  padding: 10px 14px; background: var(--doc-surface);
+}
+.bld-report-row + .bld-report-row { border-top: 1px solid var(--doc-line); }
+.bld-report-row-main { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.bld-report-type { font: 700 13px/1.3 var(--font-bold); color: var(--text-title); }
+.bld-report-path {
+  font: 12px/1.3 var(--font-mono, var(--font-normal)); color: var(--text-caption);
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.bld-report-jump {
+  flex-shrink: 0; height: 28px; padding: 0 12px; border: 1px solid var(--doc-line); border-radius: var(--radius-sm);
+  background: var(--doc-bg); color: var(--text-body); font: 700 12px/1 var(--font-bold); cursor: pointer;
+}
+.bld-report-jump:hover:not(:disabled) { border-color: var(--colour-primaryblue-300); color: var(--colour-primaryblue-500); }
+.bld-report-jump:disabled { opacity: 0.35; cursor: not-allowed; }
 
 /* ── Visual editor (Edit view) ─────────────────────────────────────────── */
 .bld-edit-undo-redo { display: flex; gap: 4px; }
@@ -728,6 +766,57 @@
 .bld-project-github-btn.connected:hover { background: var(--colour-success-100, #dcfce7); }
 .bld-project-github-btn.error { color: var(--colour-error-600); opacity: 1; }
 .bld-project-github-btn.error:hover { background: var(--colour-error-100, #fee2e2); }
+
+/* project-head Azure DevOps trigger — same footprint/behaviour as the GitHub
+   button above; "connected" only lights up for the currently active project
+   since that's the only one whose ADO status is loaded client-side. */
+.bld-project-ado-btn {
+  width: 20px; height: 20px; border: none; background: none; padding: 0;
+  color: var(--text-caption); cursor: pointer; border-radius: 4px;
+  display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+  opacity: 0.55; transition: opacity .1s, color .1s, background .1s;
+}
+.bld-project-ado-btn svg { width: 12px; height: 12px; }
+.bld-project-ado-btn:hover { opacity: 1; background: var(--colour-primaryblue-50); color: var(--colour-primaryblue-500); }
+.bld-project-ado-btn.connected { opacity: 1; color: var(--colour-success-600, #1a7f4b); }
+.bld-project-ado-btn.connected:hover { background: var(--colour-success-100, #dcfce7); }
+
+/* ── "Getting started" checklist (Sign in / GitHub / Azure DevOps) ──────
+   Sits above the plain Azure DevOps status strip, near the project context
+   line. Self-hides once all 3 steps are done via the component's own
+   doneCount >= 3 check — this is an onboarding nudge, not a status panel. */
+.bld-gs-card {
+  display: flex; flex-direction: column; gap: 10px;
+  margin-top: 10px; padding: 14px;
+  border: 1px solid var(--doc-line); border-radius: var(--radius-lg);
+  background: var(--doc-bg);
+}
+.bld-gs-header { display: flex; align-items: center; justify-content: space-between; }
+.bld-gs-title { font: 700 13px/1 var(--font-bold); color: var(--text-body); }
+.bld-gs-progress { display: flex; align-items: center; gap: 6px; }
+.bld-gs-count { font: 700 11px/1 var(--font-bold); color: var(--text-caption); }
+.bld-gs-ring { flex-shrink: 0; transform: rotate(-90deg); }
+.bld-gs-ring-track, .bld-gs-ring-fill { fill: none; stroke-width: 2; }
+.bld-gs-ring-track { stroke: var(--doc-line); }
+.bld-gs-ring-fill {
+  stroke: var(--colour-success-600, #1a7f4b); stroke-linecap: round;
+  transition: stroke-dashoffset .2s ease;
+}
+.bld-gs-list { display: flex; flex-direction: column; gap: 6px; }
+.bld-gs-row { display: flex; align-items: center; gap: 8px; height: 28px; }
+.bld-gs-row--done { color: var(--colour-success-600, #1a7f4b); }
+.bld-gs-row--done span { font: 400 12px/1 var(--font-normal); color: var(--text-caption); }
+/* Deliberately dark regardless of theme (like GitHub's own brand buttons) —
+   not a token-driven surface, a fixed "connect" accent for this checklist. */
+.bld-gs-action {
+  display: flex; align-items: center; justify-content: center; gap: 8px;
+  width: 100%; height: 36px; padding: 0 12px;
+  border: none; border-radius: var(--radius-lg);
+  background: #1c1f24; color: #fff;
+  font: 700 12px/1 var(--font-bold); cursor: pointer;
+  transition: background .12s;
+}
+.bld-gs-action:hover { background: #2a2f37; }
 
 /* modal contents */
 .bld-modal--github { max-width: 420px; }

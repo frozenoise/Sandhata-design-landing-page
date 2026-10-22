@@ -8,7 +8,7 @@ import "./builder.css";
 import { SdTopNav } from "../_docs/shell";
 import { sdHighlightLines } from "../_docs/highlight";
 import { RenderTree, treeToJSX, type UINode } from "./Renderer";
-import { ensureIds, findNodeById, updateNodeProps, updateNodeText, removeNodeById, moveNode, insertNodeAt, createNode, CONTAINER_TYPES } from "./uiTree";
+import { ensureIds, findNodeById, updateNodeProps, updateNodeText, removeNodeById, moveNode, insertNodeAt, createNode, CONTAINER_TYPES, auditTree, type AuditIssue } from "./uiTree";
 import { PROP_SCHEMA, type PropField } from "./propSchema";
 import { PALETTE_CATEGORIES, paletteDefaults } from "./paletteDefaults";
 
@@ -152,6 +152,7 @@ const ExternalIcon = () => (<svg width="11" height="11" viewBox="0 0 24 24" fill
 const EyeIcon      = () => (<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7-11-7-11-7z"/><circle cx="12" cy="12" r="3"/></svg>);
 const CodeIcon     = () => (<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>);
 const EditIcon     = () => (<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 013 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>);
+const ShieldIcon   = () => (<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><polyline points="9 12 11 14 15 10"/></svg>);
 
 export default function BuilderPage() {
   const { data: session, status } = useSession();
@@ -166,7 +167,7 @@ export default function BuilderPage() {
   const [keyDraft,      setKeyDraft]      = React.useState("");
   const [needsKey,      setNeedsKey]      = React.useState(false);
   const [tree,          setTree]          = React.useState<UINode | null>(null);
-  const [view,          setView]          = React.useState<"preview" | "code" | "edit">("preview");
+  const [view,          setView]          = React.useState<"preview" | "code" | "edit" | "report">("preview");
   const [viewport,      setViewport]      = React.useState<"mobile" | "tablet" | "desktop">("tablet");
   // ── Visual editor (edit view) — Phase 1: select + property-panel editing.
   // Undo/redo is a snapshot stack, not a diff log — trees here are small
@@ -214,6 +215,17 @@ export default function BuilderPage() {
   const [openTabs,   setOpenTabs]   = React.useState<HistoryItem[]>([]);
   const [activeTabId, setActiveTabId] = React.useState<string | null>(null);
   const tabCacheRef = React.useRef<Record<string, { msgs: ChatMsg[]; tree: UINode | null }>>({});
+  // Double-click a tab to rename it. renamingTabId gates which tab (if any)
+  // currently shows an input instead of its name span; renameDraft is that
+  // input's live value, committed on blur/Enter, discarded on Escape.
+  const [renamingTabId, setRenamingTabId] = React.useState<string | null>(null);
+  const [renameDraft,   setRenameDraft]   = React.useState("");
+  // React doesn't reliably fire onBlur when the focused input itself
+  // unmounts (browser-dependent), so Escape can't just clear renamingTabId
+  // and trust blur to stay quiet — a stray blur could still land on the old
+  // closure and commit renameDraft anyway. This ref makes Escape's "discard,
+  // don't commit" explicit regardless of whether that blur fires.
+  const skipRenameCommitRef = React.useRef(false);
   const [projects,        setProjects]        = React.useState<ProjectItem[]>([]);
   const [projLoading,     setProjLoading]     = React.useState(false);
   const [activeProjectId, setActiveProjectId] = React.useState<string | null>(null);
@@ -436,7 +448,7 @@ export default function BuilderPage() {
     setEditRedoStack([]);
   }
 
-  function changeView(next: "preview" | "code" | "edit") {
+  function changeView(next: "preview" | "code" | "edit" | "report") {
     if (view === "edit" && next !== "edit") flushVisualEditsToChat();
     setView(next);
   }
@@ -583,10 +595,21 @@ export default function BuilderPage() {
     // within a project (the "quick switch" part of Projects v1) should
     // leave you positioned in that project, not wherever you were before.
     setActiveProjectId(s.projectId ?? null);
+    // Race with renameTab(): a double-click's two plain `click`s (fired
+    // before the `dblclick` that actually opens the rename input) can
+    // trigger this fetch for a not-yet-cached tab at the same moment the
+    // user renames it. If this resolves after that rename commits, using
+    // the server's `s.name` here would silently revert it — the local
+    // state (openTabs) is always at least as fresh as whatever this GET
+    // returned, since a rename updates it directly and optimistically.
+    // Only a brand-new tab entry (not already in openTabs) has no local
+    // name to defer to, so only that case falls back to `s.name`.
     setOpenTabs(tabs => {
-      const entry: HistoryItem = { id, name: s.name, createdAt: s.createdAt, updatedAt: s.updatedAt, projectId: s.projectId ?? null };
-      const exists = tabs.some(t => t.id === id);
-      return exists ? tabs.map(t => (t.id === id ? entry : t)) : [...tabs, entry];
+      const existing = tabs.find(t => t.id === id);
+      const entry: HistoryItem = existing
+        ? { ...existing, createdAt: s.createdAt, updatedAt: s.updatedAt, projectId: s.projectId ?? null }
+        : { id, name: s.name, createdAt: s.createdAt, updatedAt: s.updatedAt, projectId: s.projectId ?? null };
+      return existing ? tabs.map(t => (t.id === id ? entry : t)) : [...tabs, entry];
     });
   }
 
@@ -634,6 +657,26 @@ export default function BuilderPage() {
     setOpenTabs(tabs => [...tabs, draft]);
     reset();
     setActiveTabId(draftId);
+  }
+
+  /** Commits a tab rename: updates openTabs (what the strip reads) and
+   * history (what the sidebar reads) so both agree without a re-fetch, and
+   * — for a tab already backed by a real session (id isn't the `draft-…`
+   * local-only form) — persists it server-side. A draft tab's name lives
+   * only in local state/localStorage until its first message creates the
+   * real session (see the name-precedence comment in saveToDb below); no
+   * network call needed yet, and none is made. */
+  function renameTab(id: string, rawName: string) {
+    const name = rawName.trim().slice(0, 120) || "Untitled";
+    setOpenTabs(tabs => tabs.map(t => (t.id === id ? { ...t, name } : t)));
+    setHistory(h => h.map(s => (s.id === id ? { ...s, name } : s)));
+    if (!id.startsWith("draft-")) {
+      fetch(`/api/sessions/${id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name }),
+      }).catch(() => {});
+    }
   }
 
   async function deleteSession(id: string, e: React.MouseEvent) {
@@ -766,11 +809,27 @@ export default function BuilderPage() {
       } else {
         setAdoLinks([]);
       }
+      return d;
     } catch {
       setAdoStatus({ connected: false });
       setAdoLinks([]);
+      return { connected: false };
     } finally {
       setAdoLoading(false);
+    }
+  }
+
+  // Sidebar row trigger (mirrors openGithubModal) — selects the project so
+  // its ADO strip becomes visible, then only pops the connect modal if that
+  // project genuinely isn't connected yet. Avoids showing the raw "Connect"
+  // form over an existing connection, since (unlike the GitHub modal) the ADO
+  // modal has no "already connected" branch of its own.
+  async function openAdoConnect(projectId: string) {
+    selectProject(projectId);
+    const status = await loadAdoForProject(projectId);
+    if (!status?.connected) {
+      setAdoConnectErr(null);
+      setAdoModalOpen(true);
     }
   }
 
@@ -1017,9 +1076,17 @@ export default function BuilderPage() {
   // `activeTabId` here would still see the pre-draft value (often null).
   async function saveToDb(updatedMsgs: ChatMsg[], updatedTree: UINode, isFirst: boolean, currentTabId: string | null) {
     if (!isLoggedIn) return;
-    const name = updatedMsgs.find(m => m.role === "user")?.content?.slice(0, 120) || "Untitled";
+    const autoName = updatedMsgs.find(m => m.role === "user")?.content?.slice(0, 120) || "Untitled";
     try {
       if (isFirst || !dbSessionId) {
+        const oldTabId = currentTabId ?? dbSessionId ?? activeTabId; // the draft tab this content was living under
+        // A rename made before the first message would otherwise be lost —
+        // this is the only place a fresh session's name gets set, and it
+        // defaults to deriving one from the first message. Prefer a name
+        // the user already typed on this tab (renameTab, called pre-save)
+        // over that derived default.
+        const renamedAlready = oldTabId && openTabs.find(t => t.id === oldTabId)?.name;
+        const name = renamedAlready && renamedAlready !== "Untitled" ? renamedAlready : autoName;
         const res = await fetch("/api/sessions", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -1028,7 +1095,6 @@ export default function BuilderPage() {
         if (res.ok) {
           const d = await res.json();
           const newId = d.session.id;
-          const oldTabId = currentTabId ?? dbSessionId ?? activeTabId; // the draft tab this content was living under
           setDbSessionId(newId);
           setActiveTabId(newId);
           localStorage.setItem(SESSION_ID_STORAGE, newId);
@@ -1183,6 +1249,22 @@ export default function BuilderPage() {
   const code = tree
     ? `import {\n  /* … */\n} from "sandhata-ui";\n\nexport default function Generated() {\n  return (\n${treeToJSX(tree, 2)}\n  );\n}`
     : "";
+
+  // Report tab: every node whose type isn't a governed Spectra component or
+  // layout primitive — same check Renderer.tsx's "Unknown: {type}" fallback
+  // makes per-node, recomputed only when the tree actually changes.
+  const auditIssues: AuditIssue[] = React.useMemo(() => (tree ? auditTree(tree) : []), [tree]);
+
+  /** Jump to an audited element: switch to Edit view and select it, same as
+   * clicking it on the canvas. Elements inserted before the visual editor's
+   * id-backfill (ensureIds) ran won't have a nodeId yet — those still show
+   * in the report (type + path), just without a clickable jump. */
+  function goToAuditIssue(issue: AuditIssue) {
+    if (!issue.nodeId) return;
+    setView("edit");
+    setInspectorTab("properties");
+    setSelectedNodeId(issue.nodeId);
+  }
 
   async function exportZip() {
     if (!tree) return;
@@ -1732,6 +1814,64 @@ export default function BuilderPage() {
               </div>
             </div>
 
+            {/* "Getting started" checklist — Sign in / Connect GitHub / Connect
+                Azure DevOps for the active project. Sign-in always reads as
+                done here (this whole block is gated on isLoggedIn already).
+                Self-hides once all 3 are done — an onboarding nudge, not a
+                permanent status display (the strip below still shows that). */}
+            {isLoggedIn && activeProjectId && (() => {
+              const activeProject = projects.find(pr => pr.id === activeProjectId);
+              const githubDone = !!activeProject?.repoOwner;
+              const adoDone = !!adoStatus?.connected;
+              const doneCount = 1 + (githubDone ? 1 : 0) + (adoDone ? 1 : 0);
+              if (doneCount >= 3) return null;
+              const r = 8;
+              const circumference = 2 * Math.PI * r;
+              const offset = circumference * (1 - doneCount / 3);
+              return (
+                <div className="bld-gs-card">
+                  <div className="bld-gs-header">
+                    <span className="bld-gs-title">Getting started</span>
+                    <span className="bld-gs-progress">
+                      <span className="bld-gs-count">{doneCount}/3</span>
+                      <svg width="20" height="20" viewBox="0 0 20 20" className="bld-gs-ring">
+                        <circle cx="10" cy="10" r={r} className="bld-gs-ring-track" />
+                        <circle
+                          cx="10" cy="10" r={r}
+                          className="bld-gs-ring-fill"
+                          strokeDasharray={circumference}
+                          strokeDashoffset={offset}
+                        />
+                      </svg>
+                    </span>
+                  </div>
+                  <div className="bld-gs-list">
+                    <div className="bld-gs-row bld-gs-row--done">
+                      <CheckIcon /> <span>Signed in</span>
+                    </div>
+                    {githubDone ? (
+                      <div className="bld-gs-row bld-gs-row--done">
+                        <CheckIcon /> <span>{activeProject?.repoOwner}/{activeProject?.repoName}</span>
+                      </div>
+                    ) : (
+                      <button className="bld-gs-action" onClick={() => openGithubModal(activeProjectId)}>
+                        <GithubIcon /> Connect GitHub
+                      </button>
+                    )}
+                    {adoDone ? (
+                      <div className="bld-gs-row bld-gs-row--done">
+                        <CheckIcon /> <span>{adoStatus?.organization}/{adoStatus?.adoProject}</span>
+                      </div>
+                    ) : (
+                      <button className="bld-gs-action" onClick={() => { setAdoConnectErr(null); setAdoModalOpen(true); }}>
+                        <AdoIcon /> Connect Azure DevOps
+                      </button>
+                    )}
+                  </div>
+                </div>
+              );
+            })()}
+
             {/* Azure DevOps — project-scoped connect + link/status controls.
                 Lives near the project context line above, not gated behind
                 the History panel, so it stays visible whatever the sidebar
@@ -1820,6 +1960,13 @@ export default function BuilderPage() {
                       title={p.repoOwner ? `${p.repoOwner}/${p.repoName}${p.syncStatus === "error" ? " — last push failed" : ""}` : "Connect GitHub"}
                     >
                       <GithubIcon />
+                    </button>
+                    <button
+                      className={`bld-project-ado-btn${activeProjectId === p.id && adoStatus?.connected ? " connected" : ""}`}
+                      onClick={(e) => { e.stopPropagation(); openAdoConnect(p.id); }}
+                      title={activeProjectId === p.id && adoStatus?.connected ? `${adoStatus.organization}/${adoStatus.adoProject}` : "Connect Azure DevOps"}
+                    >
+                      <AdoIcon />
                     </button>
                     <button className="bld-history-del" onClick={(e) => deleteProject(p.id, e)} title="Delete project">
                       <XIcon />
@@ -1947,9 +2094,30 @@ export default function BuilderPage() {
                   key={t.id}
                   className={`bld-instance-tab${t.id === activeTabId ? " active" : ""}`}
                   onClick={() => openTab(t)}
-                  title={t.name}
+                  onDoubleClick={(e) => { e.stopPropagation(); skipRenameCommitRef.current = false; setRenameDraft(t.name); setRenamingTabId(t.id); }}
+                  title={renamingTabId === t.id ? undefined : `${t.name} — double-click to rename`}
                 >
-                  <span className="bld-instance-tab-name">{t.name}</span>
+                  {renamingTabId === t.id ? (
+                    <input
+                      className="bld-instance-tab-rename"
+                      value={renameDraft}
+                      autoFocus
+                      onFocus={(e) => e.currentTarget.select()}
+                      onClick={(e) => e.stopPropagation()}
+                      onChange={(e) => setRenameDraft(e.target.value)}
+                      onBlur={() => {
+                        if (skipRenameCommitRef.current) { skipRenameCommitRef.current = false; }
+                        else { renameTab(t.id, renameDraft); }
+                        setRenamingTabId(null);
+                      }}
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter") { e.preventDefault(); e.currentTarget.blur(); }
+                        else if (e.key === "Escape") { e.preventDefault(); skipRenameCommitRef.current = true; setRenamingTabId(null); }
+                      }}
+                    />
+                  ) : (
+                    <span className="bld-instance-tab-name">{t.name}</span>
+                  )}
                   <button className="bld-instance-tab-close" onClick={(e) => closeTab(t.id, e)} title="Close tab">
                     <XIcon />
                   </button>
@@ -1965,6 +2133,15 @@ export default function BuilderPage() {
               <button className={view === "preview" ? "on" : ""} onClick={() => changeView("preview")}><EyeIcon /> Preview</button>
               <button className={view === "code" ? "on" : ""} onClick={() => changeView("code")} disabled={!tree}><CodeIcon /> Code</button>
               <button className={view === "edit" ? "on" : ""} onClick={() => changeView("edit")} disabled={!tree} title="Click to select and edit properties, drag to reorder"><EditIcon /> Edit</button>
+              <button
+                className={view === "report" ? "on" : ""}
+                onClick={() => changeView("report")}
+                disabled={!tree}
+                title="Check for elements outside the design system"
+              >
+                <ShieldIcon /> Report
+                {auditIssues.length > 0 && <span className="bld-report-badge">{auditIssues.length}</span>}
+              </button>
             </div>
             <div className="bld-toolbar-right">
               {view === "preview" && (
@@ -2021,6 +2198,40 @@ export default function BuilderPage() {
                     why the colour values themselves are redeclared locally. */}
                 <code className="doc-code-lines" dangerouslySetInnerHTML={{ __html: sdHighlightLines(code) }} />
               </pre>
+            )}
+            {tree && view === "report" && (
+              <div className="bld-report">
+                {auditIssues.length === 0 ? (
+                  <div className="bld-report-clean">
+                    <ShieldIcon />
+                    <span>Every element in this page uses a governed Spectra component. Nothing outside the design system.</span>
+                  </div>
+                ) : (
+                  <>
+                    <p className="bld-report-summary">
+                      {auditIssues.length} element{auditIssues.length === 1 ? "" : "s"} outside the design system — not a real Spectra/Sandhata component.
+                    </p>
+                    <div className="bld-report-list">
+                      {auditIssues.map((issue, i) => (
+                        <div className="bld-report-row" key={issue.nodeId ?? `${issue.type}-${i}`}>
+                          <div className="bld-report-row-main">
+                            <span className="bld-report-type">{issue.type}</span>
+                            <span className="bld-report-path">{issue.path}</span>
+                          </div>
+                          <button
+                            className="bld-report-jump"
+                            onClick={() => goToAuditIssue(issue)}
+                            disabled={!issue.nodeId}
+                            title={issue.nodeId ? "Select in Edit view" : "Enter Edit view once to make this selectable"}
+                          >
+                            Select
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  </>
+                )}
+              </div>
             )}
             {tree && view === "edit" && (
               <div className="bld-edit-layout">
