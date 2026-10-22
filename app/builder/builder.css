@@ -222,6 +222,25 @@
 .bld-tabs button.on { background: rgba(20,22,24,0.08); color: var(--text-title); }
 .bld-tabs button:disabled { opacity: 0.35; cursor: not-allowed; }
 .bld-toolbar-right { display: flex; align-items: center; gap: 10px; }
+/* Common workspace: who else is on this page, and live connection state. */
+.bld-presence { display: flex; align-items: center; gap: 4px; }
+.bld-presence-dot { width: 8px; height: 8px; border-radius: 50%; margin-right: 4px; background: var(--colour-neutral-400, #98a3ad); }
+.bld-presence-dot--live { background: var(--colour-success-500, #16a34a); }
+.bld-presence-dot--error { background: var(--colour-error-500, #e5484d); }
+.bld-presence-avatar {
+  width: 24px; height: 24px; border-radius: 50%; border: 2px solid; object-fit: cover; margin-left: -6px;
+  box-sizing: border-box;
+}
+.bld-presence-avatar:first-of-type { margin-left: 0; }
+.bld-presence-avatar--initial {
+  display: flex; align-items: center; justify-content: center; border-color: transparent;
+  color: #fff; font: 11px var(--font-normal);
+}
+.bld-presence-more { font: 11px var(--font-normal); color: var(--text-caption); margin-left: 4px; }
+.bld-view-only {
+  font: 12px/22px var(--font-normal); padding: 0 8px; border-radius: 999px;
+  color: var(--text-caption); border: 1px solid var(--doc-line);
+}
 .bld-copy {
   height: 32px; padding: 0 14px; border: 1px solid var(--doc-line); border-radius: var(--radius-sm);
   background: var(--doc-surface); font: 700 12px/1 var(--font-bold); color: var(--text-body); cursor: pointer;
@@ -780,6 +799,53 @@
 .bld-project-ado-btn:hover { opacity: 1; background: var(--colour-primaryblue-50); color: var(--colour-primaryblue-500); }
 .bld-project-ado-btn.connected { opacity: 1; color: var(--colour-success-600, #1a7f4b); }
 .bld-project-ado-btn.connected:hover { background: var(--colour-success-100, #dcfce7); }
+
+/* ── Common workspace: share button, shared badge, share dialog ───────── */
+.bld-project-share-btn {
+  width: 20px; height: 20px; border: none; background: none; padding: 0;
+  color: var(--text-caption); cursor: pointer; border-radius: 4px;
+  display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+  opacity: 0.55; transition: opacity .1s, color .1s, background .1s;
+}
+.bld-project-share-btn svg { width: 12px; height: 12px; }
+.bld-project-share-btn:hover { opacity: 1; background: var(--colour-primaryblue-50); color: var(--colour-primaryblue-500); }
+.bld-project-share-btn.shared { opacity: 1; color: var(--colour-primaryblue-500); }
+.bld-project-shared {
+  font: 10px/16px var(--font-normal); padding: 0 6px; border-radius: 999px; flex-shrink: 0;
+  color: var(--colour-primaryblue-600); background: var(--colour-primaryblue-50);
+}
+.bld-modal--share { max-width: 460px; align-items: stretch; text-align: left; }
+.bld-modal--share .bld-modal-title, .bld-modal--share .bld-modal-body { text-align: left; }
+.bld-share-add { display: flex; gap: 8px; width: 100%; }
+.bld-share-add .bld-key-input { flex: 1; min-width: 0; }
+.bld-share-role {
+  height: 34px; padding: 0 8px; border: 1px solid var(--doc-line); border-radius: var(--radius-sm);
+  background: var(--surface-raised, transparent); color: var(--text-body); font: 13px var(--font-normal);
+}
+.bld-share-add-btn {
+  height: 34px; padding: 0 14px; border: none; border-radius: var(--radius-sm); cursor: pointer;
+  background: var(--colour-primaryblue-500); color: #fff; font: 13px var(--font-normal);
+}
+.bld-share-add-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+.bld-share-msg { margin-top: 8px; }
+.bld-share-notice, .bld-share-loading { margin: 8px 0 0; font: 12px/1.5 var(--font-normal); color: var(--text-caption); }
+.bld-share-list { list-style: none; margin: 14px 0 0; padding: 0; width: 100%; display: flex; flex-direction: column; gap: 4px; }
+.bld-share-row { display: flex; align-items: center; gap: 10px; padding: 6px 0; }
+.bld-share-row--pending { opacity: 0.75; }
+.bld-share-avatar { width: 28px; height: 28px; border-radius: 50%; flex-shrink: 0; object-fit: cover; }
+.bld-share-avatar--initial {
+  display: flex; align-items: center; justify-content: center;
+  background: var(--colour-primaryblue-100, #dbe4ff); color: var(--colour-primaryblue-600); font: 12px var(--font-normal);
+}
+.bld-share-who { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+.bld-share-name { font: 13px/1.4 var(--font-normal); color: var(--text-body); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.bld-share-email { font: 11px/1.4 var(--font-normal); color: var(--text-caption); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.bld-share-badge { font: 12px var(--font-normal); color: var(--text-caption); }
+.bld-share-remove {
+  border: none; background: none; cursor: pointer; padding: 4px 6px; border-radius: 4px;
+  font: 12px var(--font-normal); color: var(--colour-error-600, #aa1400);
+}
+.bld-share-remove:hover { background: var(--colour-error-50, #fdecea); }
 
 /* ── "Getting started" checklist (Sign in / GitHub / Azure DevOps) ──────
    Sits above the plain Azure DevOps status strip, near the project context

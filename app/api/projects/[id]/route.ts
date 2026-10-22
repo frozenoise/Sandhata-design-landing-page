@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { projectRole } from "@/lib/access";
 
 type Params = { params: Promise<{ id: string }> };
 
@@ -12,8 +13,12 @@ export async function GET(_req: Request, props: Params) {
   const session = await auth();
   if (!session?.user?.id) return NextResponse.json({ error: "unauthenticated" }, { status: 401 });
 
+  // Any member can open the project; rename and delete below stay owner-only.
+  const role = await projectRole(session.user.id, params.id);
+  if (!role) return NextResponse.json({ error: "not_found" }, { status: 404 });
+
   const project = await prisma.project.findFirst({
-    where: { id: params.id, userId: session.user.id },
+    where: { id: params.id },
     include: {
       sessions: {
         orderBy: { updatedAt: "desc" },
@@ -23,7 +28,7 @@ export async function GET(_req: Request, props: Params) {
   });
   if (!project) return NextResponse.json({ error: "not_found" }, { status: 404 });
 
-  return NextResponse.json({ project });
+  return NextResponse.json({ project: { ...project, role } });
 }
 
 // PATCH /api/projects/:id — rename a project

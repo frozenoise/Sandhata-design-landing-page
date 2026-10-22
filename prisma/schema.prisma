@@ -23,6 +23,7 @@ model User {
   builderSessions BuilderSession[]
   projects        Project[]
   githubInstallations GitHubInstallation[]
+  projectMemberships  ProjectMember[] @relation("MemberUser")
 }
 
 model Account {
@@ -75,6 +76,8 @@ model Project {
   updatedAt     DateTime         @updatedAt
   sessions      BuilderSession[]
   adoConnection AdoConnection?
+  members       ProjectMember[]
+  invites       ProjectInvite[]
 
   // ── GitHub push integration (Phase 1: push-only, single repo) ───────────
   // All optional — a project has no GitHub connection until /api/github/connect
@@ -100,6 +103,42 @@ model Project {
 
   @@index([userId, updatedAt])
   @@unique([repoOwner, repoName, userId])
+}
+
+// ── Common workspace (shared projects) ──────────────────────────────────────
+// Project.userId stays the owner. Members get access to the project and every
+// page inside it: "editor" can edit pages (live, via Liveblocks rooms keyed by
+// page id) and add pages; "viewer" can only open them. Integration settings
+// (GitHub, Azure DevOps), renaming, deleting and sharing stay owner-only.
+
+model ProjectMember {
+  id        String   @id @default(cuid())
+  projectId String
+  project   Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  userId    String
+  user      User     @relation("MemberUser", fields: [userId], references: [id], onDelete: Cascade)
+  role      String   // "editor" | "viewer"
+  addedById String
+  createdAt DateTime @default(now())
+
+  @@unique([projectId, userId])
+  @@index([userId])
+}
+
+// An invite for an email with no Sandhata account yet. Claimed (turned into a
+// ProjectMember) the first time someone signs in with that email — no invite
+// email is sent; the owner tells the person to sign in with that address.
+model ProjectInvite {
+  id          String   @id @default(cuid())
+  projectId   String
+  project     Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  email       String   // lowercased
+  role        String   // "editor" | "viewer"
+  invitedById String
+  createdAt   DateTime @default(now())
+
+  @@unique([projectId, email])
+  @@index([email])
 }
 
 // One GitHub App installation (an org or user account that installed the

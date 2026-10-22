@@ -11,6 +11,8 @@ import { RenderTree, treeToJSX, type UINode } from "./Renderer";
 import { ensureIds, findNodeById, updateNodeProps, updateNodeText, removeNodeById, moveNode, insertNodeAt, createNode, CONTAINER_TYPES, auditTree, type AuditIssue } from "./uiTree";
 import { PROP_SCHEMA, type PropField } from "./propSchema";
 import { PALETTE_CATEGORIES, paletteDefaults } from "./paletteDefaults";
+import { useLivePage, ROOM_PREFIX } from "./liveRoom";
+import { ShareDialog } from "./ShareDialog";
 
 type ChatMsg = {
   role: "user" | "assistant";
@@ -35,6 +37,11 @@ type ProjectItem = {
   updatedAt: string;
   createdAt: string;
   sessionCount: number;
+  // Common workspace: the caller's role, the owner's name when someone else
+  // owns it (shared with me), and whether anyone besides the owner has access.
+  role?: "owner" | "editor" | "viewer";
+  ownerName?: string | null;
+  shared?: boolean;
   // GitHub push integration (Phase 1) — all optional/null until connected.
   repoOwner?: string | null;
   repoName?: string | null;
@@ -152,6 +159,7 @@ const ExternalIcon = () => (<svg width="11" height="11" viewBox="0 0 24 24" fill
 const EyeIcon      = () => (<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7-11-7-11-7z"/><circle cx="12" cy="12" r="3"/></svg>);
 const CodeIcon     = () => (<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>);
 const EditIcon     = () => (<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 013 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>);
+const ShareIcon    = () => (<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M16 21v-2a4 4 0 00-4-4H6a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><line x1="19" y1="8" x2="19" y2="14"/><line x1="22" y1="11" x2="16" y2="11"/></svg>);
 const ShieldIcon   = () => (<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><polyline points="9 12 11 14 15 10"/></svg>);
 
 export default function BuilderPage() {
@@ -204,6 +212,11 @@ export default function BuilderPage() {
   // a container the user forgot they'd collapsed.
   const [collapsedLayerIds, setCollapsedLayerIds] = React.useState<Set<string>>(() => new Set());
   const [dbSessionId,   setDbSessionId]   = React.useState<string | null>(null);
+  // ── Common workspace: per saved page, the caller's role and whether it
+  // opens a live room (from GET /api/sessions/:id). Keyed by session id so a
+  // cached tab switch (openTab's fast path, no refetch) still knows it.
+  const [pageAccess, setPageAccess] = React.useState<Record<string, { role: "owner" | "editor" | "viewer"; shared: boolean; live: boolean }>>({});
+  const [shareProjectId, setShareProjectId] = React.useState<string | null>(null);
   const [history,       setHistory]       = React.useState<HistoryItem[]>([]);
   const [showHistory,   setShowHistory]   = React.useState(false);
   const [histLoading,   setHistLoading]   = React.useState(false);
@@ -381,6 +394,29 @@ export default function BuilderPage() {
     [tree, selectedNodeId]
   );
 
+  // ── Common workspace: live co-editing of shared pages ───────────────────
+  // Only a saved page in a shared project (and only while it's the tab on
+  // screen) joins a live room; everything else stays on the single-user path.
+  const activeAccess = dbSessionId && activeTabId === dbSessionId ? pageAccess[dbSessionId] : undefined;
+  const readOnly = activeAccess?.role === "viewer";
+  const liveRoomId = isLoggedIn && dbSessionId && activeAccess?.live ? `${ROOM_PREFIX}${dbSessionId}` : null;
+  const livePage = useLivePage<ChatMsg>({
+    roomId: liveRoomId,
+    loadSeed: async () => {
+      if (!dbSessionId) return null;
+      const res = await fetch(`/api/sessions/${dbSessionId}`);
+      if (!res.ok) return null;
+      const { session: s } = await res.json();
+      const seedMsgs: ChatMsg[] = s.messages ?? [];
+      // Same "latest tree = last assistant message's tree" rule as loadSession.
+      const seedTree = ([...seedMsgs].reverse().find(m => m.role === "assistant" && m.tree)?.tree ?? null) as UINode | null;
+      return { tree: seedTree, msgs: seedMsgs };
+    },
+    canWrite: !readOnly,
+    tree, setTree, msgs, setMsgs,
+    selectedNodeId: view === "edit" ? selectedNodeId : null,
+  });
+
   // Every structural/property edit goes through this — pushes the
   // pre-edit tree onto the undo stack, clears redo (a fresh edit
   // invalidates whatever "future" redo pointed at), and commits.
@@ -392,6 +428,9 @@ export default function BuilderPage() {
   }
 
   function undoEdit() {
+    // In a live room, undo goes through Liveblocks so it only reverts my own
+    // edits, never someone else's that landed after mine.
+    if (livePage.live) { livePage.undo(); return; }
     if (!tree || editHistory.length === 0) return;
     const prev = editHistory[editHistory.length - 1];
     setEditHistory(h => h.slice(0, -1));
@@ -400,6 +439,7 @@ export default function BuilderPage() {
   }
 
   function redoEdit() {
+    if (livePage.live) { livePage.redo(); return; }
     if (!tree || editRedoStack.length === 0) return;
     const next = editRedoStack[editRedoStack.length - 1];
     setEditRedoStack(r => r.slice(0, -1));
@@ -449,6 +489,8 @@ export default function BuilderPage() {
   }
 
   function changeView(next: "preview" | "code" | "edit" | "report") {
+    if (next === "edit" && readOnly) return;
+    if (next === "edit" && view !== "edit") livePage.clearHistory();
     if (view === "edit" && next !== "edit") flushVisualEditsToChat();
     setView(next);
   }
@@ -581,7 +623,8 @@ export default function BuilderPage() {
     setShowHistory(false);
     const res = await fetch(`/api/sessions/${id}`);
     if (!res.ok) return;
-    const { session: s } = await res.json();
+    const { session: s, access } = await res.json();
+    if (access) setPageAccess(a => ({ ...a, [id]: access }));
     const loadedMsgs: ChatMsg[] = s.messages ?? [];
     const lastTree = [...loadedMsgs].reverse().find(m => m.role === "assistant" && m.tree)?.tree ?? null;
     tabCacheRef.current[id] = { msgs: loadedMsgs, tree: lastTree as UINode | null };
@@ -611,6 +654,25 @@ export default function BuilderPage() {
         : { id, name: s.name, createdAt: s.createdAt, updatedAt: s.updatedAt, projectId: s.projectId ?? null };
       return existing ? tabs.map(t => (t.id === id ? entry : t)) : [...tabs, entry];
     });
+  }
+
+  // A saved page restored from localStorage on reload never went through
+  // loadSession, so it has no access info yet: fetch it, or a shared page
+  // reopened from a previous visit wouldn't join its live room until clicked.
+  React.useEffect(() => {
+    if (isLoggedIn && dbSessionId && activeTabId === dbSessionId && !pageAccess[dbSessionId]) refreshPageAccess();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isLoggedIn, dbSessionId, activeTabId]);
+
+  // Re-reads the open page's role/live flags without reloading its content —
+  // after sharing changes, so a page that just became shared goes live (and
+  // one that stopped being shared drops out of its room) straight away.
+  async function refreshPageAccess() {
+    if (!dbSessionId) return;
+    const res = await fetch(`/api/sessions/${dbSessionId}`);
+    if (!res.ok) return;
+    const { access } = await res.json();
+    if (access) setPageAccess(a => ({ ...a, [dbSessionId]: access }));
   }
 
   // Opens (or focuses, if already open) a tab for the given session. Restores
@@ -1177,7 +1239,7 @@ export default function BuilderPage() {
 
   async function send(text?: string) {
     const txt = (text ?? input).trim();
-    if (!txt || loading) return;
+    if (!txt || loading || readOnly) return;
     setInput("");
     setNeedsKey(false);
 
@@ -1500,6 +1562,16 @@ export default function BuilderPage() {
       )}
 
       {/* ── Azure DevOps connect modal ───────────────────────────────── */}
+      {shareProjectId && (
+        <ShareDialog
+          projectId={shareProjectId}
+          projectName={projects.find(p => p.id === shareProjectId)?.name ?? "project"}
+          currentUserId={(session?.user as { id?: string } | undefined)?.id ?? null}
+          onClose={() => setShareProjectId(null)}
+          onChanged={() => { loadProjects(); loadHistory(); refreshPageAccess(); }}
+        />
+      )}
+
       {adoModalOpen && (
         <div className="bld-modal-overlay" onClick={() => !adoConnecting && setAdoModalOpen(false)}>
           <div className="bld-modal" onClick={e => e.stopPropagation()}>
@@ -1952,8 +2024,17 @@ export default function BuilderPage() {
                   >
                     <span className={`bld-project-chevron${expandedProjects.has(p.id) ? " open" : ""}`}><ChevronIcon /></span>
                     <span className="bld-project-icon"><FolderIcon /></span>
-                    <span className="bld-project-name">{p.name}</span>
+                    <span className="bld-project-name" title={p.ownerName ? `Shared by ${p.ownerName}` : undefined}>{p.name}</span>
+                    {p.role && p.role !== "owner" && <span className="bld-project-shared">{p.role === "viewer" ? "View" : "Shared"}</span>}
                     <span className="bld-project-count">{p.sessionCount}</span>
+                    <button
+                      className={`bld-project-share-btn${p.shared ? " shared" : ""}`}
+                      onClick={(e) => { e.stopPropagation(); setShareProjectId(p.id); }}
+                      title={p.role === "owner" || !p.role ? (p.shared ? "Shared: manage who has access" : "Share this project") : "Who has access"}
+                    >
+                      <ShareIcon />
+                    </button>
+                    {(!p.role || p.role === "owner") && <>
                     <button
                       className={`bld-project-github-btn${p.repoOwner ? " connected" : ""}${p.syncStatus === "error" ? " error" : ""}`}
                       onClick={(e) => { e.stopPropagation(); openGithubModal(p.id); }}
@@ -1971,6 +2052,7 @@ export default function BuilderPage() {
                     <button className="bld-history-del" onClick={(e) => deleteProject(p.id, e)} title="Delete project">
                       <XIcon />
                     </button>
+                    </>}
                   </div>
                   {expandedProjects.has(p.id) && (
                     <div className="bld-project-sessions">
@@ -2063,14 +2145,14 @@ export default function BuilderPage() {
               <textarea
                 ref={inputRef}
                 className="bld-input"
-                placeholder={msgs.length > 0 ? "Describe a change…" : "Describe an interface…"}
+                placeholder={readOnly ? "You have view-only access to this page" : msgs.length > 0 ? "Describe a change…" : "Describe an interface…"}
                 value={input}
                 onChange={e => setInput(e.target.value)}
                 onKeyDown={e => { if ((e.metaKey || e.ctrlKey) && e.key === "Enter") send(); }}
                 rows={3}
-                disabled={loading}
+                disabled={loading || readOnly}
               />
-              <button className="bld-send-btn" onClick={() => send()} disabled={loading || !input.trim()} title="Send (⌘ Enter)">
+              <button className="bld-send-btn" onClick={() => send()} disabled={loading || readOnly || !input.trim()} title="Send (⌘ Enter)">
                 <SendIcon />
               </button>
             </div>
@@ -2132,7 +2214,7 @@ export default function BuilderPage() {
             <div className="bld-tabs">
               <button className={view === "preview" ? "on" : ""} onClick={() => changeView("preview")}><EyeIcon /> Preview</button>
               <button className={view === "code" ? "on" : ""} onClick={() => changeView("code")} disabled={!tree}><CodeIcon /> Code</button>
-              <button className={view === "edit" ? "on" : ""} onClick={() => changeView("edit")} disabled={!tree} title="Click to select and edit properties, drag to reorder"><EditIcon /> Edit</button>
+              <button className={view === "edit" ? "on" : ""} onClick={() => changeView("edit")} disabled={!tree || readOnly} title={readOnly ? "You have view-only access to this project" : "Click to select and edit properties, drag to reorder"}><EditIcon /> Edit</button>
               <button
                 className={view === "report" ? "on" : ""}
                 onClick={() => changeView("report")}
@@ -2144,6 +2226,18 @@ export default function BuilderPage() {
               </button>
             </div>
             <div className="bld-toolbar-right">
+              {readOnly && <span className="bld-view-only" title="The project owner gave you view-only access">View only</span>}
+              {livePage.live && (
+                <div className="bld-presence" title={livePage.status === "live" ? "Live: changes sync as you make them" : livePage.status === "error" ? "Live editing isn't connected" : "Connecting…"}>
+                  <span className={`bld-presence-dot bld-presence-dot--${livePage.status}`} />
+                  {livePage.others.slice(0, 4).map(o => (
+                    o.avatar
+                      ? <img key={o.connectionId} src={o.avatar} alt={o.name} title={o.name} className="bld-presence-avatar" style={{ borderColor: o.color }} />
+                      : <span key={o.connectionId} title={o.name} className="bld-presence-avatar bld-presence-avatar--initial" style={{ background: o.color }}>{o.name.slice(0, 1).toUpperCase()}</span>
+                  ))}
+                  {livePage.others.length > 4 && <span className="bld-presence-more">+{livePage.others.length - 4}</span>}
+                </div>
+              )}
               {view === "preview" && (
                 <div className="bld-viewport">
                   {(["mobile","tablet","desktop"] as const).map(v => (
@@ -2158,8 +2252,8 @@ export default function BuilderPage() {
               )}
               {view === "edit" && (
                 <div className="bld-edit-undo-redo">
-                  <button onClick={undoEdit} disabled={editHistory.length === 0} title="Undo">↶</button>
-                  <button onClick={redoEdit} disabled={editRedoStack.length === 0} title="Redo">↷</button>
+                  <button onClick={undoEdit} disabled={livePage.live ? !livePage.canUndo : editHistory.length === 0} title="Undo">↶</button>
+                  <button onClick={redoEdit} disabled={livePage.live ? !livePage.canRedo : editRedoStack.length === 0} title="Redo">↷</button>
                 </div>
               )}
               {tree && (
@@ -2342,6 +2436,11 @@ export default function BuilderPage() {
                     dropTarget?.position === "before" && `.bld-edit-canvas-wrap [data-node-id="${dropTarget.id}"] { box-shadow: inset 0 3px 0 0 var(--colour-primaryblue-500) !important; }`,
                     dropTarget?.position === "after" && `.bld-edit-canvas-wrap [data-node-id="${dropTarget.id}"] { box-shadow: inset 0 -3px 0 0 var(--colour-primaryblue-500) !important; }`,
                     dropTarget?.position === "inside" && `.bld-edit-canvas-wrap [data-node-id="${dropTarget.id}"] { outline: 2px dashed var(--colour-primaryblue-500) !important; outline-offset: -2px; }`,
+                    // Other people's selections (live rooms): their colour,
+                    // so you can see what someone else is working on.
+                    ...livePage.others
+                      .filter(o => o.selectedNodeId && o.selectedNodeId !== selectedNodeId && /^[\w-]+$/.test(o.selectedNodeId))
+                      .map(o => `.bld-edit-canvas-wrap [data-node-id="${o.selectedNodeId}"] { outline: 2px solid ${/^#[0-9a-fA-F]{3,8}$/.test(o.color) ? o.color : "#3B68FF"} !important; outline-offset: 1px; }`),
                   ].filter(Boolean).join("\n")}</style>
                   <div className={`bld-surface bld-surface--${viewport}`}>
                     <RenderTree tree={tree} editable />
