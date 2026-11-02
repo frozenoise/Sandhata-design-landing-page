@@ -996,6 +996,33 @@ export default function BuilderPage() {
     }));
   }
 
+  // Share from the editor. Access is per project, so a loose page first gets
+  // a project of its own (named after the page), then the invite dialog opens.
+  const [sharingPage, setSharingPage] = React.useState(false);
+  async function shareCurrentPage() {
+    if (activePageProjectId) { setShareProjectId(activePageProjectId); return; }
+    if (!dbSessionId || sharingPage) return;
+    setSharingPage(true);
+    try {
+      const pageName = history.find(h => h.id === dbSessionId)?.name ?? openTabs.find(t => t.id === dbSessionId)?.name ?? "Untitled";
+      const res = await fetch("/api/projects", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name: pageName }),
+      });
+      if (!res.ok) return;
+      const { project } = await res.json();
+      setProjects(ps => [project, ...ps]);
+      await moveSessionToProject(dbSessionId, project.id);
+      setOpenTabs(tabs => tabs.map(t => t.id === dbSessionId ? { ...t, projectId: project.id } : t));
+      setActiveProjectId(project.id);
+      setExpandedProjects(ex => new Set(ex).add(project.id));
+      setShareProjectId(project.id);
+    } finally {
+      setSharingPage(false);
+    }
+  }
+
   // ── Azure DevOps helpers ─────────────────────────────────────────────────
   // Connections are per-Project (not per-user), so everything here keys off
   // activeProjectId — Ungrouped sessions have no ADO surface at all.
@@ -2397,16 +2424,15 @@ export default function BuilderPage() {
               {readOnly && <span className="bld-view-only" title="The project owner gave you view-only access">View only</span>}
               {isLoggedIn && tree && (view === "edit" || view === "preview") && (() => {
                 // Invite people straight from the page (Vzy's Collaboration
-                // panel): opens the project's sharing dialog. Pages outside a
-                // project can't be shared, since access is per project.
+                // panel). A page outside a project gets one on first share.
                 const pid = activePageProjectId;
                 const owner = !activeAccess?.role || activeAccess.role === "owner";
                 return (
                   <button
                     className="bld-share-page-btn"
-                    disabled={!pid}
-                    onClick={() => pid && setShareProjectId(pid)}
-                    title={!pid ? "Move this page into a project to share it" : owner ? "Invite people to edit this page" : "See who has access"}
+                    disabled={(!pid && !dbSessionId) || sharingPage}
+                    onClick={shareCurrentPage}
+                    title={!pid && !dbSessionId ? "Send a first prompt to save this page, then share it" : owner ? "Invite people to edit this page" : "See who has access"}
                   >
                     <ShareIcon /> {owner ? "Share" : "People"}
                   </button>
