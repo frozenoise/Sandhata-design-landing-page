@@ -362,6 +362,27 @@
 .bld-float-toolbar button:hover:not(:disabled) { background: var(--doc-bg); color: var(--text-title); }
 .bld-float-toolbar button:disabled { color: var(--text-caption); opacity: 0.4; cursor: not-allowed; }
 .bld-float-toolbar-sep { width: 1px; height: 18px; margin: 0 4px; background: var(--doc-line); }
+.bld-float-toolbar button.on { background: var(--colour-primaryblue-50); color: var(--colour-primaryblue-600); }
+
+/* Hover labels for icon-only buttons (Vzy-style): a small dark pill with
+   the button's data-tip text. Above the bottom toolbar, below the section
+   pill so it doesn't cover the section it acts on. */
+.bld-float-toolbar [data-tip], .bld-section-bar-pill [data-tip] { position: relative; }
+.bld-float-toolbar [data-tip]::after, .bld-section-bar-pill [data-tip]::after {
+  content: attr(data-tip);
+  position: absolute; left: 50%; z-index: 30; pointer-events: none;
+  padding: 5px 8px; border-radius: 6px; white-space: nowrap;
+  background: #111318; color: #fff; font: 600 11px/1 var(--font-normal);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.18);
+  opacity: 0; transform: translate(-50%, 4px);
+  transition: opacity .12s ease, transform .12s ease;
+}
+.bld-float-toolbar [data-tip]::after { bottom: calc(100% + 10px); }
+.bld-section-bar-pill [data-tip]::after { top: calc(100% + 8px); transform: translate(-50%, -4px); }
+.bld-float-toolbar [data-tip]:hover::after, .bld-float-toolbar [data-tip]:focus-visible::after,
+.bld-section-bar-pill [data-tip]:hover::after, .bld-section-bar-pill [data-tip]:focus-visible::after {
+  opacity: 1; transform: translate(-50%, 0); transition-delay: .25s;
+}
 
 .bld-edit-layout { flex: 1; display: flex; gap: 20px; align-items: flex-start; min-width: 0; }
 .bld-edit-canvas-wrap { flex: 1; min-width: 0; display: flex; position: relative; }

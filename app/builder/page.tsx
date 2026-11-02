@@ -188,7 +188,7 @@ export default function BuilderPage() {
   const [keyDraft,      setKeyDraft]      = React.useState("");
   const [needsKey,      setNeedsKey]      = React.useState(false);
   const [tree,          setTree]          = React.useState<UINode | null>(null);
-  const [view,          setView]          = React.useState<"preview" | "code" | "edit" | "report">("preview");
+  const [view,          setView]          = React.useState<"preview" | "code" | "edit" | "report">("edit");
   const [viewport,      setViewport]      = React.useState<"mobile" | "tablet" | "desktop">("tablet");
   const [canvasTheme,   setCanvasTheme]   = React.useState<"light" | "dark">("light");
   // Insert tab: filters the component grid by name.
@@ -648,6 +648,12 @@ export default function BuilderPage() {
     setView(next);
   }
 
+  // Pages open in Edit; a view-only page drops to Preview once its access
+  // has loaded.
+  React.useEffect(() => {
+    if (readOnly && view === "edit") setView("preview");
+  }, [readOnly, view]);
+
   // ── Auth modal: show once per session for unauthenticated users ────────
   React.useEffect(() => {
     if (authLoading) return;
@@ -785,7 +791,7 @@ export default function BuilderPage() {
     setTree(lastTree as UINode | null);
     setDbSessionId(id);
     setActiveTabId(id);
-    setView("preview");
+    setView("edit");
     localStorage.setItem(SESSION_ID_STORAGE, id);
     // Follow the session into its project's context — switching pages
     // within a project (the "quick switch" part of Projects v1) should
@@ -841,7 +847,7 @@ export default function BuilderPage() {
       setTree(cached.tree);
       setDbSessionId(item.id);
       setActiveTabId(item.id);
-      setView("preview");
+      setView("edit");
       localStorage.setItem(SESSION_ID_STORAGE, item.id);
       setActiveProjectId(item.projectId ?? null);
     } else {
@@ -1456,7 +1462,7 @@ export default function BuilderPage() {
       } else {
         const newTree = data.tree as UINode;
         setTree(newTree);
-        setView("preview");
+        setView("edit");
         const isFirst = msgs.length === 0;
         const updatedMsgs: ChatMsg[] = [
           ...next,
@@ -2470,14 +2476,27 @@ export default function BuilderPage() {
             </div>
           </div>
 
-          {/* Floating canvas toolbar, bottom centre like Framer's: undo/redo
-              while editing, plus the canvas's own light/dark switch. */}
+          {/* Floating canvas toolbar, bottom centre like Framer's: preview
+              toggle, undo/redo while editing, and the canvas's own light/dark
+              switch. Labels show on hover (data-tip), as in Vzy. */}
           {tree && (view === "preview" || view === "edit") && (
             <div className="bld-float-toolbar" role="toolbar" aria-label="Canvas tools">
+              {!readOnly && (
+                <>
+                  <button
+                    className={view === "preview" ? "on" : ""}
+                    onClick={() => changeView(view === "preview" ? "edit" : "preview")}
+                    data-tip={view === "preview" ? "Back to editing" : "Preview"}
+                    aria-label={view === "preview" ? "Back to editing" : "Preview"}
+                    aria-pressed={view === "preview"}
+                  ><EyeIcon /></button>
+                  <span className="bld-float-toolbar-sep" aria-hidden="true" />
+                </>
+              )}
               {view === "edit" && (
                 <>
-                  <button onClick={undoEdit} disabled={livePage.live ? !livePage.canUndo : editHistory.length === 0} title="Undo" aria-label="Undo"><UndoIcon /></button>
-                  <button onClick={redoEdit} disabled={livePage.live ? !livePage.canRedo : editRedoStack.length === 0} title="Redo" aria-label="Redo"><RedoIcon /></button>
+                  <button onClick={undoEdit} disabled={livePage.live ? !livePage.canUndo : editHistory.length === 0} data-tip="Undo" aria-label="Undo"><UndoIcon /></button>
+                  <button onClick={redoEdit} disabled={livePage.live ? !livePage.canRedo : editRedoStack.length === 0} data-tip="Redo" aria-label="Redo"><RedoIcon /></button>
                   <span className="bld-float-toolbar-sep" aria-hidden="true" />
                 </>
               )}
@@ -2487,8 +2506,8 @@ export default function BuilderPage() {
                   setCanvasTheme(next);
                   try { localStorage.setItem(CANVAS_THEME_STORAGE, next); } catch {}
                 }}
-                title={canvasTheme === "light" ? "Canvas: light (switch to dark)" : "Canvas: dark (switch to light)"}
-                aria-label="Toggle canvas theme"
+                data-tip={canvasTheme === "light" ? "Dark canvas" : "Light canvas"}
+                aria-label={canvasTheme === "light" ? "Switch canvas to dark" : "Switch canvas to light"}
               >
                 {canvasTheme === "light" ? <SunIcon /> : <MoonIcon />}
               </button>
@@ -2691,12 +2710,12 @@ export default function BuilderPage() {
                         style={{ top: sectionRect.top, left: sectionRect.left, width: sectionRect.width }}
                       >
                         <div className="bld-section-bar-pill" role="toolbar" aria-label="Section actions">
-                          <button onClick={() => openInsertAt(barSectionId)} title="Add above this section" aria-label="Add above this section"><PlusIcon /></button>
-                          <button onClick={() => askAiAboutSection(barSectionId)} title="Ask AI to change this section" aria-label="Ask AI to change this section"><SparkleIcon /></button>
+                          <button onClick={() => openInsertAt(barSectionId)} data-tip="Add section above" aria-label="Add above this section"><PlusIcon /></button>
+                          <button onClick={() => askAiAboutSection(barSectionId)} data-tip="Edit with AI" aria-label="Ask AI to change this section"><SparkleIcon /></button>
                           <button
                             className={sectionMenuId === barSectionId ? "on" : ""}
                             onClick={() => setSectionMenuId(m => (m === barSectionId ? null : barSectionId))}
-                            title="More" aria-label="More section actions" aria-haspopup="menu" aria-expanded={sectionMenuId === barSectionId}
+                            data-tip={sectionMenuId === barSectionId ? undefined : "More actions"} aria-label="More section actions" aria-haspopup="menu" aria-expanded={sectionMenuId === barSectionId}
                           ><MoreIcon /></button>
                           {sectionMenuId === barSectionId && (
                             <div className="bld-section-menu" role="menu" onMouseLeave={() => setSectionMenuId(null)}>
