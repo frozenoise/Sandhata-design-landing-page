@@ -1965,7 +1965,7 @@ export default function BuilderPage() {
                     switching between several projects. */}
                 {isLoggedIn && activeProjectId && (
                   <div className="bld-active-project">
-                    <FolderIcon /> {projects.find(p => p.id === activeProjectId)?.name ?? "Project"}
+                    <FolderIcon /> <span>{projects.find(p => p.id === activeProjectId)?.name ?? "Project"}</span>
                   </div>
                 )}
               </div>
@@ -2142,8 +2142,9 @@ export default function BuilderPage() {
             {/* Azure DevOps — project-scoped connect + link/status controls.
                 Lives near the project context line above, not gated behind
                 the History panel, so it stays visible whatever the sidebar
-                is showing. */}
-            {isLoggedIn && activeProjectId && (
+                is showing. Until it's connected, the Getting started card
+                above carries the Connect button, so the strip waits. */}
+            {isLoggedIn && activeProjectId && adoStatus?.connected && (
               <div className="bld-ado-strip">
                 {adoLoading && !adoStatus ? (
                   <span className="bld-ado-loading">Checking Azure DevOps…</span>
