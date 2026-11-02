@@ -2020,7 +2020,7 @@ export default function BuilderPage() {
                 <div key={p.id} className="bld-project-group">
                   <div
                     className={`bld-project-head${activeProjectId === p.id ? " active" : ""}`}
-                    onClick={() => { selectProject(p.id); toggleProjectExpand(p.id); }}
+                    onClick={() => { setActiveProjectId(p.id); toggleProjectExpand(p.id); }}
                   >
                     <span className={`bld-project-chevron${expandedProjects.has(p.id) ? " open" : ""}`}><ChevronIcon /></span>
                     <span className="bld-project-icon"><FolderIcon /></span>
