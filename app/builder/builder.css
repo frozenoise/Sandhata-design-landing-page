@@ -265,11 +265,16 @@
 .bld-canvas { flex: 1; overflow: auto; padding: 36px; display: flex; }
 
 /* surface with viewport variants */
+/* The surface carries its own .light/.dark class (canvasTheme in page.tsx),
+   which re-scopes the colour tokens, so it uses the design tokens here, not
+   the --doc-* chrome colours that follow the site toggle. */
 .bld-surface {
   margin: auto; width: 100%;
-  background: var(--doc-surface); border: 1px solid var(--doc-line);
+  background: var(--surface-page); color: var(--text-body);
+  border: 1px solid var(--border-subtle);
   border-radius: var(--radius-lg); padding: 32px; box-shadow: var(--shadow-sm);
   box-sizing: border-box;
+  transition: background .15s, border-color .15s;
 }
 .bld-surface--mobile  { max-width: 375px; }
 .bld-surface--tablet  { max-width: 768px; }
@@ -333,14 +338,22 @@
 .bld-report-jump:disabled { opacity: 0.35; cursor: not-allowed; }
 
 /* ── Visual editor (Edit view) ─────────────────────────────────────────── */
-.bld-edit-undo-redo { display: flex; gap: 4px; }
-.bld-edit-undo-redo button {
-  width: 28px; height: 28px; border: 1px solid var(--doc-line); border-radius: var(--radius-sm);
-  background: var(--doc-bg); color: var(--text-body); font-size: 14px; cursor: pointer;
-  display: flex; align-items: center; justify-content: center;
+/* ── Edit toolbar: undo/redo + canvas theme ─────────────────────────── */
+.bld-edit-undo-redo {
+  display: flex; gap: 2px; padding: 2px;
+  border: 1px solid var(--doc-line); border-radius: var(--radius-sm); background: var(--doc-bg);
 }
-.bld-edit-undo-redo button:hover:not(:disabled) { border-color: var(--colour-primaryblue-300); color: var(--colour-primaryblue-500); }
-.bld-edit-undo-redo button:disabled { opacity: 0.35; cursor: not-allowed; }
+.bld-edit-undo-redo button, .bld-canvas-theme-btn {
+  width: 28px; height: 28px; border: none; border-radius: 4px;
+  background: none; color: var(--text-body); cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  transition: background .1s, color .1s;
+}
+.bld-edit-undo-redo button svg, .bld-canvas-theme-btn svg { display: block; flex-shrink: 0; }
+.bld-edit-undo-redo button:hover:not(:disabled) { background: var(--doc-surface); color: var(--text-title); }
+.bld-edit-undo-redo button:disabled { color: var(--text-caption); opacity: 0.45; cursor: not-allowed; }
+.bld-canvas-theme-btn { width: 34px; height: 34px; border: 1px solid var(--doc-line); border-radius: var(--radius-sm); background: var(--doc-bg); }
+.bld-canvas-theme-btn:hover { color: var(--text-title); border-color: var(--border-strong); }
 
 .bld-edit-layout { flex: 1; display: flex; gap: 20px; align-items: flex-start; min-width: 0; }
 .bld-edit-canvas-wrap { flex: 1; min-width: 0; display: flex; }
@@ -350,85 +363,157 @@
 .bld-edit-canvas-wrap [data-node-id] { cursor: grab; }
 .bld-edit-canvas-wrap [data-node-id]:active { cursor: grabbing; }
 
+/* ── Inspector panel (Insert / Properties / Layers) ─────────────────────
+   Modelled on Framer's and Figma's inspectors: quiet hairline sections,
+   small caption headers, label-left / control-right rows, compact 28px
+   controls. Sticky so it stays in view while the canvas scrolls. */
 .bld-prop-panel {
-  width: 260px; flex-shrink: 0; align-self: stretch;
+  width: 272px; flex-shrink: 0; align-self: flex-start;
+  position: sticky; top: 0; max-height: calc(100vh - 180px);
+  display: flex; flex-direction: column;
   background: var(--doc-surface); border: 1px solid var(--doc-line); border-radius: var(--radius-lg);
-  padding: 16px; overflow-y: auto;
+  box-shadow: 0 1px 2px rgba(0,0,0,0.04), 0 8px 24px rgba(0,0,0,0.06);
+  overflow: hidden;
 }
-.bld-prop-panel-head {
-  display: flex; align-items: center; justify-content: space-between;
-  margin-bottom: 14px; padding-bottom: 10px; border-bottom: 1px solid var(--doc-line);
-}
-.bld-prop-type { font: 700 13px/1 var(--font-bold); color: var(--text-title); }
-.bld-prop-empty { font: 12px/1.5 var(--font-normal); color: var(--text-caption); margin: 0; }
-.bld-prop-field { display: flex; flex-direction: column; gap: 5px; margin-bottom: 12px; }
-.bld-prop-field label {
-  font: 700 11px/1 var(--font-bold); color: var(--text-caption);
-  text-transform: uppercase; letter-spacing: 0.3px;
-}
-.bld-prop-field--bool { flex-direction: row; align-items: center; gap: 8px; cursor: pointer; }
-.bld-prop-field--bool input { margin: 0; }
+.bld-prop-panel > :not(.bld-inspector-tabs) { padding-left: 12px; padding-right: 12px; }
+.bld-prop-panel > .bld-palette, .bld-prop-panel > .bld-layers { overflow-y: auto; }
 
-/* ── Phase 3: Insert/Properties tab switcher + component palette ────────── */
 .bld-inspector-tabs {
-  display: flex; gap: 4px; margin-bottom: 14px; padding-bottom: 10px;
-  border-bottom: 1px solid var(--doc-line);
+  display: flex; gap: 2px; margin: 10px 10px 4px; padding: 2px;
+  background: var(--doc-bg); border: 1px solid var(--doc-line); border-radius: 8px;
+  flex-shrink: 0;
 }
 .bld-inspector-tab {
-  flex: 1; padding: 6px 10px; border: 1px solid transparent; border-radius: var(--radius-sm);
-  background: transparent; color: var(--text-caption); font: 700 12px/1 var(--font-bold);
-  cursor: pointer;
+  flex: 1; height: 26px; padding: 0 8px; border: none; border-radius: 6px;
+  background: transparent; color: var(--text-caption); font: 12px/1 var(--font-normal);
+  cursor: pointer; transition: background .1s, color .1s;
 }
-.bld-inspector-tab:hover { color: var(--text-body); }
-.bld-inspector-tab--active {
-  background: var(--colour-primaryblue-50, #eef2ff); border-color: var(--colour-primaryblue-200);
-  color: var(--colour-primaryblue-600, var(--colour-primaryblue-500));
+.bld-inspector-tab:hover { color: var(--text-title); }
+.bld-inspector-tab--active, .bld-inspector-tab--active:hover {
+  background: var(--doc-surface); color: var(--text-title); font-family: var(--font-bold); font-weight: 700;
+  box-shadow: 0 1px 2px rgba(0,0,0,0.08), 0 0 0 0.5px rgba(0,0,0,0.04);
 }
-/* :hover above and --active here have equal specificity (one class each) —
-   without this, hovering an already-active tab lets :hover's color win by
-   source order, silently swapping the active tab's text to near-invisible
-   caption-grey against its own light lavender background. */
-.bld-inspector-tab--active:hover { color: var(--colour-primaryblue-600, var(--colour-primaryblue-500)); }
-.bld-palette { display: flex; flex-direction: column; gap: 16px; }
-.bld-palette > .bld-prop-empty { margin-bottom: -4px; }
-.bld-palette-cat { display: flex; flex-direction: column; gap: 6px; }
-.bld-palette-cat-label {
-  font: 700 11px/1 var(--font-bold); color: var(--text-caption);
-  text-transform: uppercase; letter-spacing: 0.3px;
+
+.bld-panel-section-label {
+  display: block; font: 700 11px/1 var(--font-bold); color: var(--text-title);
+  letter-spacing: 0.1px; margin: 0 0 8px;
 }
-.bld-palette-chips { display: flex; flex-wrap: wrap; gap: 6px; }
-.bld-palette-chip {
-  padding: 6px 10px; border: 1px solid var(--doc-line); border-radius: var(--radius-sm);
-  background: var(--doc-bg); color: var(--text-body); font: 12px/1 var(--font-normal);
-  cursor: grab; user-select: none;
+.bld-panel-hint { font: 11px/1.4 var(--font-normal); color: var(--text-caption); margin: 4px 0 12px; }
+.bld-prop-empty { font: 12px/1.5 var(--font-normal); color: var(--text-caption); margin: 0; }
+.bld-panel-empty {
+  display: flex; flex-direction: column; align-items: center; gap: 10px;
+  padding: 28px 16px 32px !important; text-align: center;
 }
-.bld-palette-chip:active { cursor: grabbing; }
-.bld-palette-chip:hover { border-color: var(--colour-primaryblue-300); color: var(--colour-primaryblue-500); }
+.bld-panel-empty-icon {
+  width: 36px; height: 36px; border-radius: 10px; display: flex; align-items: center; justify-content: center;
+  background: var(--doc-bg); color: var(--text-caption); border: 1px solid var(--doc-line);
+}
+
+/* Insert: search + icon grid */
+.bld-palette { display: flex; flex-direction: column; gap: 14px; padding-top: 8px; }
+.bld-palette-search {
+  display: flex; align-items: center; gap: 6px; height: 30px; padding: 0 9px;
+  background: var(--doc-bg); border: 1px solid var(--doc-line); border-radius: 7px;
+  color: var(--text-caption); position: sticky; top: 0; z-index: 1;
+}
+.bld-palette-search:focus-within { border-color: var(--colour-primaryblue-400); box-shadow: 0 0 0 3px rgba(0,54,221,0.12); }
+.bld-palette-search input {
+  flex: 1; min-width: 0; border: none; outline: none; background: transparent;
+  font: 12px/1 var(--font-normal); color: var(--text-title);
+}
+.bld-palette-search input::-webkit-search-cancel-button { display: none; }
+.bld-palette-cat { display: flex; flex-direction: column; }
+.bld-palette-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 4px; }
+.bld-palette-item {
+  display: flex; align-items: center; gap: 8px; height: 34px; padding: 0 8px;
+  border: 1px solid transparent; border-radius: 7px; background: var(--doc-bg);
+  color: var(--text-body); cursor: grab; user-select: none;
+  transition: background .1s, border-color .1s, color .1s;
+}
+.bld-palette-item:hover { border-color: var(--doc-line); background: var(--doc-surface); color: var(--text-title); box-shadow: 0 1px 2px rgba(0,0,0,0.06); }
+.bld-palette-item:active { cursor: grabbing; }
+.bld-palette-item-icon {
+  width: 22px; height: 22px; flex-shrink: 0; border-radius: 5px;
+  display: flex; align-items: center; justify-content: center;
+  background: var(--doc-surface); border: 1px solid var(--doc-line); color: var(--text-caption);
+}
+.bld-palette-item:hover .bld-palette-item-icon { color: var(--colour-primaryblue-500); border-color: var(--colour-primaryblue-200); }
+.bld-palette-item-label { font: 12px/1 var(--font-normal); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+/* Properties: header + label/control rows */
+.bld-prop-panel-head {
+  display: flex; align-items: center; gap: 8px;
+  padding-top: 10px !important; padding-bottom: 10px !important; border-bottom: 1px solid var(--doc-line);
+}
+.bld-prop-type-icon {
+  width: 24px; height: 24px; border-radius: 6px; flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center;
+  background: rgba(59,104,255,0.14); color: var(--colour-primaryblue-500);
+}
+.bld-prop-type { flex: 1; font: 700 13px/1 var(--font-bold); color: var(--text-title); }
+.bld-prop-delete {
+  width: 26px; height: 26px; border: none; border-radius: 6px; background: none;
+  color: var(--text-caption); cursor: pointer; display: flex; align-items: center; justify-content: center;
+}
+.bld-prop-delete:hover { background: rgba(170,20,0,0.08); color: var(--colour-error-600, #aa1400); }
+.bld-prop-section { padding-top: 12px !important; padding-bottom: 12px !important; }
+.bld-prop-section + .bld-prop-section { border-top: 1px solid var(--doc-line); }
+.bld-prop-row {
+  display: grid; grid-template-columns: 92px minmax(0, 1fr); align-items: center; gap: 8px;
+  min-height: 28px; margin-bottom: 6px;
+}
+.bld-prop-row:last-child { margin-bottom: 0; }
+.bld-prop-row--stacked { display: block; }
+.bld-prop-row > label {
+  font: 12px/1.2 var(--font-normal); color: var(--text-caption);
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.bld-prop-input {
+  width: 100%; height: 28px; box-sizing: border-box; padding: 0 8px;
+  background: var(--doc-bg); border: 1px solid var(--doc-line); border-radius: 6px;
+  font: 12px/1 var(--font-normal); color: var(--text-title); outline: none;
+  transition: border-color .1s, box-shadow .1s;
+}
+select.bld-prop-input { padding-right: 4px; cursor: pointer; }
+.bld-prop-input:hover { border-color: var(--border-strong); }
+.bld-prop-input:focus { border-color: var(--colour-primaryblue-400); box-shadow: 0 0 0 3px rgba(0,54,221,0.12); background: var(--doc-surface); }
+.bld-prop-textarea { height: auto; min-height: 52px; padding: 7px 8px; line-height: 1.45; resize: vertical; font-family: var(--font-normal); }
+.bld-prop-segmented {
+  display: grid; grid-template-columns: 1fr 1fr; gap: 2px; padding: 2px; height: 28px; box-sizing: border-box;
+  background: var(--doc-bg); border: 1px solid var(--doc-line); border-radius: 6px;
+}
+.bld-prop-segmented button {
+  border: none; border-radius: 4px; background: none; cursor: pointer;
+  font: 12px/1 var(--font-normal); color: var(--text-caption);
+}
+.bld-prop-segmented button.on { background: var(--doc-surface); color: var(--text-title); box-shadow: 0 1px 2px rgba(0,0,0,0.08); }
 
 /* ── Layers tab: collapsible tree of the whole document ──────────────── */
-.bld-layers { display: flex; flex-direction: column; gap: 1px; margin: 0 -8px; }
+.bld-layers { display: flex; flex-direction: column; gap: 1px; padding: 8px 6px 10px !important; }
 .bld-layer-row {
-  display: flex; align-items: center; gap: 6px; padding: 5px 8px; border-radius: var(--radius-sm);
-  cursor: pointer; user-select: none;
+  display: flex; align-items: center; gap: 6px; height: 28px; padding: 0 8px; border-radius: 6px;
+  cursor: pointer; user-select: none; color: var(--text-body);
 }
-.bld-layer-row:hover { background: var(--doc-bg); }
-.bld-layer-row--hovered { background: var(--doc-bg); }
+.bld-layer-row:hover, .bld-layer-row--hovered { background: var(--doc-bg); }
 .bld-layer-row--selected, .bld-layer-row--selected:hover {
-  background: var(--colour-primaryblue-50, #eef2ff); color: var(--colour-primaryblue-600, var(--colour-primaryblue-500));
+  background: var(--colour-primaryblue-500); color: #fff;
 }
 .bld-layer-toggle {
   display: flex; align-items: center; justify-content: center; width: 14px; height: 14px; flex-shrink: 0;
   border: none; background: transparent; padding: 0; color: var(--text-caption); cursor: pointer;
 }
+.bld-layer-row--selected .bld-layer-toggle { color: rgba(255,255,255,0.8); }
 .bld-layer-toggle svg { transition: transform 0.12s ease; transform: rotate(90deg); }
 .bld-layer-toggle--collapsed svg { transform: rotate(0deg); }
 .bld-layer-toggle-spacer { width: 14px; flex-shrink: 0; }
-.bld-layer-type { font: 700 12px/1.3 var(--font-bold); color: var(--text-body); flex-shrink: 0; }
-.bld-layer-row--selected .bld-layer-type { color: inherit; }
+.bld-layer-icon { display: flex; flex-shrink: 0; color: var(--text-caption); }
+.bld-layer-row--selected .bld-layer-icon { color: rgba(255,255,255,0.9); }
+.bld-layer-type { font: 12px/1.3 var(--font-normal); color: inherit; flex-shrink: 0; }
 .bld-layer-text {
   font: 12px/1.3 var(--font-normal); color: var(--text-caption); overflow: hidden;
   text-overflow: ellipsis; white-space: nowrap; min-width: 0;
 }
+.bld-layer-row--selected .bld-layer-text { color: rgba(255,255,255,0.75); }
 
 .bld-empty { color: var(--text-caption); }
 .bld-spinner {

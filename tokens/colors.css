@@ -4,7 +4,9 @@
    Values extracted verbatim from the Sandhata Figma variables.
    ============================================================ */
 
-:root {
+/* `.light` re-applies the light values inside a dark page, e.g. the builder
+   canvas, which keeps its own theme whatever the site toggle says. */
+:root, .light {
   /* ---- Brand mark ---------------------------------------- */
   --brand-cyan: rgb(0, 164, 220);      /* logo twist mark */
   --brand-orange: rgb(246, 129, 54);   /* logo accent dot */
@@ -216,7 +218,7 @@
 }
 
 /* ========================================================
-   DARK THEME — apply via [data-theme="dark"] or .dark
+   DARK THEME — apply via [data-theme="dark"] or .dark (.light undoes it)
    ======================================================== */
 :root[data-theme="dark"], .dark {
   --surface-page: var(--colour-neutral-950);
