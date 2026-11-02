@@ -1,16 +1,16 @@
-// Pure, server-safe UINode tree helpers — no React, no "use client" directive,
+// Pure, server-safe UINode tree helpers - no React, no "use client" directive,
 // so this file can be imported from API route handlers (e.g. app/api/github/push)
 // as well as from the client-side Renderer/page. Keep it that way: don't add
-// a React or @sandhata/spectra import here — that's what Renderer.tsx is for.
+// a React or @sandhata/spectra import here - that's what Renderer.tsx is for.
 
 /* A generated UI is a tree of these nodes. Only whitelisted component types
-   are ever rendered — the model can never inject arbitrary code/markup. */
+   are ever rendered - the model can never inject arbitrary code/markup. */
 export type UINode = {
   type: string;
   props?: Record<string, any>;
   children?: UINode[] | string;
   // Stable node identity for the visual editor (selection, property edits,
-  // delete). Optional and additive — existing sessions' saved trees predate
+  // delete). Optional and additive - existing sessions' saved trees predate
   // this field, RenderNode/treeToJSX both ignore extra keys they don't know
   // about, and `ensureIds` below lazily backfills it the first time a tree
   // enters edit mode. Deliberately NOT nested inside `props`: `props` gets
@@ -22,7 +22,7 @@ export type UINode = {
 
 // ── Visual editor: pure tree-mutation helpers ────────────────────────────
 // All of these return a NEW tree (structural clone along the changed path,
-// untouched siblings/subtrees reused) rather than mutating in place — `tree`
+// untouched siblings/subtrees reused) rather than mutating in place - `tree`
 // lives in a single React.useState in app/builder/page.tsx, so every commit
 // needs to be a fresh reference for React to see the change and for the
 // undo/redo snapshot stack (also in page.tsx) to hold meaningfully distinct
@@ -32,14 +32,14 @@ let idCounter = 0;
 // Not crypto.randomUUID(): this file is deliberately import-free (see the
 // header comment) so it stays safe to use from any server runtime without
 // assuming a particular global is present. Doesn't need to be
-// cryptographically unique — only unique within one tree, for one editing
+// cryptographically unique - only unique within one tree, for one editing
 // session.
 function genNodeId(): string {
   idCounter += 1;
   return `n${Date.now().toString(36)}${idCounter.toString(36)}${Math.random().toString(36).slice(2, 6)}`;
 }
 
-/** Builds a fresh node with a real id — the palette's insert-a-new-component
+/** Builds a fresh node with a real id - the palette's insert-a-new-component
  * path (Phase 3) uses this instead of writing `{ id: undefined, ... }` and
  * relying on a later ensureIds pass, since the node needs a real id
  * immediately (to select it right after insertion, before any re-render). */
@@ -49,7 +49,7 @@ export function createNode(type: string, props?: Record<string, any>, children?:
 
 /** Backfills `id` on every node that doesn't already have one. Returns the
  * same reference if the tree was already fully id'd (cheap no-op check),
- * otherwise a new tree — same immutability contract as the rest of this file. */
+ * otherwise a new tree - same immutability contract as the rest of this file. */
 export function ensureIds(node: UINode): UINode {
   const kids = Array.isArray(node.children) ? node.children.map(ensureIds) : node.children;
   const kidsChanged = Array.isArray(node.children) && Array.isArray(kids)
@@ -105,7 +105,7 @@ export function firstText(node: UINode | null): string | null {
   return null;
 }
 
-/** Merges `patch` into the target node's `props` (shallow merge — a field
+/** Merges `patch` into the target node's `props` (shallow merge - a field
  * set to `undefined` removes that prop, matching how the property panel's
  * "clear" affordance for an optional field should behave). */
 export function updateNodeProps(node: UINode, id: string, patch: Record<string, any>): UINode {
@@ -123,7 +123,7 @@ export function updateNodeProps(node: UINode, id: string, patch: Record<string, 
   return node;
 }
 
-/** Replaces a leaf node's plain-string children (its text content) — kept
+/** Replaces a leaf node's plain-string children (its text content) - kept
  * separate from updateNodeProps since `children` is a sibling field on
  * UINode, not something living inside `props`. */
 export function updateNodeText(node: UINode, id: string, text: string): UINode {
@@ -138,7 +138,7 @@ export function updateNodeText(node: UINode, id: string, text: string): UINode {
 }
 
 /** Removes the node matching `id` from the tree. Returns `null` if `id`
- * matched the root itself (deleting the whole page) — callers should treat
+ * matched the root itself (deleting the whole page) - callers should treat
  * that as "clear the canvas", same as the existing reset()/New flow. */
 export function removeNodeById(node: UINode, id: string): UINode | null {
   if (node.id === id) return null;
@@ -154,17 +154,17 @@ export function removeNodeById(node: UINode, id: string): UINode | null {
 }
 
 // Phase 2 (drag-to-reorder): node types that legitimately hold children for
-// layout purposes, i.e. valid drop-*inside* targets — everything else (a
+// layout purposes, i.e. valid drop-*inside* targets - everything else (a
 // Button, a Badge, an Input…) can still be dragged and reordered as a
 // sibling ("before"/"after"), but can't receive a node dropped *inside* it.
-// This is deliberately an editor-side allowlist, not a schema constraint —
+// This is deliberately an editor-side allowlist, not a schema constraint -
 // the UINode type itself places no restriction on what can parent what (see
 // the type's own comment); enforcing it here keeps drag-drop from producing
 // a structurally nonsensical tree (e.g. a Card nested inside a Badge) without
 // having to validate/reject that shape everywhere else the tree is used.
 export const CONTAINER_TYPES = new Set(["Stack", "Row", "Grid", "Box", "Card"]);
 
-/** Shared by moveNode (Phase 2) and insertNodeAt (Phase 3) — both ultimately
+/** Shared by moveNode (Phase 2) and insertNodeAt (Phase 3) - both ultimately
  * do the same "place this node before/after/inside a target" walk, just with
  * a node that already existed elsewhere in the tree (moveNode, after
  * extracting it) vs. one that's brand new (insertNodeAt). Kept as one
@@ -190,7 +190,7 @@ function insertRelativeTo(tree: UINode, targetId: string, position: "before" | "
   return { tree: walk(tree), inserted };
 }
 
-/** Inserts a brand-new node (from the Phase 3 component palette — build one
+/** Inserts a brand-new node (from the Phase 3 component palette - build one
  * with `createNode`, not by hand, so it gets a real id) relative to
  * `targetId`. Returns the tree UNCHANGED if `targetId` doesn't exist. */
 export function insertNodeAt(tree: UINode, targetId: string, position: "before" | "after" | "inside", node: UINode): UINode {
@@ -199,10 +199,10 @@ export function insertNodeAt(tree: UINode, targetId: string, position: "before" 
 }
 
 /** Moves the node matching `nodeId` to a new position relative to `targetId`
- * — "before"/"after" as a sibling of the target, or "inside" as the target's
+ * - "before"/"after" as a sibling of the target, or "inside" as the target's
  * last child (only meaningful when the target is a CONTAINER_TYPES type,
  * enforced by the caller, not this function). Returns the tree UNCHANGED
- * (not a partially-mutated one) if the move can't be completed — most
+ * (not a partially-mutated one) if the move can't be completed - most
  * importantly, if `targetId` turns out to be `nodeId` itself or live inside
  * the subtree being moved (dropping a container into its own child), the
  * extract-then-reinsert below would otherwise silently delete the dragged
@@ -228,17 +228,17 @@ export function moveNode(tree: UINode, nodeId: string, targetId: string, positio
   if (!extracted) return tree; // nodeId not found, or was the tree root itself
 
   const { tree: result, inserted } = insertRelativeTo(withoutNode, targetId, position, extracted);
-  return inserted ? result : tree; // target vanished (e.g. was inside the dragged subtree) — refuse, don't lose the node
+  return inserted ? result : tree; // target vanished (e.g. was inside the dragged subtree) - refuse, don't lose the node
 }
 
 /* Pretty-print the tree as copyable JSX using the same component names. */
 // ── Design-system audit ──────────────────────────────────────────────────
-// The single source of truth for "what counts as a governed element" — kept
+// The single source of truth for "what counts as a governed element" - kept
 // here (not in Renderer.tsx) so this file's own no-React/no-@sandhata/spectra
 // constraint (see header) still lets a server route reuse it, and so there's
 // exactly one list to update when a component is added. Renderer.tsx imports
 // LAYOUT_TYPES/DS_COMPONENT_TYPES rather than redeclaring them, and asserts
-// in dev that its own DS component map agrees — see the comment there.
+// in dev that its own DS component map agrees - see the comment there.
 export const LAYOUT_TYPES = ["Stack", "Row", "Grid", "Text", "Heading", "Spacer", "Divider", "Box"] as const;
 export const DS_COMPONENT_TYPES = [
   "Button", "Badge", "Alert", "Spinner", "Avatar", "Tag", "StatCard", "Card",
@@ -254,7 +254,7 @@ export type AuditIssue = {
 };
 
 /** Walks a generated/edited tree and reports every node whose `type` isn't
- * a governed Spectra component or layout primitive — i.e. something outside
+ * a governed Spectra component or layout primitive - i.e. something outside
  * the design system. This is the same check Renderer.tsx's "Unknown: {type}"
  * fallback makes per-node at render time, surfaced instead as a standalone
  * report a human (or CI) can act on. Order is depth-first, matching render

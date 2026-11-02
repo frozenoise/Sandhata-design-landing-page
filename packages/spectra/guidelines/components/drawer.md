@@ -1,6 +1,6 @@
 # Drawer
 
-A panel anchored to a screen edge — used for detail views, filter panels, and
+A panel anchored to a screen edge: used for detail views, filter panels, and
 secondary content. Renders nothing when `open` is `false`.
 
 ## Props
@@ -23,8 +23,8 @@ Full-screen dimming overlay → panel anchored to `align` edge → drag handle
 ## Do / Don't
 
 - **Do** use bottom or right alignment for detail views that supplement the
-  main content — the user should be able to see both simultaneously.
-- **Don't** use Drawer as a navigation panel — use `Sidebar` for that. Drawer
+  main content: the user should be able to see both simultaneously.
+- **Don't** use Drawer as a navigation panel: use `Sidebar` for that. Drawer
   is for contextual detail and secondary content that co-exists with the main
   view, not primary navigation.
 

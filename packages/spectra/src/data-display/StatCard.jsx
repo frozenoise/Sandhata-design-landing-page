@@ -1,7 +1,7 @@
 import React from "react";
 
 /**
- * StatCard — a KPI tile: label, large value and an optional trend.
+ * StatCard - a KPI tile: label, large value and an optional trend.
  * Used across the Sandhata dashboard (e.g. Desktop / Mobile visitors).
  */
 export function StatCard({ label, value, trend, trendDirection = "up", style = {} }) {

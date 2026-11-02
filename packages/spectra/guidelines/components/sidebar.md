@@ -20,11 +20,11 @@ strip on the current item) → collapse toggle at the bottom.
 
 ## Do / Don't
 
-- **Do** group related destinations together under labelled sections — it
+- **Do** group related destinations together under labelled sections: it
   reduces the cognitive load of scanning a long nav list.
-- **Don't** put more than 7–8 top-level nav items in the sidebar — nest
+- **Don't** put more than 7–8 top-level nav items in the sidebar: nest
   secondary links inside a parent item or move them to a sub-nav.
-- **Don't** use Sidebar for a transient, contextual panel — use `Drawer` for
+- **Don't** use Sidebar for a transient, contextual panel: use `Drawer` for
   that. Sidebar is for persistent, primary navigation.
 
 ## Example

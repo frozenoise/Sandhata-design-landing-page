@@ -1,5 +1,5 @@
 /* ============================================================
-   Sandhata Design System — Spacing, radius, border & elevation
+   Sandhata Design System - Spacing, radius, border & elevation
    8-point spacing grid. Radii are small & restrained (max 12px
    on containers); the system reads crisp and enterprise-grade.
    ============================================================ */
@@ -50,7 +50,7 @@
 
   /* ---- Motion ---------------------------------------------
      Realigned 2026-08-25 to Figma's Motion collection (a Carbon-style
-     productive/expressive scale) — the old 3-step --duration-fast/base/slow
+     productive/expressive scale) - the old 3-step --duration-fast/base/slow
      + --ease-standard/entrance/exit didn't match Figma's 6-step scale even
      approximately, and Figma's was decided as the reference. Every real
      consumer repointed to these names; nothing aliases the old ones. */

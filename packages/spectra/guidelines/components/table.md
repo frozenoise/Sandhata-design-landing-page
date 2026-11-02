@@ -10,7 +10,7 @@ A sortable data table with optional row selection and striping.
 | `rows` | `Record<string, any>[]` | Plain objects read via `row[column.key]`; needs an `id` field when `selectable` |
 | `sortKey` | string | Currently-sorted column key |
 | `sortDirection` | `"asc" \| "desc"` | Default `"asc"` |
-| `onSort` | `(key) => void` | Called when a sortable header is clicked — you own the actual sorting of `rows` |
+| `onSort` | `(key) => void` | Called when a sortable header is clicked: you own the actual sorting of `rows` |
 | `striped` | boolean | Alternate row background |
 | `selectable` | boolean | Adds a checkbox column, composing the real `Checkbox` component |
 | `selectedIds` | `Array<string \| number>` | |
@@ -20,9 +20,9 @@ A sortable data table with optional row selection and striping.
 
 ## Do / Don't
 
-- **Do** own the actual sort/filter logic yourself — `Table` is presentational
+- **Do** own the actual sort/filter logic yourself: `Table` is presentational
   and calls `onSort`, it doesn't sort `rows` internally.
-- **Don't** expect built-in pagination or column resizing — this component
+- **Don't** expect built-in pagination or column resizing: this component
   covers sorting, selection, and striping only. If a layout needs pagination,
   build a separate pager and slice `rows` yourself.
 

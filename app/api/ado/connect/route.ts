@@ -10,7 +10,7 @@ import {
   buildStateMapping,
 } from "@/lib/ado";
 
-// GET /api/ado/connect?projectId= — connection status only, never the PAT.
+// GET /api/ado/connect?projectId= - connection status only, never the PAT.
 export async function GET(req: Request) {
   const session = await auth();
   if (!session?.user?.id) return NextResponse.json({ error: "unauthenticated" }, { status: 401 });
@@ -41,7 +41,7 @@ export async function GET(req: Request) {
   });
 }
 
-// POST /api/ado/connect — body { projectId, organization, adoProject, pat }
+// POST /api/ado/connect - body { projectId, organization, adoProject, pat }
 // Validates the PAT against a cheap ADO endpoint, derives the Phase-1
 // default type/state mapping, encrypts the PAT, and upserts the connection.
 // Refuses to save anything if the PAT doesn't check out.
@@ -122,7 +122,7 @@ export async function POST(req: Request) {
   }
 }
 
-// DELETE /api/ado/connect?projectId= — soft-disconnect: null out the PAT and
+// DELETE /api/ado/connect?projectId= - soft-disconnect: null out the PAT and
 // flip `active` off, but keep the row (and its WorkItemLink history) so
 // reconnecting later doesn't orphan already-linked work items.
 export async function DELETE(req: Request) {

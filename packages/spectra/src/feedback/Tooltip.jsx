@@ -1,7 +1,7 @@
 import React from "react";
 
 /**
- * Tooltip — dark label on hover/focus. Wraps its child trigger.
+ * Tooltip - dark label on hover/focus. Wraps its child trigger.
  * `side` controls placement. Matches the Figma dark tooltip chip.
  */
 export function Tooltip({ label, side = "top", children, style = {} }) {

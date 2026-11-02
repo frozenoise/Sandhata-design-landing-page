@@ -10,7 +10,7 @@ export interface ModalProps {
   children?: React.ReactNode;
   /** Right-aligned action row. */
   footer?: React.ReactNode;
-  /** Destructive-confirmation styling — red top accent. @default false */
+  /** Destructive-confirmation styling - red top accent. @default false */
   danger?: boolean;
   /** @default "medium" */
   size?: "small" | "medium" | "large";

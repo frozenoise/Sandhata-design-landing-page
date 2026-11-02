@@ -7,13 +7,13 @@ Toggle switch for binary on/off settings.
 | Prop | Type | Notes |
 |---|---|---|
 | `checked` | boolean | On/off state |
-| `onChange` | func | **`(next: boolean) => void`** — receives a bare boolean, not an event. Different from `Checkbox.onChange`. |
+| `onChange` | func | **`(next: boolean) => void`**: receives a bare boolean, not an event. Different from `Checkbox.onChange`. |
 | `label` | string | |
 | `disabled` | boolean | |
 
 ## Do / Don't
 
-- **Don't** write `onChange={(e) => setOn(e.target.checked)}` on a `Switch` —
+- **Don't** write `onChange={(e) => setOn(e.target.checked)}` on a `Switch`:
   that's the `Checkbox` pattern. `Switch` hands you the next boolean value
   directly: `onChange={setOn}` or `onChange={(next) => setOn(next)}`.
 

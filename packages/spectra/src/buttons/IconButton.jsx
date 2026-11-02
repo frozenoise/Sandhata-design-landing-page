@@ -1,7 +1,7 @@
 import React from "react";
 
 /**
- * Sandhata IconButton — a square button holding a single icon.
+ * Sandhata IconButton - a square button holding a single icon.
  * Same hierarchies as Button. Sizes keep a 40px hit target by default.
  */
 export function IconButton({

@@ -1,4 +1,4 @@
-/* Sandhata docs — tiny JSX syntax highlighter (light theme). window.sdHighlight(src) -> HTML. */
+/* Sandhata docs - tiny JSX syntax highlighter (light theme). window.sdHighlight(src) -> HTML. */
 (function () {
   window.sdHighlight = function (src) {
     var esc = String(src).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");

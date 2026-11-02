@@ -8,7 +8,7 @@ type Params = { params: Promise<{ linkId: string }> };
 
 const VALID_STATUSES: BuilderStatus[] = ["new", "in_progress", "completed"];
 
-// PATCH /api/ado/workitems/:linkId/status — body { status: "new" | "in_progress" | "completed" }
+// PATCH /api/ado/workitems/:linkId/status - body { status: "new" | "in_progress" | "completed" }
 // Resolves through the connection's cached stateMapping (never a literal ADO
 // state name) and does the real PATCH to Azure DevOps. On an ADO validation
 // error (e.g. an illegal state transition for that work item's workflow),

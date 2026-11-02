@@ -43,7 +43,7 @@ type ProjectItem = {
   role?: "owner" | "editor" | "viewer";
   ownerName?: string | null;
   shared?: boolean;
-  // GitHub push integration (Phase 1) — all optional/null until connected.
+  // GitHub push integration (Phase 1) - all optional/null until connected.
   repoOwner?: string | null;
   repoName?: string | null;
   defaultBranch?: string | null;
@@ -104,7 +104,7 @@ const EXAMPLES = [
 
 const MODEL_STORAGE      = "sd-builder-model";
 // Mirrors the server's ALLOWED_MODELS allowlist (app/api/generate/route.ts)
-// — kept in sync by hand since the client and route are separate bundles.
+// - kept in sync by hand since the client and route are separate bundles.
 // The route re-validates against its own copy regardless, so a stale list
 // here only limits what shows in the picker, never a real trust boundary.
 const AVAILABLE_MODELS = [
@@ -125,7 +125,7 @@ const OPEN_TABS_STORAGE  = "sd-builder-open-tabs";
 const CANVAS_THEME_STORAGE = "sd-builder-canvas-theme";
 // Deliberately separate from SESSION_ID_STORAGE: that key only ever gets set
 // for a tab that's a real saved DB session (openTab's cache-hit branch,
-// loadSession's success path, or saveToDb) — a pure local draft tab (most of
+// loadSession's success path, or saveToDb) - a pure local draft tab (most of
 // signed-out use, or any brand-new page before its first successful save)
 // never touches it. Falling back to SESSION_ID_STORAGE to restore "which tab
 // was active" is wrong whenever the active tab was a draft: it'd resolve to
@@ -193,8 +193,8 @@ export default function BuilderPage() {
   const [canvasTheme,   setCanvasTheme]   = React.useState<"light" | "dark">("light");
   // Insert tab: filters the component grid by name.
   const [paletteQuery,  setPaletteQuery]  = React.useState("");
-  // ── Visual editor (edit view) — Phase 1: select + property-panel editing.
-  // Undo/redo is a snapshot stack, not a diff log — trees here are small
+  // ── Visual editor (edit view) - Phase 1: select + property-panel editing.
+  // Undo/redo is a snapshot stack, not a diff log - trees here are small
   // (the AI's own system prompt caps them around ~200 nodes), so a
   // structuredClone-cheap approach is simpler than a command log and doesn't
   // need to be.
@@ -204,20 +204,20 @@ export default function BuilderPage() {
   const [editRedoStack,  setEditRedoStack]  = React.useState<UINode[]>([]);
   // ── Phase 2: drag-to-reorder. Native HTML5 drag-and-drop, delegated on the
   // canvas wrapper (same philosophy as click/hover selection above) rather
-  // than a per-node drag library — RenderNode already only needs one extra
+  // than a per-node drag library - RenderNode already only needs one extra
   // conditional attribute (`draggable`, gated on `editable`) to support this,
   // with all position math and the actual tree mutation living here.
   const [draggingNodeId, setDraggingNodeId] = React.useState<string | null>(null);
   const [dropTarget, setDropTarget] = React.useState<{ id: string; position: "before" | "after" | "inside" } | null>(null);
   // ── Phase 3: component palette + drag-to-insert. A drag is either an
   // existing node (draggingNodeId, Phase 2) or a fresh palette chip
-  // (draggingPaletteType) — never both; onDragStart on each source clears
+  // (draggingPaletteType) - never both; onDragStart on each source clears
   // the other. Both share the same onDragOver/onDrop position math and
   // dropTarget state, branching only at the very end on which one is set.
   const [draggingPaletteType, setDraggingPaletteType] = React.useState<string | null>(null);
   // The right-side inspector panel context-switches between "insert a new
   // element", "edit the selected one", and "browse the tree" rather than
-  // adding a whole extra column — auto-follows selection (see the effect
+  // adding a whole extra column - auto-follows selection (see the effect
   // below) but the user can still switch to Insert manually to add a sibling
   // near the current spot.
   const [inspectorTab, setInspectorTab] = React.useState<"insert" | "layers">("insert");
@@ -233,7 +233,7 @@ export default function BuilderPage() {
   const [sectionRect, setSectionRect] = React.useState<{ top: number; left: number; width: number } | null>(null);
   const canvasWrapRef = React.useRef<HTMLDivElement>(null);
   // Layers tab: which container nodes are collapsed, by id. Starts empty
-  // (everything expanded) — a generated tree is capped around ~200 nodes by
+  // (everything expanded) - a generated tree is capped around ~200 nodes by
   // the AI's own system prompt, so a full expand-by-default is cheap and,
   // more importantly, means a freshly-inserted node is never hidden inside
   // a container the user forgot they'd collapsed.
@@ -249,7 +249,7 @@ export default function BuilderPage() {
   const [histLoading,   setHistLoading]   = React.useState(false);
   // ── Tabs: multiple open "instances" above the canvas, so switching between
   // pages you're actively iterating on is one click, not a trip into History.
-  // tabCacheRef holds each open tab's msgs/tree in memory (a ref, not state —
+  // tabCacheRef holds each open tab's msgs/tree in memory (a ref, not state -
   // it doesn't need to trigger a render on its own) so re-focusing a tab you
   // already visited this session is instant, no re-fetch.
   const [openTabs,   setOpenTabs]   = React.useState<HistoryItem[]>([]);
@@ -262,7 +262,7 @@ export default function BuilderPage() {
   const [renameDraft,   setRenameDraft]   = React.useState("");
   // React doesn't reliably fire onBlur when the focused input itself
   // unmounts (browser-dependent), so Escape can't just clear renamingTabId
-  // and trust blur to stay quiet — a stray blur could still land on the old
+  // and trust blur to stay quiet - a stray blur could still land on the old
   // closure and commit renameDraft anyway. This ref makes Escape's "discard,
   // don't commit" explicit regardless of whether that blur fires.
   const skipRenameCommitRef = React.useRef(false);
@@ -292,7 +292,7 @@ export default function BuilderPage() {
   const [adoRowErrors,  setAdoRowErrors]  = React.useState<{ project?: string; page?: string }>({});
 
   // ── GitHub push integration (Phase 1) ────────────────────────────────────
-  // null = not checked yet (treated as "unknown", not "unavailable" — avoids
+  // null = not checked yet (treated as "unknown", not "unavailable" - avoids
   // a flash of the disabled state before the first /api/github/config reply).
   const [githubConfigured,     setGithubConfigured]     = React.useState<boolean | null>(null);
   const [githubInstallations,  setGithubInstallations]  = React.useState<GithubInstallationItem[]>([]);
@@ -343,8 +343,8 @@ export default function BuilderPage() {
       const rawTabs = localStorage.getItem(OPEN_TABS_STORAGE);
       if (rawTabs) restoredTabs = JSON.parse(rawTabs);
     } catch {}
-    // Back-compat for a reload from before tabs existed — a saved session or
-    // an unsent draft that was active but never made it into a tab list —
+    // Back-compat for a reload from before tabs existed - a saved session or
+    // an unsent draft that was active but never made it into a tab list -
     // seed a single tab from whatever was restored above, rather than
     // showing an empty tab strip while the canvas clearly has content in it.
     if (restoredTabs.length === 0 && (savedId || hadRestoredMsgs)) {
@@ -354,7 +354,7 @@ export default function BuilderPage() {
     if (restoredTabs.length > 0) {
       setOpenTabs(restoredTabs);
       // The tab that was actually on screen at reload time, NOT whichever
-      // one happens to be a real saved session — see the ACTIVE_TAB_STORAGE
+      // one happens to be a real saved session - see the ACTIVE_TAB_STORAGE
       // comment above for why SESSION_ID_STORAGE alone isn't reliable here.
       const savedActiveTabId = localStorage.getItem(ACTIVE_TAB_STORAGE);
       setActiveTabId(savedActiveTabId ?? savedId ?? restoredTabs[0].id);
@@ -375,7 +375,7 @@ export default function BuilderPage() {
 
   // Continuously mirrors the active tab's live content into tabCacheRef.
   // Without this, only tabs that went through loadSession (a real DB fetch)
-  // or saveToDb (signed-in only) ever got cached — an unsaved draft tab
+  // or saveToDb (signed-in only) ever got cached - an unsaved draft tab
   // (most of the signed-out flow, and any brand-new page before its first
   // successful save) had nothing written for it, so switching back to it
   // silently no-opped instead of restoring its content. This is what
@@ -387,7 +387,7 @@ export default function BuilderPage() {
   }, [activeTabId, msgs, tree]);
 
   // ── Visual editor: enter/leave "edit" view ──────────────────────────────
-  // Existing saved sessions' trees predate the `id` field on UINode — backfill
+  // Existing saved sessions' trees predate the `id` field on UINode - backfill
   // lazily the moment edit mode is actually entered, rather than migrating
   // every session up front. ensureIds returns the same reference if nothing
   // needed adding, so this is a no-op re-render for an already-id'd tree.
@@ -398,7 +398,7 @@ export default function BuilderPage() {
   }, [view, tree]);
 
   // Undo/redo is scoped per open tab (matching tabCacheRef's per-tab
-  // caching) — switching tabs with edit history still pending would
+  // caching) - switching tabs with edit history still pending would
   // otherwise let you undo INTO a different page's tree.
   React.useEffect(() => {
     setSelectedNodeId(null);
@@ -412,7 +412,7 @@ export default function BuilderPage() {
   }, [activeTabId]);
 
   // Selecting something (by click, or right after a palette insert below)
-  // brings the inspector to Properties automatically — you shouldn't have to
+  // brings the inspector to Properties automatically - you shouldn't have to
   // manually flip the tab every time just to see what you clicked.
   React.useEffect(() => {
     if (selectedNodeId) { setPropTab("content"); setInsertTarget(null); }
@@ -446,7 +446,7 @@ export default function BuilderPage() {
     selectedNodeId: view === "edit" ? selectedNodeId : null,
   });
 
-  // Every structural/property edit goes through this — pushes the
+  // Every structural/property edit goes through this - pushes the
   // pre-edit tree onto the undo stack, clears redo (a fresh edit
   // invalidates whatever "future" redo pointed at), and commits.
   function commitTreeEdit(nextTree: UINode | null) {
@@ -490,7 +490,7 @@ export default function BuilderPage() {
     if (!tree || !selectedNodeId) return;
     const next = removeNodeById(tree, selectedNodeId);
     setSelectedNodeId(null);
-    // next === null means the root itself was deleted (cleared canvas) —
+    // next === null means the root itself was deleted (cleared canvas) -
     // commitTreeEdit accepts that directly; it still goes through
     // history/redo and gets flushed back into the chat like any other edit.
     commitTreeEdit(next);
@@ -621,13 +621,13 @@ export default function BuilderPage() {
   }
 
   // Folds any edits made in "edit" view back into the chat transcript as a
-  // single synthetic assistant turn when you leave it — not on every
+  // single synthetic assistant turn when you leave it - not on every
   // keystroke/commit, which would spam the transcript. This is deliberately
   // NOT a parallel/independent mutation path: send()'s system prompt already
   // tells the model its prior JSON is in the conversation history as its own
   // last assistant message and to modify it, so a visually-edited tree just
   // becomes the AI's next starting point for free, same as any chat-driven
-  // edit — and it goes through the exact same saveToDb() the chat flow uses.
+  // edit - and it goes through the exact same saveToDb() the chat flow uses.
   function flushVisualEditsToChat() {
     if (editHistory.length === 0) return;
     const isFirst = msgs.length === 0;
@@ -700,7 +700,7 @@ export default function BuilderPage() {
   }, [isLoggedIn]);
 
   // ── GitHub: handle the /api/github/install/callback redirect back here ──
-  // Plain window.location parsing (not next/navigation's useSearchParams) —
+  // Plain window.location parsing (not next/navigation's useSearchParams) -
   // this page is already all-client-side, and this sidesteps needing a
   // Suspense boundary just for a one-time query-param read on mount.
   React.useEffect(() => {
@@ -776,7 +776,7 @@ export default function BuilderPage() {
 
   // Fetches a session's full content from the network and applies it as the
   // active tab. Populates tabCacheRef so re-visiting this tab later this
-  // session skips the fetch entirely — call openTab() for that fast path,
+  // session skips the fetch entirely - call openTab() for that fast path,
   // not this directly, unless you specifically need a forced refetch.
   async function loadSession(id: string) {
     setShowHistory(false);
@@ -793,7 +793,7 @@ export default function BuilderPage() {
     setActiveTabId(id);
     setView("edit");
     localStorage.setItem(SESSION_ID_STORAGE, id);
-    // Follow the session into its project's context — switching pages
+    // Follow the session into its project's context - switching pages
     // within a project (the "quick switch" part of Projects v1) should
     // leave you positioned in that project, not wherever you were before.
     setActiveProjectId(s.projectId ?? null);
@@ -801,7 +801,7 @@ export default function BuilderPage() {
     // before the `dblclick` that actually opens the rename input) can
     // trigger this fetch for a not-yet-cached tab at the same moment the
     // user renames it. If this resolves after that rename commits, using
-    // the server's `s.name` here would silently revert it — the local
+    // the server's `s.name` here would silently revert it - the local
     // state (openTabs) is always at least as fresh as whatever this GET
     // returned, since a rename updates it directly and optimistically.
     // Only a brand-new tab entry (not already in openTabs) has no local
@@ -823,7 +823,7 @@ export default function BuilderPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isLoggedIn, dbSessionId, activeTabId]);
 
-  // Re-reads the open page's role/live flags without reloading its content —
+  // Re-reads the open page's role/live flags without reloading its content -
   // after sharing changes, so a page that just became shared goes live (and
   // one that stopped being shared drops out of its room) straight away.
   async function refreshPageAccess() {
@@ -835,8 +835,8 @@ export default function BuilderPage() {
   }
 
   // Opens (or focuses, if already open) a tab for the given session. Restores
-  // instantly from tabCacheRef when available — the actual "quick switch
-  // between several pages you're iterating on" payoff of having tabs at all —
+  // instantly from tabCacheRef when available - the actual "quick switch
+  // between several pages you're iterating on" payoff of having tabs at all -
   // and only falls back to loadSession's network fetch on a genuine first open.
   function openTab(item: HistoryItem) {
     setShowHistory(false);
@@ -855,7 +855,7 @@ export default function BuilderPage() {
     }
   }
 
-  // Closes a tab (just removes it from the strip — the saved session itself
+  // Closes a tab (just removes it from the strip - the saved session itself
   // is untouched). If it was the active tab, focuses a neighbor, or clears
   // the canvas if that was the last tab open.
   function closeTab(id: string, e: React.MouseEvent) {
@@ -871,7 +871,7 @@ export default function BuilderPage() {
   }
 
   // Opens a new blank draft tab. Distinct from reset() (which just clears the
-  // canvas with no tab bookkeeping) — this is the user-facing "+" action.
+  // canvas with no tab bookkeeping) - this is the user-facing "+" action.
   function newTab() {
     const draftId = `draft-${Date.now()}`;
     const draft: HistoryItem = { id: draftId, name: "Untitled", createdAt: new Date().toISOString(), updatedAt: new Date().toISOString(), projectId: activeProjectId };
@@ -882,8 +882,8 @@ export default function BuilderPage() {
 
   /** Commits a tab rename: updates openTabs (what the strip reads) and
    * history (what the sidebar reads) so both agree without a re-fetch, and
-   * — for a tab already backed by a real session (id isn't the `draft-…`
-   * local-only form) — persists it server-side. A draft tab's name lives
+   * - for a tab already backed by a real session (id isn't the `draft-…`
+   * local-only form) - persists it server-side. A draft tab's name lives
    * only in local state/localStorage until its first message creates the
    * real session (see the name-precedence comment in saveToDb below); no
    * network call needed yet, and none is made. */
@@ -1031,7 +1031,7 @@ export default function BuilderPage() {
 
   // ── Azure DevOps helpers ─────────────────────────────────────────────────
   // Connections are per-Project (not per-user), so everything here keys off
-  // activeProjectId — Ungrouped sessions have no ADO surface at all.
+  // activeProjectId - Ungrouped sessions have no ADO surface at all.
   React.useEffect(() => {
     if (!isLoggedIn || !activeProjectId) {
       setAdoStatus(null);
@@ -1067,7 +1067,7 @@ export default function BuilderPage() {
     }
   }
 
-  // Sidebar row trigger (mirrors openGithubModal) — selects the project so
+  // Sidebar row trigger (mirrors openGithubModal) - selects the project so
   // its ADO strip becomes visible, then only pops the connect modal if that
   // project genuinely isn't connected yet. Avoids showing the raw "Connect"
   // form over an existing connection, since (unlike the GitHub modal) the ADO
@@ -1153,7 +1153,7 @@ export default function BuilderPage() {
   }
 
   // Optimistic status push with rollback on ADO rejection (e.g. an illegal
-  // state transition) — errors surface inline via bld-msg-error styling
+  // state transition) - errors surface inline via bld-msg-error styling
   // rather than being swallowed.
   async function pushAdoStatus(kind: "project" | "page", link: WorkItemLinkItem, status: AdoStatusValue) {
     const prevLinks = adoLinks;
@@ -1184,11 +1184,11 @@ export default function BuilderPage() {
   function githubErrorMessage(code: string): string {
     switch (code) {
       case "not_configured":          return "GitHub integration isn't set up yet.";
-      case "invalid_state":           return "That GitHub connection link expired — try again.";
-      case "install_requested":       return "Installation request sent — waiting on approval from an organization owner.";
-      case "missing_installation_id": return "GitHub didn't return an installation id — try again.";
+      case "invalid_state":           return "That GitHub connection link expired. Try again.";
+      case "install_requested":       return "Installation request sent. Waiting on approval from an organization owner.";
+      case "missing_installation_id": return "GitHub didn't return an installation id. Try again.";
       case "installation_not_found":  return "Couldn't find that GitHub installation.";
-      case "callback_failed":         return "Connecting to GitHub failed — try again.";
+      case "callback_failed":         return "Connecting to GitHub failed. Try again.";
       case "unauthenticated":         return "Sign in, then try connecting GitHub again.";
       default:                        return "Something went wrong connecting GitHub.";
     }
@@ -1227,7 +1227,7 @@ export default function BuilderPage() {
     setGithubModalError(null);
   }
 
-  // Full-page navigation (not fetch) — the route redirects the browser to
+  // Full-page navigation (not fetch) - the route redirects the browser to
   // github.com, so this has to leave the SPA. GitHub's own install picker
   // handles "install fresh" vs "use an existing installation" from here.
   function startGithubInstall(projectId: string) {
@@ -1320,7 +1320,7 @@ export default function BuilderPage() {
   // `currentTabId` is passed explicitly rather than read from the
   // `activeTabId` closure: when called from send() right after that same
   // call created a draft tab, the state update hasn't flushed into this
-  // closure yet (same synchronous invocation, not yet re-rendered) — reading
+  // closure yet (same synchronous invocation, not yet re-rendered) - reading
   // `activeTabId` here would still see the pre-draft value (often null).
   async function saveToDb(updatedMsgs: ChatMsg[], updatedTree: UINode, isFirst: boolean, currentTabId: string | null) {
     if (!isLoggedIn) return;
@@ -1328,7 +1328,7 @@ export default function BuilderPage() {
     try {
       if (isFirst || !dbSessionId) {
         const oldTabId = currentTabId ?? dbSessionId ?? activeTabId; // the draft tab this content was living under
-        // A rename made before the first message would otherwise be lost —
+        // A rename made before the first message would otherwise be lost -
         // this is the only place a fresh session's name gets set, and it
         // defaults to deriving one from the first message. Prefer a name
         // the user already typed on this tab (renameTab, called pre-save)
@@ -1351,7 +1351,7 @@ export default function BuilderPage() {
             setProjects(ps => ps.map(p => p.id === activeProjectId ? { ...p, sessionCount: p.sessionCount + 1 } : p));
           }
           // The draft tab's synthetic id needs to become the real session id
-          // now that one exists — same tab, same open position, real identity.
+          // now that one exists - same tab, same open position, real identity.
           // Falls back to appending rather than silently dropping the tab if,
           // for some reason, no tab was tracking this content yet.
           tabCacheRef.current[newId] = { msgs: updatedMsgs, tree: updatedTree };
@@ -1379,7 +1379,7 @@ export default function BuilderPage() {
   }
 
   // The profile-menu key input unmounts on outside-click (see the
-  // showProfile effect) as soon as the mousedown fires — before the input's
+  // showProfile effect) as soon as the mousedown fires - before the input's
   // own blur event gets a chance to run, so a plain onBlur-triggered save
   // races the unmount and silently drops the keystroke. Debounce on every
   // change instead: the timer lives on this always-mounted component, not
@@ -1430,7 +1430,7 @@ export default function BuilderPage() {
     setNeedsKey(false);
 
     // A first message sent with no tab open yet (page just loaded, nothing
-    // clicked "+" or opened from History) still needs one — otherwise the
+    // clicked "+" or opened from History) still needs one - otherwise the
     // session this creates has nowhere to show up in the tab strip. Resolve
     // synchronously into a local var: setActiveTabId below won't be visible
     // via the `activeTabId` closure until next render, so saveToDb (called
@@ -1478,7 +1478,7 @@ export default function BuilderPage() {
     }
   }
 
-  // Deliberately does NOT clear activeProjectId — "New" while inside a
+  // Deliberately does NOT clear activeProjectId - "New" while inside a
   // project should start a fresh page still grouped under that project
   // (the "iterate across multiple pages in one project" workflow). To start
   // a genuinely ungrouped session, select "Ungrouped" in the sidebar first.
@@ -1499,13 +1499,13 @@ export default function BuilderPage() {
     : "";
 
   // Report tab: every node whose type isn't a governed Spectra component or
-  // layout primitive — same check Renderer.tsx's "Unknown: {type}" fallback
+  // layout primitive - same check Renderer.tsx's "Unknown: {type}" fallback
   // makes per-node, recomputed only when the tree actually changes.
   const auditIssues: AuditIssue[] = React.useMemo(() => (tree ? auditTree(tree) : []), [tree]);
 
   /** Jump to an audited element: switch to Edit view and select it, same as
    * clicking it on the canvas. Elements inserted before the visual editor's
-   * id-backfill (ensureIds) ran won't have a nodeId yet — those still show
+   * id-backfill (ensureIds) ran won't have a nodeId yet - those still show
    * in the report (type + path), just without a clickable jump. */
   function goToAuditIssue(issue: AuditIssue) {
     if (!issue.nodeId) return;
@@ -1541,7 +1541,7 @@ export default function BuilderPage() {
   const ungroupedSessions = history.filter(s => !s.projectId);
 
   // The currently-open page only gets ADO "page" controls when it actually
-  // belongs to the active project — activeProjectId can be changed in the
+  // belongs to the active project - activeProjectId can be changed in the
   // sidebar independently of what's currently loaded in the chat/canvas.
   const currentPageInActiveProject =
     !!dbSessionId && history.find(s => s.id === dbSessionId)?.projectId === activeProjectId;
@@ -1553,7 +1553,7 @@ export default function BuilderPage() {
     : undefined;
 
   // Shared status-control + link-row renderer for the "project" and "page"
-  // ADO rows — visually similar weight to the preview/code bld-tabs toggle.
+  // ADO rows - visually similar weight to the preview/code bld-tabs toggle.
   function renderAdoRow(kind: "project" | "page", link: WorkItemLinkItem | undefined, label: string) {
     const isLinking = adoLinking === kind;
     const isUpdating = adoUpdating === kind;
@@ -1563,7 +1563,7 @@ export default function BuilderPage() {
         <span className="bld-ado-row-label">{label}</span>
         {link ? (
           <>
-            <a className="bld-ado-item-link" href={link.adoUrl} target="_blank" rel="noopener noreferrer" title={`${link.adoWorkItemType} #${link.adoWorkItemId} — open in Azure DevOps`}>
+            <a className="bld-ado-item-link" href={link.adoUrl} target="_blank" rel="noopener noreferrer" title={`${link.adoWorkItemType} #${link.adoWorkItemId}: open in Azure DevOps`}>
               #{link.adoWorkItemId} <ExternalIcon />
             </a>
             <div className="bld-ado-status">
@@ -1590,7 +1590,7 @@ export default function BuilderPage() {
   }
 
   // Shared row markup for a session under a project group or the
-  // "Ungrouped" bucket — the move-select lets you re-file an existing page
+  // "Ungrouped" bucket - the move-select lets you re-file an existing page
   // into a different project (or out of one) without deleting/recreating it.
   function renderSessionRow(s: HistoryItem) {
     return (
@@ -1617,7 +1617,7 @@ export default function BuilderPage() {
   }
 
   // One field row in the visual editor's property panel. Text/number fields
-  // commit on blur (not per-keystroke — an undo entry per keystroke would
+  // commit on blur (not per-keystroke - an undo entry per keystroke would
   // make undo useless), keyed on selectedNodeId+field.key so switching the
   // selected node remounts the input with the new node's current value
   // instead of an uncontrolled input carrying over stale text mid-edit.
@@ -1686,7 +1686,7 @@ export default function BuilderPage() {
   // hard to reach on canvas (behind another element, inside an empty-looking
   // container) can still be found and selected. Clicking a row reuses the
   // exact same selectedNodeId/hoveredNodeId state canvas click/hover already
-  // drive — the outline-highlight CSS and the auto-flip-to-Properties effect
+  // drive - the outline-highlight CSS and the auto-flip-to-Properties effect
   // both keep working unmodified, this is just a second way to set them.
   function renderLayerRow(node: UINode, depth: number): React.ReactNode {
     const id = node.id;
@@ -1829,7 +1829,7 @@ export default function BuilderPage() {
           </div>
         </div>
       )}
-      {/* ── GitHub connect/push modal — project-scoped, opened from the
+      {/* ── GitHub connect/push modal - project-scoped, opened from the
           project group header's GitHub button ─────────────────────────── */}
       {githubModalProjectId && (() => {
         const proj = projects.find(p => p.id === githubModalProjectId);
@@ -1842,11 +1842,11 @@ export default function BuilderPage() {
                 <XIcon />
               </button>
               <div className="bld-modal-icon"><GithubIcon /></div>
-              <h2 className="bld-modal-title">GitHub — {proj.name}</h2>
+              <h2 className="bld-modal-title">GitHub: {proj.name}</h2>
 
               {githubConfigured === false && (
                 <p className="bld-modal-body">
-                  GitHub integration isn&apos;t set up yet — a Sandhata admin needs to register the
+                  GitHub integration isn&apos;t set up yet. A Sandhata admin needs to register the
                   GitHub App before projects can push to a repository.
                 </p>
               )}
@@ -1906,7 +1906,7 @@ export default function BuilderPage() {
 
                       {!githubReposLoading && githubRepos.length === 0 && !githubModalError && (
                         <p className="bld-history-empty">
-                          No repositories accessible — grant this App access to a repo from GitHub&apos;s installation settings.
+                          No repositories accessible. Grant this App access to a repo from GitHub&apos;s installation settings.
                         </p>
                       )}
 
@@ -1966,7 +1966,7 @@ export default function BuilderPage() {
             <div className="bld-header-row">
               <div>
                 <h1 className="bld-title">AI Builder</h1>
-                {/* Tells you where "New" will file the next page — otherwise
+                {/* Tells you where "New" will file the next page - otherwise
                     silent context is easy to lose track of once you've been
                     switching between several projects. */}
                 {isLoggedIn && activeProjectId && (
@@ -1989,7 +1989,7 @@ export default function BuilderPage() {
                   <button className="bld-new-btn" onClick={newTab}>New</button>
                 )}
 
-                {/* Profile menu — sign in/out + API key live here, off the main chat */}
+                {/* Profile menu - sign in/out + API key live here, off the main chat */}
                 <div className="bld-profile" ref={profileRef}>
                   <button
                     className={`bld-profile-btn${showProfile ? " active" : ""}`}
@@ -2054,8 +2054,8 @@ export default function BuilderPage() {
                         )}
                         <p className="bld-profile-key-note">
                           {isLoggedIn
-                            ? "Signed in — your key is linked to your account and follows you across devices."
-                            : "Not signed in — your key is kept in this browser only."}
+                            ? "Signed in. Your key is linked to your account and follows you across devices."
+                            : "Not signed in. Your key is kept in this browser only."}
                         </p>
                       </div>
 
@@ -2087,10 +2087,10 @@ export default function BuilderPage() {
               </div>
             </div>
 
-            {/* "Getting started" checklist — Sign in / Connect GitHub / Connect
+            {/* "Getting started" checklist - Sign in / Connect GitHub / Connect
                 Azure DevOps for the active project. Sign-in always reads as
                 done here (this whole block is gated on isLoggedIn already).
-                Self-hides once all 3 are done — an onboarding nudge, not a
+                Self-hides once all 3 are done - an onboarding nudge, not a
                 permanent status display (the strip below still shows that). */}
             {isLoggedIn && activeProjectId && (() => {
               const activeProject = projects.find(pr => pr.id === activeProjectId);
@@ -2145,7 +2145,7 @@ export default function BuilderPage() {
               );
             })()}
 
-            {/* Azure DevOps — project-scoped connect + link/status controls.
+            {/* Azure DevOps - project-scoped connect + link/status controls.
                 Lives near the project context line above, not gated behind
                 the History panel, so it stays visible whatever the sidebar
                 is showing. Until it's connected, the Getting started card
@@ -2172,7 +2172,7 @@ export default function BuilderPage() {
             )}
           </div>
 
-          {/* GitHub connect/push result banner — driven by the query params
+          {/* GitHub connect/push result banner - driven by the query params
               /api/github/install/callback redirects back with, cleared on
               read (see the mount effect above). */}
           {githubNotice && (
@@ -2240,7 +2240,7 @@ export default function BuilderPage() {
                     <button
                       className={`bld-project-github-btn${p.repoOwner ? " connected" : ""}${p.syncStatus === "error" ? " error" : ""}`}
                       onClick={(e) => { e.stopPropagation(); openGithubModal(p.id); }}
-                      title={p.repoOwner ? `${p.repoOwner}/${p.repoName}${p.syncStatus === "error" ? " — last push failed" : ""}` : "Connect GitHub"}
+                      title={p.repoOwner ? `${p.repoOwner}/${p.repoName}${p.syncStatus === "error" ? " (last push failed)" : ""}` : "Connect GitHub"}
                     >
                       <GithubIcon />
                     </button>
@@ -2260,7 +2260,7 @@ export default function BuilderPage() {
                     <div className="bld-project-sessions">
                       {history.filter(s => s.projectId === p.id).map(renderSessionRow)}
                       {history.filter(s => s.projectId === p.id).length === 0 && (
-                        <p className="bld-history-empty bld-project-empty">No pages yet — start one below.</p>
+                        <p className="bld-history-empty bld-project-empty">No pages yet. Start one below.</p>
                       )}
                     </div>
                   )}
@@ -2293,7 +2293,7 @@ export default function BuilderPage() {
               <div className="bld-empty-state">
                 <p className="bld-sub">
                   Describe an interface and it&apos;s built from Sandhata components.
-                  Refine it with follow-up messages — context is preserved.
+                  Refine it with follow-up messages. Context is preserved.
                 </p>
                 <div className="bld-examples-label">Start with an example</div>
                 {EXAMPLES.map(ex => (
@@ -2365,7 +2365,7 @@ export default function BuilderPage() {
 
         {/* ── Right: canvas ───────────────────────────────────────── */}
         <main className="bld-main">
-          {/* Instance tabs — replaces having to dig into History to switch
+          {/* Instance tabs - replaces having to dig into History to switch
               between pages you're actively working on. Each tab caches its
               own msgs/tree (tabCacheRef) so re-focusing one already visited
               this session is instant, not a re-fetch. Not gated behind
@@ -2379,7 +2379,7 @@ export default function BuilderPage() {
                   className={`bld-instance-tab${t.id === activeTabId ? " active" : ""}`}
                   onClick={() => openTab(t)}
                   onDoubleClick={(e) => { e.stopPropagation(); skipRenameCommitRef.current = false; setRenameDraft(t.name); setRenamingTabId(t.id); }}
-                  title={renamingTabId === t.id ? undefined : `${t.name} — double-click to rename`}
+                  title={renamingTabId === t.id ? undefined : `${t.name} (double-click to rename)`}
                 >
                   {renamingTabId === t.id ? (
                     <input
@@ -2536,7 +2536,7 @@ export default function BuilderPage() {
             {tree && view === "code" && (
               <pre className="bld-code">
                 {/* Same hand-rolled tokenizer + Cursor-sourced colours as the
-                    docs code blocks (app/_docs/highlight.ts) — reused rather
+                    docs code blocks (app/_docs/highlight.ts) - reused rather
                     than duplicated, see the .c-* overrides in builder.css for
                     why the colour values themselves are redeclared locally. */}
                 <code className="doc-code-lines" dangerouslySetInnerHTML={{ __html: sdHighlightLines(code) }} />
@@ -2552,7 +2552,7 @@ export default function BuilderPage() {
                 ) : (
                   <>
                     <p className="bld-report-summary">
-                      {auditIssues.length} element{auditIssues.length === 1 ? "" : "s"} outside the design system — not a real Spectra/Sandhata component.
+                      {auditIssues.length} element{auditIssues.length === 1 ? "" : "s"} outside the design system, not a real Spectra/Sandhata component.
                     </p>
                     <div className="bld-report-list">
                       {auditIssues.map((issue, i) => (
@@ -2579,7 +2579,7 @@ export default function BuilderPage() {
             {tree && view === "edit" && (
               <div className="bld-edit-layout">
                 {/* Selection/hover resolved via a single delegated listener
-                    here, using RenderNode's data-node-id attribute — not
+                    here, using RenderNode's data-node-id attribute - not
                     handlers threaded through every Renderer.tsx branch. This
                     also blocks the underlying component's own interactivity
                     (a Switch toggling, a link navigating) while in edit mode:
@@ -2593,7 +2593,7 @@ export default function BuilderPage() {
                     // handle their own clicks and must not change selection.
                     if ((e.target as HTMLElement).closest(".bld-section-bar")) return;
                     // A real drag ends with a native `dragend`/`drop`, not a
-                    // `click` — but some browsers still fire a trailing click
+                    // `click` - but some browsers still fire a trailing click
                     // right after, which would otherwise re-select whatever's
                     // under the cursor at drop time. Swallow it once.
                     if (draggingNodeId) { e.preventDefault(); e.stopPropagation(); return; }
@@ -2620,13 +2620,13 @@ export default function BuilderPage() {
                     setDraggingPaletteType(null); // mutually exclusive with a palette drag
                     e.dataTransfer.effectAllowed = "move";
                     // Firefox requires setData to actually start a drag; the
-                    // payload itself is unused — the real source of truth is
+                    // payload itself is unused - the real source of truth is
                     // `draggingNodeId` React state, read directly in onDrop.
                     e.dataTransfer.setData("text/plain", id);
                   }}
                   onDragOver={(e) => {
                     // One position calculation serves both drag sources
-                    // (Phase 2 reorder and Phase 3 palette insert) — same
+                    // (Phase 2 reorder and Phase 3 palette insert) - same
                     // "hover a real node, read before/after/inside from
                     // cursor position within it" logic either way.
                     if ((!draggingNodeId && !draggingPaletteType) || !tree) return;
@@ -2640,7 +2640,7 @@ export default function BuilderPage() {
                     const relY = rect.height > 0 ? (e.clientY - rect.top) / rect.height : 0.5;
                     const isContainer = CONTAINER_TYPES.has(targetNode.type);
                     // A container gets a dead zone in its middle 50% that means
-                    // "drop inside me" — its top/bottom quarters still mean
+                    // "drop inside me" - its top/bottom quarters still mean
                     // "insert as my sibling", same as a non-container leaf.
                     const position: "before" | "after" | "inside" =
                       isContainer ? (relY < 0.25 ? "before" : relY > 0.75 ? "after" : "inside")
@@ -2660,7 +2660,7 @@ export default function BuilderPage() {
                         setSelectedNodeId(newNode.id ?? null); // see what you just placed, right away
                       } else if (draggingNodeId) {
                         // Refuse a drop that would nest the dragged subtree
-                        // inside itself — moveNode() already guards against
+                        // inside itself - moveNode() already guards against
                         // silently losing the node in that case, but checking
                         // here first avoids even attempting a doomed move.
                         const draggedNode = findNodeById(tree, draggingNodeId);
@@ -2677,7 +2677,7 @@ export default function BuilderPage() {
                   onDragEnd={() => { setDraggingNodeId(null); setDraggingPaletteType(null); setDropTarget(null); }}
                 >
                   {/* Highlight via a scoped attribute-selector rule rather
-                      than threading selected/hovered state into RenderNode —
+                      than threading selected/hovered state into RenderNode -
                       the whole tree already re-renders on every edit anyway,
                       so this stays correct for free with no extra plumbing. */}
                   <style>{[
@@ -2686,7 +2686,7 @@ export default function BuilderPage() {
                     draggingNodeId && `.bld-edit-canvas-wrap [data-node-id="${draggingNodeId}"] { opacity: 0.4; }`,
                     // Drop indicator: a solid edge for a before/after sibling
                     // insert, a dashed outline for dropping inside a container
-                    // — inset box-shadow rather than border/outline so it
+                    // - inset box-shadow rather than border/outline so it
                     // doesn't shift layout or fight the selection/hover outline
                     // on the same element.
                     dropTarget?.position === "before" && `.bld-edit-canvas-wrap [data-node-id="${dropTarget.id}"] { box-shadow: inset 0 3px 0 0 var(--colour-primaryblue-500) !important; }`,
@@ -2734,7 +2734,7 @@ export default function BuilderPage() {
 
                 <div className="bld-prop-panel">
                   {/* Insert, Properties, and Layers share this one panel
-                      rather than adding extra layout columns — selecting an
+                      rather than adding extra layout columns - selecting an
                       element (from canvas or from the Layers tree) auto-flips
                       here to Properties (effect above), but the user can flip
                       back to Insert manually to drop a sibling near whatever's

@@ -7,7 +7,7 @@ Circular user marker. Shows an image (`src`) or auto-generated initials from
 
 | Prop | Type | Notes |
 |---|---|---|
-| `name` | string | Used for initials + `alt` text — pass it even when `src` is set |
+| `name` | string | Used for initials + `alt` text: pass it even when `src` is set |
 | `src` | string | Image URL |
 | `size` | number | Diameter in px |
 | `tone` | `"action" \| "purple" \| "neutral"` | Initials-fallback background colour |

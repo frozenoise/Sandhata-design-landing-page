@@ -15,7 +15,7 @@ let _mqCleanup: (() => void) | null = null;
  *                      are reflected without a page reload.
  *
  * Always stamps an attribute (never removes it) so the [data-theme="dark"] selectors
- * in colors.css fire reliably — no media-query duplication required.
+ * in colors.css fire reliably - no media-query duplication required.
  */
 export function applyTheme(mode: ThemeMode) {
   // Clean up any existing media-query listener
@@ -81,9 +81,9 @@ export function ThemeToggle({ className }: { className?: string }) {
   }
 
   const titles: Record<ThemeMode, string> = {
-    auto:  "System theme — click for light",
-    light: "Light mode — click for dark",
-    dark:  "Dark mode — click for system",
+    auto:  "System theme (click for light)",
+    light: "Light mode (click for dark)",
+    dark:  "Dark mode (click for system)",
   };
 
   return (

@@ -1,4 +1,4 @@
-// Sandhata showcase — Product Cards view: pricing tiers (Basic / Extra / Pro).
+// Sandhata showcase - Product Cards view: pricing tiers (Basic / Extra / Pro).
 
 function ProductCardsView() {
   const { Button } = window.SandhataDesignSystem_081a0e;

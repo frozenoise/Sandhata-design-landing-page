@@ -13,7 +13,7 @@ function SortIcon({ direction, active }) {
 }
 
 /**
- * Table — a sortable data table with optional row selection and striping.
+ * Table - a sortable data table with optional row selection and striping.
  * `columns`: `{ key, label, sortable?, secondary? }[]`. `rows`: plain
  * objects read via `row[column.key]`, plus an `id` field when `selectable`.
  */

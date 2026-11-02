@@ -2,7 +2,7 @@
 
 import React from "react";
 
-// Sandhata documentation — design-system pages (foundations, guidelines, theming).
+// Sandhata documentation - design-system pages (foundations, guidelines, theming).
 // Same shape as the components registry: { id, name, description, sections:[...] }.
 
 const Sw = ({ c, name, hex }) => (
@@ -33,7 +33,7 @@ const docOverview = {
         ["Foundations", "colour scales, type, 8-point spacing, radii, elevation, motion"],
         ["Components", "buttons, forms, data display, feedback and navigation primitives"],
         ["UI kit", "dashboard, forms and pricing surfaces built from the components"],
-        ["Docs", "this site — component API references and these guidelines"],
+        ["Docs", "this site: component API references and these guidelines"],
       ],
     },
     {
@@ -42,7 +42,7 @@ const docOverview = {
         ["Crisp and enterprise-grade", "restrained radii, hairline borders, faint shadows"],
         ["White space dominates", "colour is used sparingly and purposefully"],
         ["Tokens first", "semantic aliases keep surfaces re-themeable"],
-        ["Quiet motion", "fast, functional easing — no bounces, no decorative loops"],
+        ["Quiet motion", "fast, functional easing: no bounces, no decorative loops"],
       ],
     },
   ],
@@ -55,7 +55,7 @@ const docColour = {
     {
       id: "brand-action", title: "Brand & action",
       bullets: [
-        ["Primary blue 500", "the action colour — buttons, links, selected states"],
+        ["Primary blue 500", "the action colour: buttons, links, selected states"],
         ["Primary blue 400", "brighter emphasis variant"],
         ["Alternative purple 500", "focus ring and data-viz lead"],
         ["Secondary blue 500", "deep navy for dense chrome"],
@@ -119,7 +119,7 @@ const docColour = {
 
 const docTypography = {
   id: "typography", name: "Typography",
-  description: "IBM Plex throughout — Light for soft body and captions, Regular for UI, Bold for display and headings, Mono for code and numbers. The scale follows an 8-point rhythm.",
+  description: "IBM Plex throughout: Light for soft body and captions, Regular for UI, Bold for display and headings, Mono for code and numbers. The scale follows an 8-point rhythm.",
   sections: [
     {
       id: "families", title: "Families",
@@ -138,7 +138,7 @@ const docTypography = {
     },
     {
       id: "scale", title: "Type scale",
-      note: "Aligned to Atlassian's published type scale (2026-08-25) — Display maps onto Atlassian's Heading XXL/XL/L, Heading H1–H3 onto Heading M/S/XS.",
+      note: "Aligned to Atlassian's published type scale (2026-08-25): Display maps onto Atlassian's Heading XXL/XL/L, Heading H1–H3 onto Heading M/S/XS.",
       table: {
         head: ["Token", "Size / line", "Tracking", "Family"],
         rows: [
@@ -161,7 +161,7 @@ const docTypography = {
     {
       id: "type-usage", title: "Usage",
       bullets: [
-        ["Sentence case everywhere", "headings, buttons, labels, tabs — never Title Case"],
+        ["Sentence case everywhere", "headings, buttons, labels, tabs: never Title Case"],
         ["Display sizes carry tight negative tracking", "body is neutral"],
         ["Comfortable line lengths", "body copy maxes around 720px"],
       ],
@@ -200,7 +200,7 @@ const docSpacing = {
 
 const docShape = {
   id: "shape", name: "Radius & elevation",
-  description: "Restrained corners and soft, low-contrast shadows. Cards lean on a 1px subtle border with a faint shadow — never heavy elevation.",
+  description: "Restrained corners and soft, low-contrast shadows. Cards lean on a 1px subtle border with a faint shadow: never heavy elevation.",
   sections: [
     {
       id: "radius", title: "Border radius",
@@ -227,7 +227,7 @@ const docShape = {
     },
     {
       id: "shadows", title: "Shadows",
-      note: "Soft neutral shadows, rgba(20,22,24,…). The only coloured glow is the focus ring — a 3px violet halo.",
+      note: "Soft neutral shadows, rgba(20,22,24,…). The only coloured glow is the focus ring: a 3px violet halo.",
       demo: () => (<SwRow>
         {["xs", "sm", "md", "lg"].map((s) => (
           <div key={s} style={{ width: 110, height: 64, background: "#fff", border: "1px solid var(--border-subtle)", borderRadius: "var(--radius-lg)", boxShadow: `var(--shadow-${s})`, display: "flex", alignItems: "center", justifyContent: "center", font: "12px/1 var(--font-mono)", color: "var(--text-caption)" }}>shadow-{s}</div>
@@ -283,7 +283,7 @@ const docContent = {
       id: "voice", title: "Voice & tone",
       bullets: [
         ["Benefit-first", "\u201cA set of beautifully designed components that you can customise, extend, and build on.\u201d"],
-        ["Second person", "components you can customise — avoid \u201cwe\u201d and \u201cour\u201d"],
+        ["Second person", "components you can customise: avoid \u201cwe\u201d and \u201cour\u201d"],
         ["Calm and instructional", "helper text is neutral and descriptive, never cute"],
         ["No emoji", "in UI or copy, ever"],
       ],
@@ -291,11 +291,11 @@ const docContent = {
     {
       id: "mechanics", title: "Mechanics",
       bullets: [
-        ["Sentence case", "headings, buttons, labels, tabs — proper nouns only"],
+        ["Sentence case", "headings, buttons, labels, tabs: proper nouns only"],
         ["British spelling", "colour, customise, organise"],
         ["Numbers", "grouped with commas (24,828); compact currency ($0/mo)"],
-        ["Errors", "direct — \u201cThis is a mandatory field!\u201d"],
-        ["CTAs", "verb-first and short — Submit, Get started, View documentation"],
+        ["Errors", "direct: \u201cThis is a mandatory field!\u201d"],
+        ["CTAs", "verb-first and short: Submit, Get started, View documentation"],
       ],
     },
   ],
@@ -309,7 +309,7 @@ const docBrand = {
       id: "logo", title: "Logo",
       bullets: [
         ["Lockup", "sandhata-logo.svg for headers and marketing"],
-        ["Mark", "sandhata-mark.svg — cyan twist + orange dot — for square and favicon use"],
+        ["Mark", "sandhata-mark.svg (cyan twist + orange dot) for square and favicon use"],
         ["Mark colours", "cyan #00A4DC, orange #F68136, ink #48484F"],
       ],
       demo: () => (<div style={{ display: "flex", alignItems: "center", gap: 40 }}>
@@ -338,7 +338,7 @@ const docTheming = {
       note: "Apply data-theme=\"dark\" (or class .dark) to any container; the semantic aliases remap automatically.",
       demo: () => (<div className="dark" style={{ background: "var(--surface-page)", border: "1px solid var(--border-subtle)", borderRadius: "var(--radius-lg)", padding: 24 }}>
         <div style={{ font: "700 16px/1.4 var(--font-bold)", color: "var(--text-title)", marginBottom: 6 }}>Dark surface</div>
-        <div style={{ font: "14px/1.5 var(--font-normal)", color: "var(--text-subtitle)" }}>Same components, same aliases — remapped values.</div>
+        <div style={{ font: "14px/1.5 var(--font-normal)", color: "var(--text-subtitle)" }}>Same components, same aliases: remapped values.</div>
       </div>),
       code: `<body data-theme="dark">\n  <!-- or scope it: -->\n  <section class="dark">…</section>\n</body>`,
     },
@@ -355,19 +355,19 @@ const docTheming = {
 
 const docFigmaMake = {
   id: "figma-make", name: "Figma Make edits",
-  description: "How to edit and extend Sandhata UI inside Figma Make so changes stay faithful to the tokens and round-trip cleanly back to code. Figma Make is for composing and refining product surfaces from the design system — not for inventing new primitives.",
+  description: "How to edit and extend Sandhata UI inside Figma Make so changes stay faithful to the tokens and round-trip cleanly back to code. Figma Make is for composing and refining product surfaces from the design system: not for inventing new primitives.",
   sections: [
     {
       id: "when-to-use", title: "When to use it",
       bullets: [
         ["Compose, don't invent", "assemble screens from existing components and tokens; new primitives are added in code first"],
         ["Explore layouts", "iterate on spacing, hierarchy and copy on real product surfaces"],
-        ["Stay portable", "every edit should reduce to a token, a component property, or an auto-layout change — nothing bespoke"],
+        ["Stay portable", "every edit should reduce to a token, a component property, or an auto-layout change: nothing bespoke"],
       ],
     },
     {
       id: "variables", title: "Bind to variables, never raw values",
-      note: "Sandhata tokens are published as Figma variables. Always pick a variable — a raw hex or a hand-typed px value has no home in code and is dropped on the round-trip.",
+      note: "Sandhata tokens are published as Figma variables. Always pick a variable: a raw hex or a hand-typed px value has no home in code and is dropped on the round-trip.",
       bullets: [
         ["Colour", "bind fills and strokes to colour/* variables (primaryblue scale, neutrals, status)"],
         ["Type", "apply the text styles that mirror the --text-* tokens; don't override size or line-height by hand"],
@@ -379,7 +379,7 @@ const docFigmaMake = {
       id: "components", title: "Keep components intact",
       bullets: [
         ["Use main components", "insert instances of the published Sandhata components; never detach"],
-        ["Change via properties", "swap hierarchy, size and state through component properties — these map to props"],
+        ["Change via properties", "swap hierarchy, size and state through component properties: these map to props"],
         ["Match the barrel", "component and variant names mirror components/index.js (Button, Badge, Alert, StatCard…)"],
         ["Detaching is a fork", "a detached instance no longer maps to a coded component and won't sync back"],
       ],
@@ -395,7 +395,7 @@ const docFigmaMake = {
           ["Swap a component property", "component prop"],
           ["Adjust auto-layout gap or padding", "spacing token"],
           ["Restyle a text layer to text/*", "type token"],
-          ["Raw hex · detached instance · new primitive", "not portable — do it in code"],
+          ["Raw hex · detached instance · new primitive", "not portable: do it in code"],
         ],
       },
     },

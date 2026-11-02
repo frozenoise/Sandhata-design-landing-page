@@ -1,7 +1,7 @@
 # Component overview
 
-All 23 components below are real, shipped, importable from `@sandhata/spectra`
-— verified against the package source, not assumed. Each has its own
+All 23 components below are real, shipped, importable from `@sandhata/spectra`,
+verified against the package source, not assumed. Each has its own
 `components/<name>.md` file with its real props, anatomy, and do/don't
 guidance; read that file before using the component.
 
@@ -9,7 +9,7 @@ guidance; read that file before using the component.
 
 | Component | Purpose |
 |---|---|
-| `Button` | The primary interactive control — five hierarchies, three sizes |
+| `Button` | The primary interactive control: five hierarchies, three sizes |
 | `IconButton` | A square button holding a single icon, same hierarchies as Button |
 
 ## Data display
@@ -17,9 +17,9 @@ guidance; read that file before using the component.
 | Component | Purpose |
 |---|---|
 | `Accordion` | A list of collapsible panels, single-open by default |
-| `Avatar` | Circular user marker — image or auto-generated initials |
+| `Avatar` | Circular user marker: image or auto-generated initials |
 | `Badge` | Small status pill, seven tones |
-| `Card` | The base content surface — white layer, subtle border, soft shadow |
+| `Card` | The base content surface: white layer, subtle border, soft shadow |
 | `StatCard` | A KPI tile: label, large value, optional trend |
 | `Table` | Sortable data table with optional row selection and striping |
 | `Tag` | Removable chip/label, two tones |
@@ -36,7 +36,7 @@ guidance; read that file before using the component.
 
 | Component | Purpose |
 |---|---|
-| `Checkbox` | Checkbox with label — checked/indeterminate/disabled |
+| `Checkbox` | Checkbox with label: checked/indeterminate/disabled |
 | `Input` | Labelled single-line text field with helper/error states |
 | `Radio` | Radio button with label, grouped by shared `name` |
 | `Select` | Styled native select with label, chevron, helper/error states |
@@ -62,7 +62,7 @@ guidance; read that file before using the component.
 
 These appear as illustrative reference material in this design system's own
 documentation site, drawn from the Figma spec, but **have no importable
-implementation** — do not `import` them from `@sandhata/spectra`. If a layout
+implementation**: do not `import` them from `@sandhata/spectra`. If a layout
 needs one of these, either compose it from the real primitives above or flag
 it as a gap rather than inventing an import that doesn't exist:
 

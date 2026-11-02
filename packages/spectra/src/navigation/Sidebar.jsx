@@ -8,7 +8,7 @@ const CollapseIcon = ({ collapsed }) => (
 );
 
 /**
- * Sidebar — a collapsible navigation rail with grouped links. The current
+ * Sidebar - a collapsible navigation rail with grouped links. The current
  * route (`activeId`) gets a left accent border and the primary-blue icon
  * treatment; `collapsed` shrinks the rail to icon-only width.
  */

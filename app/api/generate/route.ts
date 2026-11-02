@@ -8,7 +8,7 @@ export const runtime = "nodejs";
 export const maxDuration = 60;
 
 // Models the client is allowed to request. Never trust the client's `model`
-// string directly — validate against this allowlist server-side and fall
+// string directly - validate against this allowlist server-side and fall
 // back to the default for anything unrecognized (typo, stale client build,
 // or a deliberately crafted request).
 const ALLOWED_MODELS = [
@@ -19,7 +19,7 @@ const ALLOWED_MODELS = [
 ] as const;
 const DEFAULT_MODEL: (typeof ALLOWED_MODELS)[number] = "claude-sonnet-5";
 
-const SYSTEM = `You are a UI generator for Spectra, Sandhata's design system. Given a description, output a SINGLE JSON object describing an interface built ONLY from the allowed components. Output JSON only — no prose, no markdown fences.
+const SYSTEM = `You are a UI generator for Spectra, Sandhata's design system. Given a description, output a SINGLE JSON object describing an interface built ONLY from the allowed components. Output JSON only: no prose, no markdown fences.
 
 The JSON is a recursive node:
 { "type": <ComponentName>, "props"?: {...}, "children"?: [<node>, ...] | "text" }
@@ -59,9 +59,10 @@ DESIGN-SYSTEM COMPONENTS (use real product UI, not lorem):
 RULES:
 - Wrap the whole UI in a single "Stack" (or "Card") root with sensible gap.
 - Use realistic copy relevant to the request.
+- Never use em dashes in any copy. Use a comma, colon or full stop instead.
 - Prefer Card to group related content. Use Heading for titles.
 - Keep it focused: 1 cohesive screen/section, not a whole site.
-- When the user asks to modify or refine a previous design, your prior JSON is in the conversation history as your last assistant message. Modify it and return the COMPLETE updated JSON — never a partial diff.
+- When the user asks to modify or refine a previous design, your prior JSON is in the conversation history as your last assistant message. Modify it and return the COMPLETE updated JSON: never a partial diff.
 - Keep the tree concise: avoid excessive nesting, merge sibling Text nodes, and don't repeat boilerplate. Aim for under 200 nodes total.
 - Output ONLY the JSON object.`;
 
@@ -90,7 +91,7 @@ export async function POST(req: Request) {
   }
 
   // Key precedence: explicit key sent with this request (BYO / local override)
-  // > the signed-in user's account-linked key > the server's own key (dev only —
+  // > the signed-in user's account-linked key > the server's own key (dev only -
   // deliberately unset on Vercel, see CLAUDE.md).
   let key = typeof clientKey === "string" ? clientKey.trim() : "";
 
@@ -105,7 +106,7 @@ export async function POST(req: Request) {
         if (user?.apiKeyEnc) key = decryptSecret(user.apiKeyEnc);
       }
     } catch {
-      // Account-key lookup is best-effort — fall through to the env/missing-key paths.
+      // Account-key lookup is best-effort - fall through to the env/missing-key paths.
     }
   }
 
@@ -114,7 +115,7 @@ export async function POST(req: Request) {
     return NextResponse.json(
       {
         error: "missing_key",
-        message: "Enter your Anthropic API key to generate — it's sent only with this request and never stored on our server.",
+        message: "Enter your Anthropic API key to generate. It's sent only with this request and never stored on our server.",
       },
       { status: 503 }
     );
@@ -144,7 +145,7 @@ export async function POST(req: Request) {
     try {
       tree = JSON.parse(text.slice(start, end + 1));
     } catch {
-      // Response was truncated — give the user a clear message
+      // Response was truncated - give the user a clear message
       return NextResponse.json(
         { error: "generation_failed", message: "The interface was too large to generate in one go. Try a simpler or more focused description." },
         { status: 502 }

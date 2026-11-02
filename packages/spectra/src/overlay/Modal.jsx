@@ -9,7 +9,7 @@ const CloseIcon = () => (
 const SIZES = { small: 400, medium: 560, large: 760 };
 
 /**
- * Modal — a centred dialog over a page-dimming overlay. Renders nothing
+ * Modal - a centred dialog over a page-dimming overlay. Renders nothing
  * when `open` is false. Pass `danger` for destructive-confirmation modals
  * (adds a top accent border in the error colour).
  */

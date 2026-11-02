@@ -1,4 +1,4 @@
-// Sandhata intro film — stage composition.
+// Sandhata intro film - stage composition.
 
 function SdTimecode() {
   const t = useTime();

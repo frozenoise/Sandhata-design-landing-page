@@ -16,7 +16,7 @@ next-env.d.ts
 .windsurf/
 skills-lock.json
 
-# markdown (notes, guides, prompt docs) — but keep the project README + handoff
+# markdown (notes, guides, prompt docs) - but keep the project README + handoff
 *.md
 !/readme.md
 !/HANDOFF.md

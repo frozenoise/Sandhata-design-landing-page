@@ -31,7 +31,7 @@ A strict 8-point grid with half-steps for finer control.
 
 ## Border radius
 
-Restrained corners — small and crisp, never heavily rounded except pills and
+Restrained corners: small and crisp, never heavily rounded except pills and
 avatars.
 
 | Token | Value | Use |
@@ -46,7 +46,7 @@ avatars.
 ## Shadows
 
 Soft neutral shadows only (`rgba(20,22,24,…)`). The only coloured glow in the
-system is the focus ring — a 3px violet halo, never used for anything else.
+system is the focus ring: a 3px violet halo, never used for anything else.
 
 | Token | Use |
 |---|---|

@@ -1,4 +1,4 @@
-// Sandhata showcase — interactive data table (bulk-edit pattern from the dashboard).
+// Sandhata showcase - interactive data table (bulk-edit pattern from the dashboard).
 
 function DataTable() {
   const { Checkbox, IconButton, Badge, Button } = window.SandhataDesignSystem_081a0e;

@@ -49,7 +49,7 @@ export default function PricingPage() {
           font: "400 18px/1.6 'IBM Plex Sans', system-ui",
           color: "var(--text-caption)", maxWidth: 440, marginBottom: 48,
         }}>
-          We are working on our pricing plans. Check back soon — or get notified when we launch.
+          We are working on our pricing plans. Check back soon, or get notified when we launch.
         </p>
 
         <a href="/" style={{

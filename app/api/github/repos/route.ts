@@ -3,9 +3,9 @@ import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { isGitHubAppConfigured, getInstallationOctokit } from "@/lib/github";
 
-// GET /api/github/repos?installationId=123 — list repos accessible to a
+// GET /api/github/repos?installationId=123 - list repos accessible to a
 // GitHub App installation (GET /installation/repositories), using a
-// minted installation token. installationId must belong to the caller —
+// minted installation token. installationId must belong to the caller -
 // never trust it to imply access on its own.
 export async function GET(req: Request) {
   const session = await auth();

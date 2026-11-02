@@ -1,4 +1,4 @@
-// Sandhata intro film — scenes 4–6 (components, surfaces, outro).
+// Sandhata intro film - scenes 4–6 (components, surfaces, outro).
 // Uses helpers from IntroScenes1.jsx (sdC, sdF, sdP, SdItem, SdScene, …).
 
 // ── Scene 4 · Components (17.5–24.5) ────────────────────────────────────────
@@ -184,7 +184,7 @@ function SdScene6() {
         <div style={{ fontFamily: sdF.bold, fontWeight: 700, fontSize: 80, letterSpacing: "-1.5px", color: sdC.ink }}>Sandhata Design System</div>
       </SdItem>
       <SdItem x={0} y={610} at={1.0} dur={0.7} w={1920} style={{ textAlign: "center" }}>
-        <div style={{ fontFamily: sdF.light, fontWeight: 300, fontSize: 32, color: sdC.n700 }}>Tokens, components and full surfaces — ready to build on.</div>
+        <div style={{ fontFamily: sdF.light, fontWeight: 300, fontSize: 32, color: sdC.n700 }}>Tokens, components and full surfaces: ready to build on.</div>
       </SdItem>
       <Sprite start={30.5} end={36} keepMounted>
         {({ localTime }) => (

@@ -1,6 +1,6 @@
 # Tabs
 
-Underline-style tab bar — the Sandhata navigation pattern. Active tab is bold
+Underline-style tab bar: the Sandhata navigation pattern. Active tab is bold
 and blue with a 2px underline.
 
 ## Props

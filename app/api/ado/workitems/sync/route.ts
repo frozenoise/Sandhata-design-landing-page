@@ -4,10 +4,10 @@ import { prisma } from "@/lib/prisma";
 import { decryptSecret } from "@/lib/crypto";
 import { AdoApiError, getWorkItemsBatch, builderStatusForState, type StateMappingForType } from "@/lib/ado";
 
-// GET /api/ado/workitems/sync?projectId= — on-load reconciliation: batch
+// GET /api/ado/workitems/sync?projectId= - on-load reconciliation: batch
 // GET every WorkItemLink under this project's connection and refresh the
 // cached state. Returns the updated list (does not fail the whole request
-// if ADO is unreachable — it returns the cached links with a top-level
+// if ADO is unreachable - it returns the cached links with a top-level
 // error note instead, since a reconciliation failure shouldn't block the
 // rest of the builder UI from rendering).
 export async function GET(req: Request) {
@@ -46,7 +46,7 @@ export async function GET(req: Request) {
       conn.workItemLinks.map(async link => {
         const fresh = remoteById.get(link.adoWorkItemId);
         if (!fresh) {
-          // Work item no longer visible (deleted/moved) — leave the cached
+          // Work item no longer visible (deleted/moved) - leave the cached
           // row as-is but flag it rather than guessing.
           return prisma.workItemLink.update({
             where: { id: link.id },

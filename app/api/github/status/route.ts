@@ -3,10 +3,10 @@ import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { isGitHubAppConfigured, getInstallationOctokit } from "@/lib/github";
 
-// GET /api/github/status?projectId=... — cheap ahead/behind check: compares
+// GET /api/github/status?projectId=... - cheap ahead/behind check: compares
 // Project.lastSyncedSha against the working branch's current head SHA on
 // GitHub. Phase 1 has no pull/manifest, so this can only tell you "someone
-// (or something) has moved the branch since our last push" (behind) — it
+// (or something) has moved the branch since our last push" (behind) - it
 // can't yet tell you what changed or merge it back. That's Phase 2 scope.
 export async function GET(req: Request) {
   const session = await auth();
@@ -36,7 +36,7 @@ export async function GET(req: Request) {
 
   const branch = project.workingBranch || project.defaultBranch;
   if (!branch) {
-    // Connected but never pushed yet — no branch to compare against.
+    // Connected but never pushed yet - no branch to compare against.
     return NextResponse.json({
       connected: true, repoOwner: project.repoOwner, repoName: project.repoName,
       syncStatus: project.syncStatus, lastSyncedAt: project.lastSyncedAt, lastSyncError: project.lastSyncError,
@@ -63,12 +63,12 @@ export async function GET(req: Request) {
       lastSyncedAt: project.lastSyncedAt,
       lastSyncError: project.lastSyncError,
       // "behind" here means the branch moved on GitHub since our last push
-      // (someone pushed directly, or force-pushed) — not a real 3-way diff.
+      // (someone pushed directly, or force-pushed) - not a real 3-way diff.
       behind,
     });
   } catch (e: any) {
     if (e?.status === 404) {
-      // Branch doesn't exist on GitHub yet (never pushed) — not an error.
+      // Branch doesn't exist on GitHub yet (never pushed) - not an error.
       return NextResponse.json({
         connected: true, repoOwner: project.repoOwner, repoName: project.repoName,
         workingBranch: branch, syncStatus: project.syncStatus, lastSyncedAt: project.lastSyncedAt,

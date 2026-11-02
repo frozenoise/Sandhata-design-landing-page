@@ -6,10 +6,10 @@ import Lenis from "lenis";
 /**
  * Scroll-bend (haoqi.design-style, DOM approximation): Lenis interpolates the
  * scroll position so motion is frame-smooth, and while scrolling the page
- * curls AWAY from the viewer at the top and bottom of the viewport — in BOTH
- * scroll directions, like the reference — settling flat at rest.
+ * curls AWAY from the viewer at the top and bottom of the viewport - in BOTH
+ * scroll directions, like the reference - settling flat at rest.
  *
- * Geometry: one bent sheet with a flat plateau — the central FLAT fraction of
+ * Geometry: one bent sheet with a flat plateau - the central FLAT fraction of
  * the viewport stays untransformed and the curve ramps in beyond it. Content
  * is carved into strips (top-level sections, recursively subdivided while
  * they span a large part of the viewport) and each strip is a chord of the
@@ -18,7 +18,7 @@ import Lenis from "lenis";
  * their projections stay seam-free at any depth.
  *
  * Subdivided ancestors stay untransformed, flattened containers (paint order
- * remains DOM order — preserve-3d would hide receded strips behind their
+ * remains DOM order - preserve-3d would hide receded strips behind their
  * section's own background); nested strips carry their own perspective().
  * A subdivided ancestor with an opaque background would paint it as a flat
  * un-bent band behind its curling children, so its background is moved onto
@@ -29,7 +29,7 @@ import Lenis from "lenis";
  * single content child in that case. Respects prefers-reduced-motion.
  *
  * Elements with a `data-bend-exempt` attribute (and their subtrees) are never
- * transformed — use it for sections with their own scroll-driven scenes.
+ * transformed - use it for sections with their own scroll-driven scenes.
  */
 export function useScrollBend<T extends HTMLElement>(
   scrollerRef?: React.RefObject<HTMLElement>
@@ -59,7 +59,7 @@ export function useScrollBend<T extends HTMLElement>(
     const prevWrapPosition = wrap.style.position;
     if (getComputedStyle(wrap).position === "static") wrap.style.position = "relative";
 
-    // Layout top relative to the wrapper via the offsetParent chain — layout
+    // Layout top relative to the wrapper via the offsetParent chain - layout
     // values ignore transforms (measuring transformed rects feeds the
     // transform back into its own input and oscillates).
     const layoutTop = (el: HTMLElement): number => {
@@ -173,7 +173,7 @@ export function useScrollBend<T extends HTMLElement>(
       lenis.raf(time);
 
       // |velocity| so the sheet curls AWAY at both edges in both scroll
-      // directions (matches the reference) — and no zero-crossing lag when
+      // directions (matches the reference) - and no zero-crossing lag when
       // the scroll direction flips.
       const target = Math.min(24, Math.abs(lenis.velocity) * 0.3);
       bend += (target - bend) * 0.12;
@@ -222,7 +222,7 @@ export function useScrollBend<T extends HTMLElement>(
           const angle = angleRad * 180 / Math.PI;
           const z = (zT + zB) / 2;
           // scaleY(1/cosφ) stretches the strip to its chord length so both
-          // endpoints land exactly on the sheet — neighbours share endpoints
+          // endpoints land exactly on the sheet - neighbours share endpoints
           // in 3D, so projections stay joined at any depth.
           const sy = 1 / Math.cos(angleRad);
           // Receded rows foreshorten horizontally and would reveal the page

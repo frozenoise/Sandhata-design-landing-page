@@ -1,6 +1,6 @@
 import React from "react";
 
-/** Tag / chip — a removable label. Pass `onRemove` to show the × button. */
+/** Tag / chip - a removable label. Pass `onRemove` to show the × button. */
 export function Tag({ children, onRemove, tone = "neutral", style = {} }) {
   const tones = {
     neutral: { bg: "var(--colour-neutral-100)", fg: "var(--colour-neutral-800)", bd: "var(--colour-neutral-200)" },

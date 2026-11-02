@@ -18,9 +18,9 @@ Row: left accent border (blue, only when open) → title (bold) → chevron
 
 ## Do / Don't
 
-- **Do** use Accordion for secondary/supplementary content — FAQs, optional
+- **Do** use Accordion for secondary/supplementary content: FAQs, optional
   configuration, progressive disclosure in long forms.
-- **Don't** hide critical information inside a closed panel by default — if
+- **Don't** hide critical information inside a closed panel by default: if
   the user must read it, show it open or don't put it in an accordion.
 
 ## Example

@@ -1,7 +1,7 @@
 import React from "react";
 
 /**
- * Sandhata Button — the primary interactive control.
+ * Sandhata Button - the primary interactive control.
  * Hierarchies map to the Figma button set: primary (royal blue),
  * secondary (tinted), tertiary (ghost), inverse (dark) and danger (red).
  */
@@ -37,7 +37,7 @@ export function Button({
       "--bd": "transparent",
     },
     tertiary: {
-      // Semantic tokens, not raw neutral primitives — this hierarchy needs to
+      // Semantic tokens, not raw neutral primitives - this hierarchy needs to
       // stay legible against ANY surface it's dropped onto (site-wide dark
       // mode, showcase's Ink Dark surface, a future tenant theme), not just
       // the light-mode default it was originally hand-tuned for.
@@ -60,7 +60,7 @@ export function Button({
     },
     ghost: {
       // Same reasoning as tertiary. primaryblue-600 as a hardcoded --fg
-      // measured ~1.5:1 against a dark surface (WCAG AA needs 4.5:1) — the
+      // measured ~1.5:1 against a dark surface (WCAG AA needs 4.5:1) - the
       // text was there, just effectively invisible. --text-action now has a
       // dark-theme override (tokens/colors.css) so this adapts automatically.
       "--bg": "transparent",

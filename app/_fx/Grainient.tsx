@@ -1,6 +1,6 @@
 "use client";
 
-/* Grainient — animated grainy-gradient WebGL background, ported from
+/* Grainient - animated grainy-gradient WebGL background, ported from
  * react-bits.dev's "Grainient" component (registry item
  * @react-bits/Grainient-JS-CSS, MIT-style code-drop, not an npm package).
  * Pulled verbatim from https://reactbits.dev/r/Grainient-JS-CSS.json and
@@ -10,12 +10,12 @@
  * second stylesheet. Shader/WebGL logic (ogl Renderer/Program/Mesh) is
  * unchanged from the upstream source.
  *
- * Renders a full-bleed <div><canvas/></div> — size it via the wrapper's
+ * Renders a full-bleed <div><canvas/></div> - size it via the wrapper's
  * CSS (width/height 100%, position:absolute/inset:0 inside a
  * position:relative parent), same pattern as `.hero-aurora`.
  *
  * Skips entirely under prefers-reduced-motion, same fallback convention as
- * .hero-aurora and PixelCanvasBackground — the section keeps whatever
+ * .hero-aurora and PixelCanvasBackground - the section keeps whatever
  * static background sits behind it (set via CSS on the wrapping element).
  */
 
@@ -302,7 +302,7 @@ const Grainient = ({
     };
   }, []); // renderer created once
 
-  // Effect 2: sync props to uniforms — zero GPU cost, no teardown
+  // Effect 2: sync props to uniforms - zero GPU cost, no teardown
   useEffect(() => {
     const container = containerRef.current;
     if (!container) return;
@@ -338,13 +338,13 @@ const Grainient = ({
     // live: Effect 1's very first frame (inside its own synchronous
     // setSize() call) renders with this program's placeholder [1,1,1]
     // uniforms, since it necessarily runs before this effect ever gets a
-    // chance to set the real colours. That's normally invisible — the rAF
+    // chance to set the real colours. That's normally invisible - the rAF
     // loop's next frame (scheduled a few lines later in Effect 1, after
     // this effect has already run) picks up the corrected values within a
     // frame or two. But the loop is gated on page/element visibility
     // (`document.hidden`, an IntersectionObserver), and if that gate reads
-    // false at mount — a real, confirmed case: a background/unfocused tab
-    // — tryStart() never fires the loop at all, so this canvas is stuck
+    // false at mount - a real, confirmed case: a background/unfocused tab
+    // - tryStart() never fires the loop at all, so this canvas is stuck
     // showing that one placeholder-white frame forever, even once the tab
     // becomes visible and Effect 2 has long since set the right colours,
     // because nothing ever renders again to pick them up. One explicit

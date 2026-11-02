@@ -9,7 +9,7 @@ function getKey(): Buffer {
   const secret = process.env.BUILDER_KEY_SECRET;
   if (!secret) {
     throw new Error(
-      "BUILDER_KEY_SECRET is not set — required to store account-linked API keys. Add it to .env.local (any random string; e.g. `openssl rand -hex 32`)."
+      "BUILDER_KEY_SECRET is not set: required to store account-linked API keys. Add it to .env.local (any random string; e.g. `openssl rand -hex 32`)."
     );
   }
   return crypto.createHash("sha256").update(secret).digest(); // 32 bytes

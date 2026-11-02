@@ -1,7 +1,7 @@
 import React from "react";
 
 /**
- * Status Badge — small status pill. Tones map to the semantic palette.
+ * Status Badge - small status pill. Tones map to the semantic palette.
  * `variant="subtle"` (default) uses a tinted background; "solid" fills.
  */
 export function Badge({ children, tone = "neutral", variant = "subtle", dot = false, style = {} }) {

@@ -11,7 +11,7 @@ Removable chip / label.
 
 ## Do / Don't
 
-- **Don't** add a leading icon, hover state, or "selected" state — the real
+- **Don't** add a leading icon, hover state, or "selected" state: the real
   component doesn't implement any of these; if the layout needs them, that's
   a gap to flag, not something to fake with inline styles on top of `Tag`.
 

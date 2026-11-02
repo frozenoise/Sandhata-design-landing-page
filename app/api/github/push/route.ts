@@ -7,8 +7,8 @@ import { treeToJSX, type UINode } from "@/app/builder/uiTree";
 // POST /api/github/push { projectId, sessionIds?: string[] }
 // Commits the derived .tsx for each session (default: every session in the
 // project that has a generated tree) to the project's working branch via
-// the Git Data API — one atomic multi-file commit, not one commit per file.
-// No .sandhata/*.json manifest yet (that's Phase 2) — this is push-only,
+// the Git Data API - one atomic multi-file commit, not one commit per file.
+// No .sandhata/*.json manifest yet (that's Phase 2) - this is push-only,
 // last-write-wins, single repo.
 //
 // Git Data API sequence (see plan): ref → base commit → base tree → blobs
@@ -80,7 +80,7 @@ export async function POST(req: Request) {
       baseCommitSha = ref.object.sha;
     } catch (e: any) {
       if (e?.status !== 404) throw e;
-      // Branch doesn't exist yet — branch it off the repo's current default-branch head.
+      // Branch doesn't exist yet - branch it off the repo's current default-branch head.
       const { data: repoData } = await octokit.rest.repos.get({ owner, repo });
       const defaultBranch = repoData.default_branch;
       const { data: defaultRef } = await octokit.rest.git.getRef({ owner, repo, ref: `heads/${defaultBranch}` });
@@ -91,7 +91,7 @@ export async function POST(req: Request) {
     const { data: baseCommit } = await octokit.rest.git.getCommit({ owner, repo, commit_sha: baseCommitSha });
     const baseTreeSha = baseCommit.tree.sha;
 
-    // Dedupe file paths — two sessions with the same slugified name would
+    // Dedupe file paths - two sessions with the same slugified name would
     // otherwise silently overwrite each other in the tree.
     const usedPaths = new Set<string>();
     const files = pages.map(p => {
@@ -119,7 +119,7 @@ export async function POST(req: Request) {
     });
 
     const names = pages.map(p => p.name).join(", ");
-    const message = `Sandhata: sync ${pages.length} page(s) — ${names}\n\nGenerated-by: Sandhata AI Builder`;
+    const message = `Sandhata: sync ${pages.length} page(s), ${names}\n\nGenerated-by: Sandhata AI Builder`;
 
     const { data: newCommit } = await octokit.rest.git.createCommit({
       owner, repo, message, tree: newTree.sha, parents: [baseCommitSha],

@@ -1,7 +1,7 @@
 import React from "react";
 
 /**
- * Sandhata text Input — field with optional label, helper text, and
+ * Sandhata text Input - field with optional label, helper text, and
  * error/disabled states. Matches the Figma form-field anatomy.
  */
 export function Input({

@@ -5,7 +5,7 @@ import { sessionRole, projectRole, canEdit, isShared } from "@/lib/access";
 
 type Params = { params: Promise<{ id: string }> };
 
-// GET /api/sessions/:id — load full session (messages + tree)
+// GET /api/sessions/:id - load full session (messages + tree)
 export async function GET(_req: Request, props: Params) {
   const params = await props.params;
   const session = await auth();
@@ -26,7 +26,7 @@ export async function GET(_req: Request, props: Params) {
   return NextResponse.json({ session: record, access: { role, shared, live } });
 }
 
-// PATCH /api/sessions/:id — update messages + tree (auto-save), or move the
+// PATCH /api/sessions/:id - update messages + tree (auto-save), or move the
 // session into a different project / ungroup it (projectId: null).
 export async function PATCH(req: Request, props: Params) {
   const params = await props.params;
@@ -41,7 +41,7 @@ export async function PATCH(req: Request, props: Params) {
   if (!canEdit(role)) return NextResponse.json({ error: "forbidden" }, { status: 403 });
 
   // Moving a page between projects (or out of one) is for the page's owner
-  // or the project owner only — an editor can change a shared page's content
+  // or the project owner only - an editor can change a shared page's content
   // but not take it out of the shared project. The target must be a project
   // the caller can edit; `projectId: null` (ungroup) needs no target check.
   if (projectId !== undefined) {
@@ -65,7 +65,7 @@ export async function PATCH(req: Request, props: Params) {
   return NextResponse.json({ session: updated });
 }
 
-// DELETE /api/sessions/:id — remove a session
+// DELETE /api/sessions/:id - remove a session
 export async function DELETE(_req: Request, props: Params) {
   const params = await props.params;
   const session = await auth();

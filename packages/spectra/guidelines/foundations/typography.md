@@ -9,12 +9,12 @@ maps onto Atlassian's Heading XXL/XL/L; Heading H1–H3 maps onto Heading M/S/XS
 
 | Token | Weight | Use |
 |---|---|---|
-| `--font-bold` | 700 | Display, headings — pair with tight negative tracking |
+| `--font-bold` | 700 | Display, headings: pair with tight negative tracking |
 | `--font-normal` | 400 | UI and body copy |
 | `--font-light` | 300 | Soft body, captions, secondary copy |
-| `--font-mono` | — | Code, tokens, tabular numbers |
+| `--font-mono` |: | Code, tokens, tabular numbers |
 
-All three Sans weights resolve to the same family name (`"IBM Plex Sans"`) —
+All three Sans weights resolve to the same family name (`"IBM Plex Sans"`):
 the weight comes from `font-weight`, not a different family string. Mono is
 `"IBM Plex Mono"`.
 
@@ -44,8 +44,8 @@ body { font: var(--body-medium-size)/var(--body-medium-line) var(--font-normal);
 
 ## Usage rules
 
-- **Sentence case everywhere** — headings, buttons, labels, tabs. Never Title
+- **Sentence case everywhere**: headings, buttons, labels, tabs. Never Title
   Case.
 - Display sizes carry tight negative tracking; body stays neutral (no
   tracking adjustment).
-- Comfortable line lengths — body copy maxes around 720px wide.
+- Comfortable line lengths: body copy maxes around 720px wide.

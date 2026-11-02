@@ -13,7 +13,7 @@ A KPI tile: label, large value, and an optional trend indicator.
 
 ## Do / Don't
 
-- **Don't** expect `StatCard` to position or size itself in a grid — like
+- **Don't** expect `StatCard` to position or size itself in a grid: like
   `Card`, it has no layout props. Wrap it in a `<div>` for grid/flex placement.
 
 ## Example

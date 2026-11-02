@@ -5,7 +5,7 @@ import { projectRole, MEMBER_ROLES } from "@/lib/access";
 
 type Params = { params: Promise<{ id: string }> };
 
-// GET /api/projects/:id/members — everyone with access to the project: the
+// GET /api/projects/:id/members - everyone with access to the project: the
 // owner, members, and pending invites (emails with no account yet). Any
 // member can see the list; only the owner can change it.
 export async function GET(_req: Request, props: Params) {
@@ -36,7 +36,7 @@ export async function GET(_req: Request, props: Params) {
   });
 }
 
-// POST /api/projects/:id/members — owner adds someone by email. If they
+// POST /api/projects/:id/members - owner adds someone by email. If they
 // already have an account they become a member straight away; otherwise a
 // pending invite is stored and claimed when they first sign in with it.
 export async function POST(req: Request, props: Params) {

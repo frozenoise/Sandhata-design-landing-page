@@ -4,7 +4,7 @@ import * as React from "react";
 export interface AlertProps {
   tone?: "info" | "success" | "warning" | "error";
   title?: React.ReactNode;
-  /** Optional dismiss handler — renders a close button. */
+  /** Optional dismiss handler - renders a close button. */
   onClose?: () => void;
   children?: React.ReactNode;
 }

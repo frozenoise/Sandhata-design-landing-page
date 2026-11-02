@@ -5,8 +5,8 @@ import { projectRole } from "@/lib/access";
 
 type Params = { params: Promise<{ id: string }> };
 
-// GET /api/projects/:id — project + its sessions (id/name/updatedAt only,
-// same shape as /api/sessions' list — the sidebar loads full session content
+// GET /api/projects/:id - project + its sessions (id/name/updatedAt only,
+// same shape as /api/sessions' list - the sidebar loads full session content
 // lazily via /api/sessions/:id, same as it does today for ungrouped ones)
 export async function GET(_req: Request, props: Params) {
   const params = await props.params;
@@ -31,7 +31,7 @@ export async function GET(_req: Request, props: Params) {
   return NextResponse.json({ project: { ...project, role } });
 }
 
-// PATCH /api/projects/:id — rename a project
+// PATCH /api/projects/:id - rename a project
 export async function PATCH(req: Request, props: Params) {
   const params = await props.params;
   const session = await auth();
@@ -56,8 +56,8 @@ export async function PATCH(req: Request, props: Params) {
   return NextResponse.json({ project: updated });
 }
 
-// DELETE /api/projects/:id — delete a project AND the sessions inside it
-// (folder semantics — see the cascade comment on the Prisma relation).
+// DELETE /api/projects/:id - delete a project AND the sessions inside it
+// (folder semantics - see the cascade comment on the Prisma relation).
 export async function DELETE(_req: Request, props: Params) {
   const params = await props.params;
   const session = await auth();

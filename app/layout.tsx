@@ -6,7 +6,7 @@ import "./globals.css";
 export const metadata: Metadata = {
   title: "Spectra",
   description:
-    "Everything your team needs to ship consistent, accessible interfaces — components, tokens, and guidelines in one place.",
+    "Everything your team needs to ship consistent, accessible interfaces: components, tokens, and guidelines in one place.",
 };
 
 export default function RootLayout({

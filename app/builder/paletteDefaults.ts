@@ -1,19 +1,19 @@
-// Phase 3 (component palette + drag-to-insert) — what the AI-generation
+// Phase 3 (component palette + drag-to-insert) - what the AI-generation
 // route (app/api/generate/route.ts) is to a prompt, this is to a drag: the
 // registry of insertable component types + sensible starting props/content
 // for each, so a freshly-dropped element looks like something, not a blank
 // husk. Categories mirror the real capability of app/builder/Renderer.tsx's
-// LAYOUT/DS registries — NOT the full @sandhata/spectra catalogue (Accordion,
+// LAYOUT/DS registries - NOT the full @sandhata/spectra catalogue (Accordion,
 // Table, Menu, Sidebar, Drawer, Modal exist in the library but need runtime/
 // controlled state the static JSON tree can't express, so the renderer never
 // wires them up, and the palette must not offer what it can't render).
 //
 // IconButton and Tooltip are deliberately excluded: IconButton.icon is a
-// required React.ReactNode — not a JSON-serializable value the tree format
+// required React.ReactNode - not a JSON-serializable value the tree format
 // can hold (see UINode's own comment on `props` needing to survive Postgres/
 // export round-trips), so a palette-dropped IconButton would always render
 // with a missing required prop. Tooltip needs a `children` trigger element,
-// not a props/text default — dropping a blank one would render invisible
+// not a props/text default - dropping a blank one would render invisible
 // (nothing to hover). Both are real, documented gaps, not oversights.
 
 import type { UINode } from "./uiTree";

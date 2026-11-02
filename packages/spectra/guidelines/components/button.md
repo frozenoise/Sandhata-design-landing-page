@@ -1,6 +1,6 @@
 # Button
 
-Triggers actions or events. The primary interactive control — used across
+Triggers actions or events. The primary interactive control: used across
 forms, dialogs, and navigation flows.
 
 ## Props
@@ -21,25 +21,25 @@ icon.
 
 ## Hierarchy
 
-- **Primary** — the one main action per screen.
-- **Secondary** — supporting actions.
-- **Tertiary** — low-emphasis actions, outlined.
-- **Ghost** — minimal, no background or border.
-- **Danger** — destructive actions (delete, remove). Solid red background,
+- **Primary**: the one main action per screen.
+- **Secondary**: supporting actions.
+- **Tertiary**: low-emphasis actions, outlined.
+- **Ghost**: minimal, no background or border.
+- **Danger**: destructive actions (delete, remove). Solid red background,
   white text.
-- **Inverse** — dark background, for use on light/coloured surfaces.
+- **Inverse**: dark background, for use on light/coloured surfaces.
 
 ## Accessibility
 
 - Enter and Space activate a focused button.
 - Disabled buttons are removed from the tab order.
-- Renders a native `<button>` — role and disabled state are exposed to
+- Renders a native `<button>`: role and disabled state are exposed to
   assistive tech automatically, no extra ARIA needed.
 
 ## Do / Don't
 
 - **Do** use Primary for the one main action per screen.
-- **Don't** use multiple Primary buttons in the same view — it dilutes the
+- **Don't** use multiple Primary buttons in the same view: it dilutes the
   hierarchy. Pair one Primary with a Secondary or Tertiary instead.
 
 ## Example

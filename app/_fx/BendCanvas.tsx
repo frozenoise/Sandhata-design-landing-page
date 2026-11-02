@@ -11,7 +11,7 @@ import Lenis from "lenis";
  * planes in a fixed full-viewport WebGL canvas, tracked each frame to their
  * DOM placeholders' rects. A vertex shader curls the planes away from the
  * viewer at the viewport's top and bottom edges, magnitude driven by
- * |scroll velocity| — the same Z(y) profile as the old DOM approximation,
+ * |scroll velocity| - the same Z(y) profile as the old DOM approximation,
  * but continuous per-vertex, so the parabola is pixel-smooth and the
  * perspective foreshortening is real instead of scaleX/scaleY compensation.
  *
@@ -23,7 +23,7 @@ import Lenis from "lenis";
  *                                             contains one); used live as a
  *                                             VideoTexture, no margin.
  *
- * The DOM original is hidden (visibility:hidden — it keeps its layout box,
+ * The DOM original is hidden (visibility:hidden - it keeps its layout box,
  * so rect tracking and document flow are unaffected) once its texture is
  * ready. Reveal entrance animations still work: each plane multiplies its
  * opacity by the computed opacity of its nearest [data-reveal] ancestor,
@@ -35,11 +35,11 @@ import Lenis from "lenis";
 
 const EXPAND = 20;   // must match scripts/bake-bend-textures.js margin
 // Central fraction of the viewport that stays flat. Kept small enough that
-// the curl is clearly visible in the band below the 100px sticky nav — the
+// the curl is clearly visible in the band below the 100px sticky nav - the
 // outermost pixels (where a quadratic ramp is strongest) sit behind it.
 const FLAT = 0.38;
 // Curl strength: full amplitude at this Lenis velocity (px/frame). Human
-// wheel scrolling peaks around 20–40 px/frame — tune here, not in the shader.
+// wheel scrolling peaks around 20–40 px/frame - tune here, not in the shader.
 const FULL_CURL_VELOCITY = 22;
 // Edge displacement at full amplitude, as a fraction of the viewport height.
 const CURL_AMPLITUDE = 0.22;
@@ -114,7 +114,7 @@ export function BendCanvas() {
     try {
       renderer = new THREE.WebGLRenderer({ alpha: true, antialias: true });
     } catch {
-      return; // no WebGL — DOM stays as-is
+      return; // no WebGL - DOM stays as-is
     }
 
     const canvas = renderer.domElement;
@@ -196,7 +196,7 @@ export function BendCanvas() {
       }
     }
     if (tracked.length === 0) {
-      // nothing to bend — tear down silently
+      // nothing to bend - tear down silently
       window.removeEventListener("resize", sizeCamera);
       lenis.destroy();
       renderer.dispose();

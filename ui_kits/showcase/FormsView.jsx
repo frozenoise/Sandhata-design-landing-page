@@ -1,4 +1,4 @@
-// Sandhata showcase — Forms view: small, standard and stepper forms.
+// Sandhata showcase - Forms view: small, standard and stepper forms.
 
 function FormsView() {
   const { Card, Input, Textarea, Button, Badge } = window.SandhataDesignSystem_081a0e;

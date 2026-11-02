@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { isGitHubAppConfigured, githubAppSlug, signInstallState } from "@/lib/github";
 
-// GET /api/github/install — kicks off the GitHub App install/authorize flow.
+// GET /api/github/install - kicks off the GitHub App install/authorize flow.
 // This is a full-page navigation target (the UI does `window.location.href =
 // "/api/github/install"`, not a fetch), since it has to end with the browser
 // on github.com. Optional ?projectId=... is folded into the signed state so
@@ -15,7 +15,7 @@ export async function GET(req: Request) {
   }
 
   if (!isGitHubAppConfigured()) {
-    // Defensive fallback — the UI is expected to check /api/github/config and
+    // Defensive fallback - the UI is expected to check /api/github/config and
     // disable this entry point before it's ever clicked, so reaching here
     // means either a stale UI or a direct hit. JSON is fine for that case.
     return NextResponse.json(

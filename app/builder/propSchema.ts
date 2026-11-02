@@ -1,14 +1,14 @@
 // Property-panel field definitions for the visual editor's "edit" view
 // (app/builder/page.tsx). Grounded in the REAL prop contracts from
-// packages/spectra/src/**/*.d.ts (hand-authored, not generated — same
+// packages/spectra/src/**/*.d.ts (hand-authored, not generated - same
 // convention followed here), not the AI generation route's reduced/simplified
-// prop subset (app/api/generate/route.ts) — the editor should let you reach
+// prop subset (app/api/generate/route.ts) - the editor should let you reach
 // every prop the real component actually supports, even ones the model
 // itself is never told to use.
 //
 // Deliberately excludes: ReactNode-typed props (icons, custom children
 // slots), array/object-shaped props (Select.options, Tabs.tabs), and event
-// handlers — none of those have a sane generic editor in this pass. A field
+// handlers - none of those have a sane generic editor in this pass. A field
 // not listed here simply isn't editable from the panel yet; that's a known,
 // acceptable Phase 1 gap, not a bug.
 
@@ -43,7 +43,7 @@ export const PROP_SCHEMA: Record<string, PropField[]> = {
   Spacer: [
     { key: "size", label: "Size", kind: "number" },
   ],
-  // Text, Divider: no editable props beyond content/style — content is
+  // Text, Divider: no editable props beyond content/style - content is
   // handled generically (any node with plain-string children gets a Text
   // Content field in the panel, not driven by this schema).
 
@@ -114,7 +114,7 @@ export const PROP_SCHEMA: Record<string, PropField[]> = {
     { key: "error", label: "Error message", kind: "text" },
     { key: "size", label: "Size", kind: "select", options: ["small", "medium", "large"] },
     { key: "disabled", label: "Disabled", kind: "boolean" },
-    // `options` (array) is intentionally not editable here — Phase 2+.
+    // `options` (array) is intentionally not editable here - Phase 2+.
   ],
   Switch: [
     { key: "label", label: "Label", kind: "text" },
@@ -137,7 +137,7 @@ export const PROP_SCHEMA: Record<string, PropField[]> = {
   Tabs: [
     { key: "value", label: "Active tab value", kind: "text" },
     // `tabs` (array of {value,label,icon}) is intentionally not editable
-    // here — Phase 2+.
+    // here - Phase 2+.
   ],
   Tooltip: [
     { key: "label", label: "Tooltip text", kind: "text" },

@@ -1,6 +1,6 @@
 import React from "react";
 
-/** Spinner — indeterminate loading indicator in brand blue. */
+/** Spinner - indeterminate loading indicator in brand blue. */
 export function Spinner({ size = 20, stroke = 2.5, color = "var(--colour-primaryblue-500)", style = {} }) {
   return (
     <svg width={size} height={size} viewBox="0 0 24 24" style={{ animation: "sd-spin 0.7s linear infinite", ...style }}>

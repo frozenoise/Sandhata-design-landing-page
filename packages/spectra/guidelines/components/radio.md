@@ -8,10 +8,10 @@ selected.
 | Prop | Type | Notes |
 |---|---|---|
 | `label` | string | |
-| `name` | string | Group name — must match across all radios in the same group |
+| `name` | string | Group name: must match across all radios in the same group |
 | `value` | string | |
 | `checked` | boolean | |
-| `onChange` | func | Wraps a native `<input type="radio">` — receives a `React.ChangeEvent<HTMLInputElement>` |
+| `onChange` | func | Wraps a native `<input type="radio">`: receives a `React.ChangeEvent<HTMLInputElement>` |
 
 ## Example
 

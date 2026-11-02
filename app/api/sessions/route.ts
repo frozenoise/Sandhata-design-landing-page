@@ -3,7 +3,7 @@ import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { accessibleProjectIds, projectRole, canEdit } from "@/lib/access";
 
-// GET /api/sessions — list the user's builder sessions plus every page in a
+// GET /api/sessions - list the user's builder sessions plus every page in a
 // project shared with them (most recent first). Includes projectId so the
 // sidebar can group ungrouped-vs-in-project without a second request.
 export async function GET() {
@@ -24,9 +24,9 @@ export async function GET() {
   return NextResponse.json({ sessions });
 }
 
-// POST /api/sessions — create a new builder session, optionally inside a
+// POST /api/sessions - create a new builder session, optionally inside a
 // project (folder). projectId is verified against the caller's role (owner or
-// editor) — a session can't be created inside a project they can't edit via a
+// editor) - a session can't be created inside a project they can't edit via a
 // guessed id.
 export async function POST(req: Request) {
   const session = await auth();

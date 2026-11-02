@@ -62,7 +62,7 @@
   transition: border-color .12s, background .12s;
 }
 /* Same fix as .bld-msg-user: pin the text colour when the background goes
-   to a fixed-light tint, instead of leaving --text-body (theme-adaptive —
+   to a fixed-light tint, instead of leaving --text-body (theme-adaptive -
    near-white in dark mode) to collide with it. */
 .bld-chip:hover:not(:disabled) { border-color: var(--colour-primaryblue-300); background: var(--colour-primaryblue-50); color: var(--colour-primaryblue-600); }
 .bld-chip:disabled { opacity: 0.5; cursor: not-allowed; }
@@ -78,7 +78,7 @@
   font: 13px/1.5 var(--font-normal);
   /* Deliberately-light bubble background (not theme-adaptive, same as
      Badge's "subtle" tone) paired with --text-body, which IS theme-adaptive
-     — in dark mode --text-body resolves to near-white, ~1:1 against this
+     - in dark mode --text-body resolves to near-white, ~1:1 against this
      light lavender background. Pin the fg to match the bg instead, same
      pairing Badge already uses for primaryblue-50/600. */
   color: var(--colour-primaryblue-600);
@@ -144,7 +144,7 @@
 /* inline key fields (inside error message) */
 .bld-key-inline { display: flex; flex-direction: column; gap: 8px; width: 100%; }
 
-/* ── API key (lives in the profile menu — see below) ──────────── */
+/* ── API key (lives in the profile menu - see below) ──────────── */
 .bld-key-input {
   width: 100%; box-sizing: border-box; height: 36px;
   border: 1px solid var(--doc-line); border-radius: var(--radius-md);
@@ -171,7 +171,7 @@
 /* ── Right panel ────────────────────────────────────────────── */
 .bld-main { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
 
-/* Instance tabs — one per open page, above the toolbar. Same rgba-tint
+/* Instance tabs - one per open page, above the toolbar. Same rgba-tint
    pattern as .bld-tabs button.on below (not a fixed opaque colour, so it
    composites reasonably in both themes without the fixed-bg/adaptive-fg
    mismatch documented elsewhere in this file). */
@@ -290,7 +290,7 @@
   background: #0d1117; color: #e6edf3; border-radius: var(--radius-lg);
   padding: 22px; font: 12.5px/1.7 var(--font-mono); overflow: auto; white-space: pre;
   /* Cursor's dark-theme token colours (app/_docs/highlight.ts's sdHighlight
-     classes, values sourced in the docs-code-block work — see docs.css) —
+     classes, values sourced in the docs-code-block work - see docs.css) -
      redeclared locally rather than inherited from the page's own --c-* vars,
      since this surface is always dark regardless of the site's light/dark
      theme toggle, but --c-* itself DOES flip with that toggle. */
@@ -387,7 +387,7 @@
 .bld-edit-layout { flex: 1; display: flex; gap: 20px; align-items: flex-start; min-width: 0; }
 .bld-edit-canvas-wrap { flex: 1; min-width: 0; display: flex; position: relative; }
 /* Selected/hovered outlines are injected as scoped rules (see the inline
-   <style> next to this wrapper in page.tsx) targeting [data-node-id] —
+   <style> next to this wrapper in page.tsx) targeting [data-node-id] -
    cursor:pointer here signals the whole canvas is click-to-select. */
 .bld-edit-canvas-wrap [data-node-id] { cursor: grab; }
 .bld-edit-canvas-wrap [data-node-id]:active { cursor: grabbing; }
@@ -671,7 +671,7 @@ select.bld-prop-input { padding-right: 4px; cursor: pointer; }
   display: flex; align-items: center; gap: 6px;
   padding: 7px 8px; border-radius: var(--radius-sm);
   cursor: pointer; transition: background .1s;
-  color: var(--text-body); /* same fixed-bg-vs-adaptive-fg gotcha as .bld-history-item below — pin child colours explicitly rather than trust inheritance to survive the hover/active tint. */
+  color: var(--text-body); /* same fixed-bg-vs-adaptive-fg gotcha as .bld-history-item below - pin child colours explicitly rather than trust inheritance to survive the hover/active tint. */
 }
 .bld-project-head:hover,
 .bld-project-head.active { background: var(--colour-primaryblue-50); }
@@ -717,7 +717,7 @@ select.bld-prop-input { padding-right: 4px; cursor: pointer; }
 .bld-history-meta { display: flex; align-items: center; gap: 6px; flex-shrink: 0; }
 .bld-history-time { font: 11px/1 var(--font-normal); color: var(--text-caption); white-space: nowrap; }
 /* Same fix again: --text-body/--text-caption are theme-adaptive but the
-   hover/active background above is a fixed-light tint — pin both to a
+   hover/active background above is a fixed-light tint - pin both to a
    colour that reads on that tint in either theme. */
 .bld-history-item:hover .bld-history-name,
 .bld-history-item.active .bld-history-name { color: var(--colour-primaryblue-700); }
@@ -907,7 +907,7 @@ select.bld-prop-input { padding-right: 4px; cursor: pointer; }
 }
 .bld-ado-link-action:disabled { opacity: 0.5; cursor: not-allowed; }
 
-/* status control — same visual weight as .bld-tabs (preview/code toggle) */
+/* status control - same visual weight as .bld-tabs (preview/code toggle) */
 .bld-ado-status { display: flex; gap: 3px; background: rgba(20,22,24,0.04); border-radius: var(--radius-sm); padding: 2px; width: fit-content; }
 .bld-ado-status button {
   height: 24px; padding: 0 9px; border: none; background: none; border-radius: 4px;
@@ -960,7 +960,7 @@ select.bld-prop-input { padding-right: 4px; cursor: pointer; }
   color: var(--colour-error-600);
 }
 
-/* project-head GitHub trigger — same footprint as .bld-history-del, always
+/* project-head GitHub trigger - same footprint as .bld-history-del, always
    visible (unlike the delete button's hover-reveal) since connection state
    is useful at a glance, not just on hover. */
 .bld-project-github-btn {
@@ -976,7 +976,7 @@ select.bld-prop-input { padding-right: 4px; cursor: pointer; }
 .bld-project-github-btn.error { color: var(--colour-error-600); opacity: 1; }
 .bld-project-github-btn.error:hover { background: var(--colour-error-100, #fee2e2); }
 
-/* project-head Azure DevOps trigger — same footprint/behaviour as the GitHub
+/* project-head Azure DevOps trigger - same footprint/behaviour as the GitHub
    button above; "connected" only lights up for the currently active project
    since that's the only one whose ADO status is loaded client-side. */
 .bld-project-ado-btn {
@@ -1088,7 +1088,7 @@ select.bld-prop-input { padding-right: 4px; cursor: pointer; }
 /* ── "Getting started" checklist (Sign in / GitHub / Azure DevOps) ──────
    Sits above the plain Azure DevOps status strip, near the project context
    line. Self-hides once all 3 steps are done via the component's own
-   doneCount >= 3 check — this is an onboarding nudge, not a status panel. */
+   doneCount >= 3 check - this is an onboarding nudge, not a status panel. */
 .bld-gs-card {
   display: flex; flex-direction: column; gap: 8px;
   margin-top: 12px; padding: 12px;
@@ -1110,7 +1110,7 @@ select.bld-prop-input { padding-right: 4px; cursor: pointer; }
 .bld-gs-row { display: flex; align-items: center; gap: 8px; height: 24px; }
 .bld-gs-row--done { color: var(--colour-success-600, #1a7f4b); }
 .bld-gs-row--done span { font: 400 12px/1 var(--font-normal); color: var(--text-caption); }
-/* Deliberately dark regardless of theme (like GitHub's own brand buttons) —
+/* Deliberately dark regardless of theme (like GitHub's own brand buttons) -
    not a token-driven surface, a fixed "connect" accent for this checklist. */
 .bld-gs-action {
   display: flex; align-items: center; justify-content: center; gap: 8px;

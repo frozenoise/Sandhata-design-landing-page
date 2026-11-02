@@ -3,7 +3,7 @@
 //   1. npm run dev (textures are captured from the live page)
 //   2. node scripts/bake-bend-textures.js   (needs playwright: npm i playwright --no-save)
 // Captures each card with a 20px margin (EXPAND) so box-shadows survive;
-// BendCanvas expands the tracked rect by the same constant — keep in sync.
+// BendCanvas expands the tracked rect by the same constant - keep in sync.
 const { chromium } = require("playwright");
 const path = require("path");
 

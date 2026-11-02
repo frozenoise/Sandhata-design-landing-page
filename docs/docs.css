@@ -1,4 +1,4 @@
-/* Sandhata docs — shared layout for Components + Documentation pages. */
+/* Sandhata docs - shared layout for Components + Documentation pages. */
 
 :root {
   --doc-bg: #FBF6F1;          /* warm paper */
@@ -64,7 +64,7 @@ pre.doc-code .c-com { color: var(--c-com); }
 .doc-table .type-cell { font-family: var(--font-mono); font-size: 12.5px; color: var(--text-caption); }
 .prop-pill { font-family: var(--font-mono); font-size: 12.5px; background: rgba(20,22,24,0.05); padding: 2px 7px; border-radius: var(--radius-xs); color: var(--text-body); }
 
-/* Right rail — quick scroll navigation (scroll-spy) */
+/* Right rail - quick scroll navigation (scroll-spy) */
 .doc-toc { width: 180px; flex-shrink: 0; position: sticky; top: 0; align-self: flex-start; }
 .toc-inner { border-left: 1px solid var(--doc-line); padding: 2px 0; }
 .doc-toc a { display: block; padding: 6px 16px; font: 13px/1.4 var(--font-normal); color: var(--text-caption); text-decoration: none; border-left: 2px solid transparent; margin-left: -1px; cursor: pointer; }

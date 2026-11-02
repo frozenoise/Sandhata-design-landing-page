@@ -1,5 +1,5 @@
 /* ============================================================
-   Sandhata Design System — Colour tokens
+   Sandhata Design System - Colour tokens
    Base palettes (full 50–950 scales) + semantic aliases.
    Values extracted verbatim from the Sandhata Figma variables.
    ============================================================ */
@@ -133,7 +133,7 @@
   --colour-alternativerosepink-600: rgb(226, 0, 81);
 
   /* ========================================================
-     SEMANTIC ALIASES — light theme (default)
+     SEMANTIC ALIASES - light theme (default)
      Reference these in product UI, not the raw scales above.
      ======================================================== */
 
@@ -218,7 +218,7 @@
 }
 
 /* ========================================================
-   DARK THEME — apply via [data-theme="dark"] or .dark (.light undoes it)
+   DARK THEME - apply via [data-theme="dark"] or .dark (.light undoes it)
    ======================================================== */
 :root[data-theme="dark"], .dark {
   --surface-page: var(--colour-neutral-950);
@@ -239,7 +239,7 @@
   --text-disabled: var(--colour-neutral-600);
   --text-inverse: var(--colour-neutral-950);
   /* Light theme's primaryblue-500 (used unredefined by every other
-     "action" text in the app) sits at ~1.95:1 against neutral-900/950 —
+     "action" text in the app) sits at ~1.95:1 against neutral-900/950 -
      fails WCAG AA badly. Found via Button's `ghost` hierarchy going
      near-invisible in dark mode; primaryblue-300 restores ~5:1+. */
   --text-action: var(--colour-primaryblue-300);

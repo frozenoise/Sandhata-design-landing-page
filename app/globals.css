@@ -60,27 +60,27 @@ body { background: #FEFAF7; overflow-x: hidden; font-family: var(--font-normal);
 /* ─── Hero ───────────────────────────────────────────────────── */
 /* Aurora fills the hero; a cream "cut" layer (with the gradient rule line
    on its top edge) sits behind the window from the window's halfmark down,
-   so the window straddles the cut — matches Figma 5252:46348. */
+   so the window straddles the cut - matches Figma 5252:46348. */
 .hero {
   position: relative; isolation: isolate;
   padding: 101px 40px 0; text-align: center;
-  background: #fdf5f0; /* cream base — only visible as the prefers-reduced-motion fallback, see below */
+  background: #fdf5f0; /* cream base - only visible as the prefers-reduced-motion fallback, see below */
 }
 /* Grainient's colour knobs (color1/2/3) are fixed hex values, not theme
-   tokens — the same vivid blue/violet/terracotta gradient paints the hero
+   tokens - the same vivid blue/violet/terracotta gradient paints the hero
    in both light and dark mode, fully opaque, covering the flat .hero
    background above. That decouples hero text colour from the site's
    light/dark theme: the dark-on-cream pairing (`--hero-text-color`'s root
    default) is unreadable against it, so force a light pairing whenever
    Grainient is actually rendering. Scoped to `not (prefers-reduced-motion:
    reduce)` because Grainient renders nothing under reduced motion (see
-   app/_fx/Grainient.tsx) — the hero then falls back to its flat cream/dark
+   app/_fx/Grainient.tsx) - the hero then falls back to its flat cream/dark
    background and should keep the original theme-matched dark/light text
    pairing (set on :root) instead of white-on-cream. */
 @media not (prefers-reduced-motion: reduce) {
   .hero { --hero-text-color: #ffffff; --hero-sub-color: rgba(255,255,255,0.82); }
 }
-/* Grainient — animated grainy-gradient WebGL background (app/_fx/Grainient.tsx,
+/* Grainient - animated grainy-gradient WebGL background (app/_fx/Grainient.tsx,
    ported from react-bits.dev), replacing the old CSS .hero-aurora glow.
    `.grainient-container` is the component's own base class (relative box
    that fills its parent); `.hero-grainient` positions that box to fill the
@@ -89,7 +89,7 @@ body { background: #FEFAF7; overflow-x: hidden; font-family: var(--font-normal);
    buffer) since the shader animates internally rather than via a CSS
    scale()/translate() that could expose an edge. The shader always paints
    fully opaque pixels, so it fully replaces the flat .hero background
-   underneath — .hero's own background colour only shows through as the
+   underneath - .hero's own background colour only shows through as the
    prefers-reduced-motion fallback (Grainient renders nothing in that case,
    see app/_fx/Grainient.tsx). */
 .grainient-container { position: relative; width: 100%; height: 100%; overflow: hidden; }
@@ -180,7 +180,7 @@ body { background: #FEFAF7; overflow-x: hidden; font-family: var(--font-normal);
   box-shadow: 0 0 0 1px rgba(10,10,20,0.04),
               5px 5px 26px rgba(0,0,0,0.08);
 }
-/* Light beam traces the frame's actual rounded-rect outline — a thin ring
+/* Light beam traces the frame's actual rounded-rect outline - a thin ring
    masked to exactly .browser's border (gradient-border technique: the
    pseudo-element's own `padding` sets the ring thickness, then a
    content-box/padding-box mask-composite:exclude cuts away everything but
@@ -188,7 +188,7 @@ body { background: #FEFAF7; overflow-x: hidden; font-family: var(--font-normal);
    of the old approach's big rotating square that washed over the frame's
    interior near the edges. @property registers --beam-angle as an <angle>
    so the conic-gradient's start angle itself can be smoothly interpolated
-   frame-to-frame — plain custom properties can't animate meaningfully
+   frame-to-frame - plain custom properties can't animate meaningfully
    without this, and animating the angle directly (vs. rotating a giant
    square via transform) is what makes the travel speed constant all the
    way around, corners included, instead of visibly surging on the long
@@ -204,13 +204,13 @@ body { background: #FEFAF7; overflow-x: hidden; font-family: var(--font-normal);
   content: '';
   position: absolute; inset: 0;
   border-radius: inherit;
-  padding: 3px; /* beam/ring thickness — was 1.5px, invisible against the
+  padding: 3px; /* beam/ring thickness - was 1.5px, invisible against the
                    frame's white background at that width; see below */
   z-index: -1;
   pointer-events: none;
   /* A hard-edged 1.5px ring in pale rgba(160,210,255,.35)→white on a #fff
      frame turned out functionally invisible (confirmed against the live
-     page, not just guessed) — too thin and too close in value to the
+     page, not just guessed) - too thin and too close in value to the
      background it sits on. Thickened the ring, swapped the peak from pure
      white to a saturated brand blue (var(--blue), #0036DD) for real
      contrast against white, and added a blur so it reads as a glowing
@@ -288,7 +288,7 @@ body { background: #FEFAF7; overflow-x: hidden; font-family: var(--font-normal);
 }
 
 /* ─── Ecosystem ──────────────────────────────────────────────── */
-/* Base structural/light styles — the dark-mode colour overrides for these
+/* Base structural/light styles - the dark-mode colour overrides for these
    classes already existed further down, but nothing defined the light-mode
    card grid itself, so this section rendered as unstyled stacked text. */
 .eco { padding: 72px 40px 80px; background: var(--page); }
@@ -332,7 +332,7 @@ body { background: #FEFAF7; overflow-x: hidden; font-family: var(--font-normal);
   position: relative; overflow: hidden;
   padding: 80px 40px; background: #000921; display: flex; flex-direction: column; align-items: center;
 }
-/* PixelCanvasBackground's <canvas> — sits behind .expect-card, filling the
+/* PixelCanvasBackground's <canvas> - sits behind .expect-card, filling the
    section; only visible in the navy margin around the (opaque) card, so it
    never fights the accordion content for legibility. */
 .expect-pixel-bg {
@@ -673,11 +673,11 @@ button, a[href], input, .acc-btn, .nl { transition: background .2s ease, color .
   border-radius: 50px 50px 0 0;
   background: #fefaf7; /* fallback base beneath .build-prism */
 }
-/* Animated "prism" background — layered blurred colour blobs that slowly
+/* Animated "prism" background - layered blurred colour blobs that slowly
  * drift/rotate with a hue shift, plus a faint checker overlay for grain.
  * Own original CSS, evoking the general mood described on componentry.dev's
  * "Prism Gradient" docs page (an animated, colour-refracting background
- * used behind hero/CTA sections) — that page doesn't publish its actual
+ * used behind hero/CTA sections) - that page doesn't publish its actual
  * WebGL shader source, and none was used or reproduced here; this is a
  * plain-CSS approximation built for this section's light, legible-text
  * register, tuned down from anything near-saturated so .build-h/.bstep-*'s
@@ -740,10 +740,10 @@ button, a[href], input, .acc-btn, .nl { transition: background .2s ease, color .
   80%,   100%  { transform: translateY(-180px); }
 }
 @keyframes wordbg {
-  0%,    23%   { background: #f68136; }   /* building — orange */
-  26.7%, 50%   { background: #5636f6; }   /* designing — purple */
-  53.3%, 76%   { background: #ff0083; }   /* shipping — pink */
-  80%,   100%  { background: #f68136; }   /* building — orange (loop) */
+  0%,    23%   { background: #f68136; }   /* building - orange */
+  26.7%, 50%   { background: #5636f6; }   /* designing - purple */
+  53.3%, 76%   { background: #ff0083; }   /* shipping - pink */
+  80%,   100%  { background: #f68136; }   /* building - orange (loop) */
 }
 @media (prefers-reduced-motion: reduce) {
   .word-track { animation: none; }
@@ -890,7 +890,7 @@ button, a[href], input, .acc-btn, .nl { transition: background .2s ease, color .
   .footer-brand p { max-width: 100%; }
 }
 
-/* ── Docs pages — responsive ──────────────────────────────────── */
+/* ── Docs pages - responsive ──────────────────────────────────── */
 @media (max-width: 768px) {
   .doc-sidebar { display: none; }
   .doc-scroll { padding: 24px 20px 60px; }
@@ -901,7 +901,7 @@ button, a[href], input, .acc-btn, .nl { transition: background .2s ease, color .
 }
 
 /* ============================================================
-   Showcase — liquid-glass sidebar
+   Showcase - liquid-glass sidebar
    Technique: SVG feTurbulence displacement on the blur layer for
    organic refraction; chromatic rim via RGB-offset inset shadows;
    multi-point radial specular; animated prismatic border shift.
@@ -918,7 +918,7 @@ button, a[href], input, .acc-btn, .nl { transition: background .2s ease, color .
   transition: width .34s cubic-bezier(.16,1,.3,1);
   isolation: isolate;
 }
-/* Layer 0: light frosted backdrop — lets section colours bleed through */
+/* Layer 0: light frosted backdrop - lets section colours bleed through */
 .sc-glass-blur {
   position: absolute; inset: 0; z-index: 0; border-radius: 22px;
   background: rgba(255, 255, 255, 0.28);
@@ -926,7 +926,7 @@ button, a[href], input, .acc-btn, .nl { transition: background .2s ease, color .
   backdrop-filter: blur(16px) saturate(130%) brightness(1.02);
   filter: url(#lg-distort);
 }
-/* Layer 1: specular rim — light glass edition */
+/* Layer 1: specular rim - light glass edition */
 .sc-glass-spec {
   position: absolute; inset: 0; z-index: 1; border-radius: 22px; pointer-events: none;
   background:
@@ -1074,7 +1074,7 @@ button, a[href], input, .acc-btn, .nl { transition: background .2s ease, color .
 }
 
 /* ══════════════════════════════════════════════════════════════
-   DARK MODE — Landing page overrides.
+   DARK MODE - Landing page overrides.
    Semantic tokens (--text-*, --surface-*, etc.) update automatically
    via tokens/colors.css [data-theme="dark"]. These rules fix the
    hardcoded hex values that can't reference tokens.
@@ -1107,7 +1107,7 @@ button, a[href], input, .acc-btn, .nl { transition: background .2s ease, color .
 [data-theme="dark"] .sec-alt,
 :root:not([data-theme="light"]) .sec-alt { background: #161b22; }
 
-/* ── Landing section headings + text — hardcoded colour overrides ── */
+/* ── Landing section headings + text - hardcoded colour overrides ── */
 [data-theme="dark"] .expect-h,
 [data-theme="dark"] .section-h,
 [data-theme="dark"] .eco-h,
@@ -1158,7 +1158,7 @@ button, a[href], input, .acc-btn, .nl { transition: background .2s ease, color .
 [data-theme="dark"] .acc-body,
 :root:not([data-theme="light"]) .acc-body { color: #8b949e; }
 
-/* Build section (dark-bg section — words stay legible against #09090f bg) */
+/* Build section (dark-bg section - words stay legible against #09090f bg) */
 [data-theme="dark"] .build-h,
 :root:not([data-theme="light"]) .build-h { color: #e6edf3; }
 [data-theme="dark"] .bstep-h,
@@ -1183,7 +1183,7 @@ button, a[href], input, .acc-btn, .nl { transition: background .2s ease, color .
 [data-theme="dark"] .eco-card-desc,
 :root:not([data-theme="light"]) .eco-card-desc { color: #8b949e; }
 
-/* Build section — replace light prism with a deep dark gradient */
+/* Build section - replace light prism with a deep dark gradient */
 [data-theme="dark"] .build,
 :root:not([data-theme="light"]) .build { background: #090912; }
 [data-theme="dark"] .build-prism,
@@ -1212,7 +1212,7 @@ button, a[href], input, .acc-btn, .nl { transition: background .2s ease, color .
   background: #0d1117; border-color: rgba(255,255,255,0.1); color: #c9d1d9;
 }
 /* Interactive Line Chart + Component Directory table cards share .cc's
-   plain white background — .rtu-card already got a dark override above,
+   plain white background - .rtu-card already got a dark override above,
    but .rtu-line/.rtu-table (and everything inside the table) never did,
    so .rtu-card-h's own (correctly dark) text rendered white-on-white. */
 [data-theme="dark"] .rtu-tbl th,

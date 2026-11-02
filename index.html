@@ -35,13 +35,13 @@ body { background: #FEFAF7; overflow-x: hidden; font-family: var(--font-normal);
 /* ─── Hero ───────────────────────────────────────────────────── */
 /* Aurora fills the hero; a cream "cut" layer (with the gradient rule line
    on its top edge) sits behind the window from the window's halfmark down,
-   so the window straddles the cut — matches Figma 5252:46348. */
+   so the window straddles the cut: matches Figma 5252:46348. */
 .hero {
   position: relative; isolation: isolate;
   padding: 101px 40px 0; text-align: center;
   background: #fdf5f0; /* cream base behind the animated aurora */
 }
-/* animated aurora layer — breathes between a narrow and a wide gradient
+/* animated aurora layer: breathes between a narrow and a wide gradient
    (Figma component 5252:45431, Frame 400 ⇄ Frame 458) */
 .hero-aurora {
   position: absolute; inset: 0; z-index: 0; pointer-events: none;
@@ -460,10 +460,10 @@ body { background: #FEFAF7; overflow-x: hidden; font-family: var(--font-normal);
   80%,   100%  { transform: translateY(-180px); }
 }
 @keyframes wordbg {
-  0%,    23%   { background: #f68136; }   /* building — orange */
-  26.7%, 50%   { background: #5636f6; }   /* designing — purple */
-  53.3%, 76%   { background: #ff0083; }   /* shipping — pink */
-  80%,   100%  { background: #f68136; }   /* building — orange (loop) */
+  0%,    23%   { background: #f68136; }   /* building: orange */
+  26.7%, 50%   { background: #5636f6; }   /* designing: purple */
+  53.3%, 76%   { background: #ff0083; }   /* shipping: pink */
+  80%,   100%  { background: #f68136; }   /* building: orange (loop) */
 }
 @media (prefers-reduced-motion: reduce) {
   .word-track { animation: none; }
@@ -764,7 +764,7 @@ function PanelFramework() {
       </div>
       {snippets[fw]}
       <div style={{font:"11px/1.5 var(--font-normal)",color:"#8a8f9b",marginTop:10}}>
-        Token layer is plain CSS — pair it with any framework or no framework at all.
+        Token layer is plain CSS: pair it with any framework or no framework at all.
       </div>
     </div>
   );
@@ -794,7 +794,7 @@ function PanelFigmaSync() {
         <span className="figp-txt">Token values materialised directly from Figma Variables</span>
       </div>
       <div style={{font:"11px/1.5 var(--font-normal)",color:"#8a8f9b",marginTop:10}}>
-        Change a token in Figma and it flows to code automatically — no spreadsheets, no drift.
+        Change a token in Figma and it flows to code automatically: no spreadsheets, no drift.
       </div>
     </div>
   );
@@ -805,7 +805,7 @@ const PANELS = [PanelComposable, PanelTokens, PanelWCAG, PanelDarkMode, PanelFra
 const FEATURES = [
   { title:"Composable components",    body:"Simple primitives that snap together cleanly. Build complex interfaces without fighting the system." },
   { title:"Token-first architecture", body:"Colour, spacing, type and elevation live as CSS custom properties. Override one variable and re-skin the entire product." },
-  { title:"WCAG 2.1 AA throughout",  body:"Contrast, focus rings, ARIA roles and keyboard navigation are built in — not bolted on after the fact." },
+  { title:"WCAG 2.1 AA throughout",  body:"Contrast, focus rings, ARIA roles and keyboard navigation are built in, not bolted on after the fact." },
   { title:"Dark mode native",         body:"Add data-theme=\"dark\" to any container and every semantic token flips automatically. No extra stylesheets required." },
   { title:"Framework agnostic",       body:"The token layer is plain CSS. The bundle ships React 18 primitives, and the patterns work in Vue, Angular or vanilla HTML." },
   { title:"Figma-to-code sync",       body:"Token values are materialised directly from Figma Variables. Design and code share one source of truth." },
@@ -853,7 +853,7 @@ function App() {
           </button>
         </div>
 
-        {/* BROWSER WINDOW — straddles the cut line at its halfmark */}
+        {/* BROWSER WINDOW: straddles the cut line at its halfmark */}
         <div className="browser-outer">
           <div className="browser-cut"/>
           <div className="browser">

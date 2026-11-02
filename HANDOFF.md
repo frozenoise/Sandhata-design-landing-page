@@ -1,8 +1,8 @@
-# Spectra — Sandhata Design System Developer Handoff
+# Spectra: Sandhata Design System Developer Handoff
 
 A handoff guide for picking up the **Spectra** (Sandhata Design System) website. This is the
 practical "how do I run it and where is everything" doc. (The older `readme.md`
-describes the original pre-Next.js compiler architecture and is now out of date —
+describes the original pre-Next.js compiler architecture and is now out of date:
 use **this** file to get started.)
 
 Repo: https://github.com/frozenoise/Sandhata-design-landing-page
@@ -18,7 +18,7 @@ primitives, design tokens, full landing page, docs, an AI "prompt → UI" builde
 and an interactive component showcase.
 
 - **Framework:** Next.js `14.2.18` (App Router), React `18.3.1`, TypeScript `^5`
-- **Styling:** plain CSS — design tokens as CSS custom properties + per-page CSS.
+- **Styling:** plain CSS: design tokens as CSS custom properties + per-page CSS.
   No Tailwind, no CSS-in-JS library (components use inline `style` objects).
 - **Fonts:** IBM Plex Sans + IBM Plex Mono (loaded via Google Fonts in
   `app/layout.tsx`, overriding the `--font-*` tokens).
@@ -43,14 +43,14 @@ Scripts (`package.json`):
 | `npm run start` | Serve the production build |
 | `npm run lint` | `next lint` |
 
-> ⚠️ **Don't run `npm run build` while `npm run dev` is running** — they share the
+> ⚠️ **Don't run `npm run build` while `npm run dev` is running**: they share the
 > `.next` folder and it corrupts (CSS 404s). Stop dev first, or build in a clean
 > checkout. Restart dev after a build.
 
 ### Environment (optional)
 
 Only the AI builder (`/builder`) needs a key. Without it the page shows a friendly
-"add your key" prompt — everything else works.
+"add your key" prompt: everything else works.
 
 ```bash
 cp .env.local.example .env.local
@@ -94,7 +94,7 @@ app/
   api/generate/route.ts
 
 components/           # the design system primitives (React, .jsx + sibling .d.ts)
-  index.js            # BARREL — import everything from here ("use client")
+  index.js            # BARREL: import everything from here ("use client")
   buttons/  forms/  data-display/  feedback/  navigation/
 
 tokens/               # CSS custom-property source of truth
@@ -132,18 +132,18 @@ Available primitives: `Button`, `IconButton`, `Avatar`, `Badge`, `Card`,
   onto another palette, e.g. `ramp("secondarycyan")`. This is how `/demo` and the
   showcase's "One system, any brand" section work.
 - **Components take a `style` prop** (merged last) but most do **not** accept
-  arbitrary layout props — wrap them in a `<div>` for positioning. `StatCard` in
+  arbitrary layout props: wrap them in a `<div>` for positioning. `StatCard` in
   particular has no `style`-driven margins; wrap it.
-- **`Checkbox` is a native `<input type="checkbox">`** — its `onChange` is a
+- **`Checkbox` is a native `<input type="checkbox">`**: its `onChange` is a
   `React.ChangeEvent<HTMLInputElement>` (use `e.target.checked`), NOT `(v:boolean)`.
   `Switch.onChange`, by contrast, gives you a boolean.
-- **`Alert` supports `onClose`** — pass it to render a working dismiss button.
+- **`Alert` supports `onClose`**: pass it to render a working dismiss button.
 
 ### ⚠️ The circular-variable gotcha (cost us real time)
 
 Do **not** remap a token to itself. `ramp("primaryblue")` produces
 `--colour-primaryblue-500: var(--colour-primaryblue-500)`, a self-referential
-custom property that CSS computes as *invalid* — which silently collapses every
+custom property that CSS computes as *invalid*: which silently collapses every
 primary button's background to transparent. For the "default / unchanged" brand,
 use **empty vars `{}`**, not a self-ramp.
 
@@ -153,7 +153,7 @@ use **empty vars `{}`**, not a self-ramp.
 
 `app/showcase/page.tsx` is a single-file interactive showcase. Structure:
 
-- **Floating liquid-glass sidebar** (`.sc-sidebar` in `globals.css`) — collapsible
+- **Floating liquid-glass sidebar** (`.sc-sidebar` in `globals.css`): collapsible
   (default expanded), with a scroll-to-section nav, accent/surface/radius controls,
   and a Token Inspector toggle.
 - **Bands:** Hero → Atoms (buttons/badges/inputs/selection) → Data viz → Theming
@@ -166,7 +166,7 @@ use **empty vars `{}`**, not a self-ramp.
   (white/warm/dark), and `--radius-*` on the `<main>` element.
 
 The landing page (`app/page.tsx`) is the **source of truth** for the chart
-components — if you change a chart, keep both in sync (or factor them out).
+components: if you change a chart, keep both in sync (or factor them out).
 
 ---
 
@@ -195,25 +195,25 @@ components — if you change a chart, keep both in sync (or factor them out).
 
 - The sidebar **"Get the code"** button in `/showcase` is a visual placeholder with
   no handler yet.
-- Charts are duplicated between `app/page.tsx` and `app/showcase/page.tsx` — a
+- Charts are duplicated between `app/page.tsx` and `app/showcase/page.tsx`: a
   shared `app/_charts/` module would remove the drift risk.
 - `/pricing` is a "coming soon" stub.
-- ~~`/builder` needs a "Projects" concept~~ — **shipped** (2026-09-03): a
+- ~~`/builder` needs a "Projects" concept~~: **shipped** (2026-09-03): a
   `Project` model (`prisma/schema.prisma`) groups multiple `BuilderSession`
   "pages" as a folder; `BuilderSession.projectId` is a nullable FK (existing
   ungrouped sessions keep working) with `onDelete: Cascade` (deleting a
-  project deletes its pages — folder semantics, confirmed with a
+  project deletes its pages: folder semantics, confirmed with a
   `window.confirm` in the UI). New routes: `app/api/projects/route.ts`
   (list/create), `app/api/projects/[id]/route.ts` (get-with-sessions/rename/
   delete); `app/api/sessions/*` extended to accept/return `projectId`. UI:
   the builder sidebar's history panel groups sessions under collapsible
   project headers + an "Ungrouped" bucket, with a per-session move-to-project
   `<select>` and a project-name subline under "AI Builder" showing which
-  project "New" will file into. **v1 scope is organize + quick-switch only**
-  — no simultaneous multi-pane/tabbed editing (that was the explicitly
+  project "New" will file into. **v1 scope is organize + quick-switch only**:
+  no simultaneous multi-pane/tabbed editing (that was the explicitly
   descoped option; revisit if real usage wants it).
 
-- **Common workspace** — shipped on `feature/common-workspace` (2026-10-22):
+- **Common workspace**: shipped on `feature/common-workspace` (2026-10-22):
   share a project with other people and edit its pages together live.
   - *Sharing:* `ProjectMember` / `ProjectInvite` tables (migration
     `20261022093513_add_project_members`, additive only). Owner shares from the

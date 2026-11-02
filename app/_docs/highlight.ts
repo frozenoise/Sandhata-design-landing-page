@@ -1,14 +1,14 @@
-/* Sandhata docs — tiny JSX syntax highlighter.
-   7 token classes now, up from the original 5 — added func (a call or
+/* Sandhata docs - tiny JSX syntax highlighter.
+   7 token classes now, up from the original 5 - added func (a call or
    function-declaration name, identifier immediately followed by "(") and
    var (any other bare identifier: a plain variable/prop-value reference).
    Colours are read directly off a real Cursor screenshot (2026-08-25),
-   not guessed — see docs.css for the per-class values and the caveat that
+   not guessed - see docs.css for the per-class values and the caveat that
    only the dark-theme set was sourced that way; light-theme is unchanged. */
 export function sdHighlight(src: string): string {
   const esc = String(src).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
   // The `entity` alt below exists only because the bare-identifier fallback
-  // (last alt) is a plain \b[A-Za-z_][\w]*\b — with no HTML awareness, it
+  // (last alt) is a plain \b[A-Za-z_][\w]*\b - with no HTML awareness, it
   // doesn't know "gt" inside "&gt;" isn't a real identifier: "&" and ";" are
   // both non-word characters, so \b still fires on either side of "gt",
   // and it gets wrapped in its own <span>, splitting the entity in two.
@@ -36,15 +36,15 @@ export function sdHighlight(src: string): string {
    the resulting HTML on line-boundary markers. Safe to do because every
    branch of RX above is inherently single-line: the comment alt is
    "[^\n]*" (stops at a newline itself), the keyword/tag/prop alts are bare
-   word patterns, and the only alt that could in principle span lines — the
-   quoted-string alt "[^"]*"/'[^']*' — would require a genuine multi-line
+   word patterns, and the only alt that could in principle span lines - the
+   quoted-string alt "[^"]*"/'[^']*' - would require a genuine multi-line
    string literal inside one of these illustrative JSX/CSS/HTML snippets,
    which none of the doc/component data does. So per-line and whole-string
    highlighting produce identical token spans here; per-line is simpler and
    sidesteps ever having to locate "line boundaries" inside already-escaped,
    already-tagged HTML.
    Each line is wrapped in a block-level span carrying its own CSS counter
-   increment (see .doc-code-line in docs.css) — the number itself is drawn
+   increment (see .doc-code-line in docs.css) - the number itself is drawn
    entirely by a ::before pseudo-element reading that counter, so it never
    exists as a real text node. That means it can't be selected or copied as
    part of the code text by construction (generated content is never

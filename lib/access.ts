@@ -1,15 +1,15 @@
 import { prisma } from "./prisma";
 
-// Common workspace access rules — the one place that decides who can see or
+// Common workspace access rules - the one place that decides who can see or
 // change a project and the pages ("sessions") inside it. Routes call these
 // instead of filtering on `userId: session.user.id` directly, so a member of
 // a shared project gets the same view of its pages as the owner.
 //
-//   owner  — Project.userId. Everything, including sharing, rename, delete
+//   owner  - Project.userId. Everything, including sharing, rename, delete
 //            and the GitHub / Azure DevOps integrations (those routes keep
 //            their own owner-only checks and don't use this file).
-//   editor — open and edit every page in the project, add new pages to it.
-//   viewer — open pages read-only.
+//   editor - open and edit every page in the project, add new pages to it.
+//   viewer - open pages read-only.
 
 export type ProjectRole = "owner" | "editor" | "viewer";
 export const MEMBER_ROLES = ["editor", "viewer"] as const;
@@ -76,7 +76,7 @@ export async function claimInvites(userId: string, email: string | null | undefi
   }
 }
 
-/** Whether a project has anyone besides the owner — decides if its pages open
+/** Whether a project has anyone besides the owner - decides if its pages open
  * a live (Liveblocks) room or stay on the plain single-user save path. */
 export async function isShared(projectId: string): Promise<boolean> {
   const [members, invites] = await Promise.all([

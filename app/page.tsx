@@ -30,7 +30,7 @@ const CodeIco  = () => <I size={15} sw={1.4} d={<><polyline points="16 18 22 12 
 const LayersIco = () => <I size={18} d={<><polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/></>}/>;
 const BoxIco   = () => <I size={18} d={<><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></>}/>;
 const ZapIco   = () => <I size={18} d={<polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/>}/>;
-/* npm/Bun wordmarks — exact simple-icons path data (single-fill, currentColor),
+/* npm/Bun wordmarks - exact simple-icons path data (single-fill, currentColor),
    not hand-approximated, so the square/bun silhouettes read correctly. */
 const NpmIco = () => (
   <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor">
@@ -45,7 +45,7 @@ const BunIco = () => (
 const CopyIco  = () => <I size={13} sw={1.6} d={<><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></>}/>;
 const CheckIco = () => <I size={13} sw={2} d={<polyline points="20 6 9 17 4 12"/>}/>;
 
-/* Click-to-copy install command — mirrors the icon-swap-on-copy pattern used
+/* Click-to-copy install command - mirrors the icon-swap-on-copy pattern used
    by the docs shell's SdCodeBlock (app/_docs/shell.tsx), reimplemented here
    since this is landing-page-local, not docs chrome. */
 function EcoSnippet({ text }: { text: string }) {
@@ -58,7 +58,7 @@ function EcoSnippet({ text }: { text: string }) {
       clearTimeout(timeoutRef.current);
       timeoutRef.current = setTimeout(() => setCopied(false), 1500);
     } catch {
-      // Clipboard API unavailable (permissions/insecure context) — fail quietly.
+      // Clipboard API unavailable (permissions/insecure context) - fail quietly.
     }
   };
   return (
@@ -147,10 +147,10 @@ function DonutChart() {
   const total = vals.reduce((a, b) => a + b, 0);
   const cx = 80, cy = 80;
 
-  // Outer ring — wider, larger radius — coloured arc segments
+  // Outer ring - wider, larger radius - coloured arc segments
   const OR = 63, Osw = 13;
 
-  // Inner ring — narrower, smaller radius — sits inside with a clear gap, shows dial ticks
+  // Inner ring - narrower, smaller radius - sits inside with a clear gap, shows dial ticks
   // Inner ring outer edge: IR+Isw/2=46+3=49  |  Outer ring inner edge: OR-Osw/2=63-6.5=56.5  →  7.5px gap
   const IR = 46, Isw = 6;
   const TICKS = 72;
@@ -184,7 +184,7 @@ function DonutChart() {
         )}
       </div>
       <svg viewBox="0 0 160 160" width="100%" style={{display:"block"}}>
-        {/* ── Inner ring: no background — grey dial tick marks only ── */}
+        {/* ── Inner ring: no background - grey dial tick marks only ── */}
         {Array.from({length: TICKS}).map((_, t) => {
           const a = (t / TICKS) * Math.PI * 2 - Math.PI / 2;
           return (
@@ -204,8 +204,8 @@ function DonutChart() {
             onMouseEnter={() => setHiArc(i)} onMouseLeave={() => setHiArc(null)}
           />
         ))}
-        {/* ── Centre — both lines share a group centred exactly at cy ── */}
-        {/* Hardcoded to near-black (#0a0a14) — invisible against the card's
+        {/* ── Centre - both lines share a group centred exactly at cy ── */}
+        {/* Hardcoded to near-black (#0a0a14) - invisible against the card's
             dark-mode background (~1.1:1 contrast). SVG presentation
             attributes accept var() same as the arc strokes above, so these
             now track theme like everything else in the card. */}
@@ -223,7 +223,7 @@ function DonutChart() {
           {arcs[hiArc]?.value}<span>{arcs[hiArc]?.label}</span>
         </div>
       )}
-      {/* ── Legend in HTML — uses rtu-card-sub for design-system typography ── */}
+      {/* ── Legend in HTML - uses rtu-card-sub for design-system typography ── */}
       <div style={{marginTop:10,display:"flex",flexDirection:"column",gap:5}}>
         {arcs.map((arc) => (
           <div key={arc.label} style={{display:"flex",alignItems:"center",gap:8}}>
@@ -531,7 +531,7 @@ function PanelFramework() {
       </div>
       {snippets[fw]}
       <div style={{font:"11px/1.5 var(--font-normal)",color:"#8a8f9b",marginTop:10}}>
-        Token layer is plain CSS — pair it with any framework or no framework at all.
+        Token layer is plain CSS: pair it with any framework or no framework at all.
       </div>
     </div>
   );
@@ -561,7 +561,7 @@ function PanelFigmaSync() {
         <span className="figp-txt">Token values materialised directly from Figma Variables</span>
       </div>
       <div style={{font:"11px/1.5 var(--font-normal)",color:"#8a8f9b",marginTop:10}}>
-        Change a token in Figma and it flows to code automatically — no spreadsheets, no drift.
+        Change a token in Figma and it flows to code automatically: no spreadsheets, no drift.
       </div>
     </div>
   );
@@ -572,7 +572,7 @@ const PANELS = [PanelComposable, PanelTokens, PanelWCAG, PanelDarkMode, PanelFra
 const FEATURES = [
   { title:"Composable components",    body:"Simple primitives that snap together cleanly. Build complex interfaces without fighting the system." },
   { title:"Token-first architecture", body:"Colour, spacing, type and elevation live as CSS custom properties. Override one variable and re-skin the entire product." },
-  { title:"WCAG 2.1 AA throughout",  body:"Contrast, focus rings, ARIA roles and keyboard navigation are built in — not bolted on after the fact." },
+  { title:"WCAG 2.1 AA throughout",  body:"Contrast, focus rings, ARIA roles and keyboard navigation are built in, not bolted on after the fact." },
   { title:"Dark mode native",         body:"Add data-theme=\"dark\" to any container and every semantic token flips automatically. No extra stylesheets required." },
   { title:"Framework agnostic",       body:"The token layer is plain CSS. The bundle ships React 18 primitives, and the patterns work in Vue, Angular or vanilla HTML." },
   { title:"Figma-to-code sync",       body:"Token values are materialised directly from Figma Variables. Design and code share one source of truth." },
@@ -679,7 +679,7 @@ export default function App() {
           </button>
         </div>
 
-        {/* BROWSER WINDOW — straddles the cut line at its halfmark */}
+        {/* BROWSER WINDOW - straddles the cut line at its halfmark */}
         <div className="browser-outer">
           <div className="browser-cut"/>
           <div className="browser">
@@ -731,7 +731,7 @@ export default function App() {
             <div className="cc eco-card">
               <div className="eco-logo eco-logo-bun"><BunIco/></div>
               <div className="eco-card-name">Bun</div>
-              <div className="eco-card-desc">Native workspace support — link the package locally with zero extra config.</div>
+              <div className="eco-card-desc">Native workspace support. Link the package locally with zero extra config.</div>
               <EcoSnippet text="bun add @sandhata/spectra"/>
             </div>
             <div className="cc eco-card">
@@ -790,7 +790,7 @@ export default function App() {
           </div>
 
           <div className="rtu">
-            {/* row 1 — Radar | Donut | [Bar + MiniLine stacked] */}
+            {/* row 1 - Radar | Donut | [Bar + MiniLine stacked] */}
             <div className="rtu-charts" data-reveal>
               <div className="cc rtu-card">
                 <div className="rtu-card-tag">◎ Radar Chart</div>
@@ -815,7 +815,7 @@ export default function App() {
                   <div className="rtu-card-foot">Peak in May · 91 sessions ↑</div>
                 </div>
                 <div className="cc rtu-card">
-                  <div className="rtu-card-tag">— Line Chart</div>
+                  <div className="rtu-card-tag">Line Chart</div>
                   <div className="rtu-card-h">Trend Line</div>
                   <div className="rtu-card-sub">Monthly sessions, Aug 2023–May 2024</div>
                   <div style={{marginTop:8}}><MiniLineChart/></div>
@@ -823,7 +823,7 @@ export default function App() {
               </div>
             </div>
 
-            {/* row 2 — line chart card */}
+            {/* row 2 - line chart card */}
             <div className="cc rtu-line" data-reveal>
               <div className="rtu-line-head">
                 <div>
@@ -842,7 +842,7 @@ export default function App() {
               </div>
             </div>
 
-            {/* row 3 — data table modal card */}
+            {/* row 3 - data table modal card */}
             <div className="cc rtu-table" data-reveal>
               <div className="rtu-table-head">
                 <div>
@@ -886,7 +886,7 @@ export default function App() {
             </div>
           </div>
 
-          {/* trusted by — real avatar photos */}
+          {/* trusted by - real avatar photos */}
           <div className="trusted">
             <div className="trusted-avatars">
               {[1,2,3,4].map(i => (

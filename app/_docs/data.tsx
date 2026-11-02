@@ -3,7 +3,7 @@
 import React from "react";
 import * as DS from "@sandhata/spectra";
 
-// Sandhata docs — component documentation registry.
+// Sandhata docs - component documentation registry.
 // Each component: { id, name, description, variants, sections:[...], props:[...] }
 // "variants" is the short descriptor shown in the All Components grid.
 
@@ -22,14 +22,14 @@ const IcGrid     = (s=16) => (<svg width={s} height={s} viewBox="0 0 24 24" fill
 const IcSettings = (s=16) => (<svg width={s} height={s} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>);
 const IcLogout   = (s=16) => (<svg width={s} height={s} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>);
 const IcChevDn   = (s=14) => (<svg width={s} height={s} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="6 9 12 15 18 9"/></svg>);
-// Menu trigger's leading glyph — a plain outlined circle/dot, matching the
+// Menu trigger's leading glyph - a plain outlined circle/dot, matching the
 // simple ring shape visible in Figma's rendered screenshot of the component
 // (no confirmed vector source for a more detailed icon, so this is the
 // deliberately-safe reading rather than a guessed glyph).
 const IcCircle   = (s=14) => (<svg width={s} height={s} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="8"/></svg>);
 
 // A doc section can mix any of these shapes (bullets/table/note/demo+code,
-// or the doDont pair) — kept loose/optional throughout so TS doesn't try to
+// or the doDont pair) - kept loose/optional throughout so TS doesn't try to
 // force every component's sections into one narrow discriminated union.
 type DocSection = {
   id: string;
@@ -39,7 +39,7 @@ type DocSection = {
   note?: string;
   demo?: () => React.JSX.Element;
   code?: string;
-  // Design tokens this component's own styling actually resolves to — pulled
+  // Design tokens this component's own styling actually resolves to - pulled
   // from the component's source/CSS, not the Figma variable layer (a
   // different naming scheme tracked separately in the Figma Component
   // Tokens collection).
@@ -153,7 +153,7 @@ const Button = {
     },
     {
       id:"tokens-used", title:"Tokens used",
-      note:"Read directly from components/buttons/Button.jsx — this is the code-token layer a developer here actually consumes, not the Figma variable layer (tracked separately in the Figma Component Tokens collection).",
+      note:"Read directly from components/buttons/Button.jsx: this is the code-token layer a developer here actually consumes, not the Figma variable layer (tracked separately in the Figma Component Tokens collection).",
       tokens:[
         { name:"--colour-primaryblue-500", role:"Primary background" },
         { name:"--colour-primaryblue-700", role:"Primary background (hover)" },
@@ -168,7 +168,7 @@ const Button = {
         { name:"--colour-neutral-700", role:"Inverse background (hover)" },
         { name:"--colour-error-500", role:"Danger background" },
         { name:"--colour-error-700", role:"Danger background (hover)" },
-        { name:"--radius-md", role:"Corner radius — all sizes and hierarchies" },
+        { name:"--radius-md", role:"Corner radius: all sizes and hierarchies" },
         { name:"--font-normal", role:"Label font family" },
         { name:"--body-small-size", role:"Label font size when size=\"small\"" },
         { name:"--body-medium-size", role:"Label font size when size=\"medium\" (default)" },
@@ -182,18 +182,18 @@ const Button = {
       bullets:[
         ["Keyboard","Enter and Space activate a focused button"],
         ["Focus","Disabled buttons are removed from the tab order and cannot receive focus"],
-        ["Role","Renders a native <button> element, so the button role and disabled state are exposed to assistive tech automatically — no extra ARIA attributes needed"],
+        ["Role","Renders a native <button> element, so the button role and disabled state are exposed to assistive tech automatically: no extra ARIA attributes needed"],
       ],
     },
     {
       id:"do-dont", title:"Do / Don't",
       doDont:{
         do:{
-          text:"Use Primary for the one main action per screen — it should be obvious where a user's next step is.",
+          text:"Use Primary for the one main action per screen: it should be obvious where a user's next step is.",
           demo: () => { const { Button:B } = S(); return <B hierarchy="primary">Save changes</B>; },
         },
         dont:{
-          text:"Don't use multiple Primary buttons in the same view — it competes for attention and dilutes the hierarchy.",
+          text:"Don't use multiple Primary buttons in the same view: it competes for attention and dilutes the hierarchy.",
           demo: () => { const { Button:B } = S(); return (
             <div style={{ display:"flex", gap:12 }}>
               <B hierarchy="primary">Save</B><B hierarchy="primary">Cancel</B>
@@ -231,7 +231,7 @@ const IconButtonDoc = {
 
 const Input = {
   id:"text-input", name:"Single-line Text input", variants:"7 variants · 5 states · 3 sizes",
-  description:"A labelled text field with built-in helper text and error handling — the standard Sandhata form control.",
+  description:"A labelled text field with built-in helper text and error handling: the standard Sandhata form control.",
   sections:[usage(
     () => { const { Input:I } = S(); return (
       <div style={{ display:"flex", flexDirection:"column", gap:16, maxWidth:360 }}>
@@ -270,9 +270,9 @@ const NumericalInput = {
           ["Label","Tiny auxiliary text above the field (IBM Plex Sans 8px, uppercase)"],
           ["Input container","30px tall, layer-01 bg, border-strong, radius 4px"],
           ["Value","IBM Plex Mono 12px inside a white inner box (layer-02, radius 2px)"],
-          ["Decrement (−)","16×16 button, layer-03 bg — hidden at rest, appears on hover/focus/error"],
-          ["Increment (+)","16×16 button, layer-03 bg — hidden at rest, appears on hover/focus/error"],
-          ["Chevron","Down arrow (16px) at right edge — triggers incremental slider on click"],
+          ["Decrement (−)","16×16 button, layer-03 bg: hidden at rest, appears on hover/focus/error"],
+          ["Increment (+)","16×16 button, layer-03 bg: hidden at rest, appears on hover/focus/error"],
+          ["Chevron","Down arrow (16px) at right edge: triggers incremental slider on click"],
           ["Incremental slider","Vertical popup with snap points: ×1 / ×10 / ×100 / ×1000, tooltip shows current delta"],
         ],
       },
@@ -335,7 +335,7 @@ const NumericalInput = {
       id:"incremental-slider", title:"Incremental slider",
       bullets:[
         ["Trigger","Click the chevron to open; click again to close"],
-        ["Snap points","±1 · ±10 · ±100 · ±1000 — drag the knob or click a label to jump"],
+        ["Snap points","±1 · ±10 · ±100 · ±1000: drag the knob or click a label to jump"],
         ["Tooltip","Follows the knob; shows the current delta (+1, +10, etc.)"],
         ["Placement","Popup floats to the right of the input; scrolls if viewport is tight"],
       ],
@@ -353,7 +353,7 @@ const NumericalInput = {
       id:"do-dont", title:"Do / Don't",
       doDont:{
         do:{ text:"Use the incremental slider for fields where users frequently need large jumps (e.g. temperature, budget, zoom level)." },
-        dont:{ text:"Don't use this for free-form text or non-numeric values — use a standard Input instead." },
+        dont:{ text:"Don't use this for free-form text or non-numeric values: use a standard Input instead." },
       },
     },
   ],
@@ -419,7 +419,7 @@ const SwitchDoc = {
 
 const DateRangePicker = {
   id:"date-range-picker", name:"Date range picker", variants:"7 variants · 5 states · 3 sizes",
-  description:"A two-field date range control — start and end — with a calendar popover. Supports keyboard navigation and locale formatting.",
+  description:"A two-field date range control (start and end) with a calendar popover. Supports keyboard navigation and locale formatting.",
   sections:[
     {
       id:"anatomy", title:"Anatomy",
@@ -463,7 +463,7 @@ const DateRangePicker = {
       id:"variants", title:"Variants",
       bullets:[
         ["Date range","Start + end fields (default)"],
-        ["Single date","One field only — same calendar interaction"],
+        ["Single date","One field only: same calendar interaction"],
         ["With presets","Quick-select chips above the calendar (Today, Last 7 days, This month)"],
         ["Read-only","Non-interactive display of the selected range"],
       ],
@@ -494,8 +494,8 @@ const DateRangePicker = {
     {
       id:"do-dont", title:"Do / Don't",
       doDont:{
-        do:{ text:"Provide preset range options (Today, Last 7 days) when users commonly pick relative ranges — it dramatically reduces interaction cost." },
-        dont:{ text:"Don't use a date range picker for single-date entry — use a plain date input or single-date picker instead." },
+        do:{ text:"Provide preset range options (Today, Last 7 days) when users commonly pick relative ranges: it dramatically reduces interaction cost." },
+        dont:{ text:"Don't use a date range picker for single-date entry: use a plain date input or single-date picker instead." },
       },
     },
   ],
@@ -582,7 +582,7 @@ const UploadFiles = {
       id:"variants", title:"Variants",
       bullets:[
         ["Default","Full drop zone with browse link"],
-        ["Compact","Single-line upload row — file name + browse button, no large zone"],
+        ["Compact","Single-line upload row: file name + browse button, no large zone"],
         ["With preview","Image thumbnail previews shown after selection"],
       ],
     },
@@ -592,7 +592,7 @@ const UploadFiles = {
         head:["State","Description"],
         rows:[
           ["Idle","Dashed border, upload icon, browse link"],
-          ["Drag-over","Border turns blue, background tints — file is hovering above the zone"],
+          ["Drag-over","Border turns blue, background tints: file is hovering above the zone"],
           ["Uploading","Progress bar per file; zone remains active for additional drops"],
           ["Error","File row shows red error text (wrong type, too large, network failure)"],
         ],
@@ -610,8 +610,8 @@ const UploadFiles = {
     {
       id:"do-dont", title:"Do / Don't",
       doDont:{
-        do:{ text:"Always show the accepted file types and size limit inside the zone — users should not have to guess and retry." },
-        dont:{ text:"Don't silently reject files after upload starts — show an inline error on the specific file row immediately." },
+        do:{ text:"Always show the accepted file types and size limit inside the zone: users should not have to guess and retry." },
+        dont:{ text:"Don't silently reject files after upload starts: show an inline error on the specific file row immediately." },
       },
     },
   ],
@@ -694,7 +694,7 @@ const DataTable = {
           ["Table row","Data row; hover state tints the background"],
           ["Row action slot","Trailing cell for per-row actions (edit, delete, etc.)"],
           ["Empty state","Centred message shown when there are no rows to display"],
-          ["Pagination","Page navigation below the table — see Pagination component"],
+          ["Pagination","Page navigation below the table: see Pagination component"],
         ],
       },
       demo: () => {
@@ -727,7 +727,7 @@ const DataTable = {
     {
       id:"column-types", title:"Column types",
       bullets:[
-        ["Text","Default — left-aligned string value"],
+        ["Text","Default: left-aligned string value"],
         ["Numeric","Right-aligned with tabular-nums formatting"],
         ["Status","Badge component rendered in cell"],
         ["Action","Trailing column with IconButton row actions"],
@@ -750,7 +750,7 @@ const DataTable = {
     {
       id:"accessibility", title:"Accessibility",
       bullets:[
-        ["Role","Native <table> with <thead>/<tbody> — structure exposed to assistive tech automatically"],
+        ["Role","Native <table> with <thead>/<tbody>: structure exposed to assistive tech automatically"],
         ["Sort","Sortable headers use aria-sort (\"ascending\" | \"descending\" | \"none\")"],
         ["Selection","Row checkboxes have aria-label with the row's primary identifier"],
         ["Select all","Header checkbox uses aria-label=\"Select all rows\" and aria-checked=\"mixed\" for partial selection"],
@@ -760,8 +760,8 @@ const DataTable = {
     {
       id:"do-dont", title:"Do / Don't",
       doDont:{
-        do:{ text:"Provide an empty state with a clear message and a call to action — users need to know why there are no rows and what to do next." },
-        dont:{ text:"Don't show more than 50 rows without pagination — long DOM trees are slow to render and overwhelming to scan." },
+        do:{ text:"Provide an empty state with a clear message and a call to action: users need to know why there are no rows and what to do next." },
+        dont:{ text:"Don't show more than 50 rows without pagination: long DOM trees are slow to render and overwhelming to scan." },
       },
     },
   ],
@@ -783,7 +783,7 @@ const AdvancedDataTable = {
           ["Group header row","Spans all columns; shows the group key value and a row count"],
           ["Expand toggle","Chevron in the first cell; opens an inline detail panel below the row"],
           ["Detail panel","Full-width row slot for expanded content (sub-tables, forms, rich detail)"],
-          ["Bulk action bar","Appears above the table when rows are selected — contains batch actions"],
+          ["Bulk action bar","Appears above the table when rows are selected: contains batch actions"],
         ],
       },
       demo: () => {
@@ -826,7 +826,7 @@ const AdvancedDataTable = {
                 </tr>
                 {/* Group header */}
                 <tr style={{ background:"var(--colour-neutral-100)" }}>
-                  <td colSpan={5} style={{ padding:"8px 12px", font:"400 12px/16px var(--font-normal)", color:"var(--text-caption)" }}>Engineering — 2 rows</td>
+                  <td colSpan={5} style={{ padding:"8px 12px", font:"400 12px/16px var(--font-normal)", color:"var(--text-caption)" }}>Engineering: 2 rows</td>
                 </tr>
               </thead>
               <tbody>
@@ -844,7 +844,7 @@ const AdvancedDataTable = {
                       </td>
                     </tr>
                     {expanded === r.id && (
-                      <tr><td colSpan={5} style={{ padding:"12px 24px", background:"var(--colour-neutral-50)", font:"13px/1.5 var(--font-normal)", color:"var(--text-body)", borderBottom:"1px solid var(--border-default)" }}>Expanded detail panel for {r.name} — any content can go here: sub-tables, forms, charts.</td></tr>
+                      <tr><td colSpan={5} style={{ padding:"12px 24px", background:"var(--colour-neutral-50)", font:"13px/1.5 var(--font-normal)", color:"var(--text-body)", borderBottom:"1px solid var(--border-default)" }}>Expanded detail panel for {r.name}: any content can go here: sub-tables, forms, charts.</td></tr>
                     )}
                   </React.Fragment>
                 ))}
@@ -858,9 +858,9 @@ const AdvancedDataTable = {
     {
       id:"features", title:"Features",
       bullets:[
-        ["Column filters","Per-column inline filter — text match for strings, range for numbers, select for enums"],
+        ["Column filters","Per-column inline filter: text match for strings, range for numbers, select for enums"],
         ["Grouping","Rows collapsed under group headers; groups expand / collapse independently"],
-        ["Row expansion","Inline detail panel below any row — arbitrary content"],
+        ["Row expansion","Inline detail panel below any row: arbitrary content"],
         ["Bulk actions","Action bar emerges when ≥1 row is selected; cleared on deselect all"],
         ["Column resizing","Drag handle on column borders to adjust widths"],
       ],
@@ -885,7 +885,7 @@ const AdvancedDataTable = {
       id:"do-dont", title:"Do / Don't",
       doDont:{
         do:{ text:"Show active filter chips above the table so users always know what's filtering their view and can clear filters individually." },
-        dont:{ text:"Don't enable all features at once — only expose filterable, expandable, and groupBy when the data actually warrants each one." },
+        dont:{ text:"Don't enable all features at once: only expose filterable, expandable, and groupBy when the data actually warrants each one." },
       },
     },
   ],
@@ -894,7 +894,7 @@ const AdvancedDataTable = {
 
 const Timeline = {
   id:"timeline", name:"Timeline", variants:"3 variants",
-  description:"A step navigation component — a vertical or horizontal list of labelled steps with directional separators. Used for wizards, process flows, and multi-step navigation.",
+  description:"A step navigation component: a vertical or horizontal list of labelled steps with directional separators. Used for wizards, process flows, and multi-step navigation.",
   sections:[
     {
       id:"anatomy", title:"Anatomy",
@@ -949,7 +949,7 @@ const Timeline = {
           ["Default","Surface page (white)","text-primary (#202225)"],
           ["Hover","background-hover (#f5f6f8)","text-primary"],
           ["Active / selected","background-active (#c0c7cf)","text-action (#0036dd) + › icon"],
-          ["Tooltip","Surface raised + tooltip label","—"],
+          ["Tooltip","Surface raised + tooltip label","None"],
         ],
       },
     },
@@ -958,14 +958,14 @@ const Timeline = {
       bullets:[
         ["Role","Render as <nav> with aria-label; each step is a <button> or <a>"],
         ["Active step","aria-current=\"step\" on the active item"],
-        ["Separators","Chevron icons are aria-hidden — they are decorative direction cues, not actions"],
+        ["Separators","Chevron icons are aria-hidden: they are decorative direction cues, not actions"],
       ],
     },
     {
       id:"do-dont", title:"Do / Don't",
       doDont:{
-        do:{ text:"Use Timeline for sequential flows where order matters — onboarding wizards, checkout steps, or multi-stage forms." },
-        dont:{ text:"Don't use it as a general-purpose menu — Sidebar is the right component for non-sequential navigation." },
+        do:{ text:"Use Timeline for sequential flows where order matters: onboarding wizards, checkout steps, or multi-stage forms." },
+        dont:{ text:"Don't use it as a general-purpose menu: Sidebar is the right component for non-sequential navigation." },
       },
     },
   ],
@@ -974,7 +974,7 @@ const Timeline = {
 
 const TabsDoc = {
   id:"tabs", name:"Tabs", variants:"2 variants",
-  description:"Underline-style tab bar — the Sandhata navigation pattern. Active tab is bold + blue with a 2px underline.",
+  description:"Underline-style tab bar: the Sandhata navigation pattern. Active tab is bold + blue with a 2px underline.",
   sections:[usage(
     () => { const { Tabs } = S(); const [t, setT] = React.useState("dashboard"); return (
       <Tabs value={t} onChange={setT} tabs={[
@@ -1058,7 +1058,7 @@ const Sidebar = {
       id:"variants", title:"Variants",
       bullets:[
         ["Expanded","Full width (240px default) with icon + label per item; nav group labels visible"],
-        ["Collapsed (rail)","Icon-only strip (56px) with tooltip labels on hover — saves horizontal space"],
+        ["Collapsed (rail)","Icon-only strip (56px) with tooltip labels on hover: saves horizontal space"],
       ],
     },
     {
@@ -1093,8 +1093,8 @@ const Sidebar = {
     {
       id:"do-dont", title:"Do / Don't",
       doDont:{
-        do:{ text:"Group related destinations together under labelled sections — it reduces the cognitive load of scanning a long nav list." },
-        dont:{ text:"Don't put more than 7–8 top-level nav items in the sidebar — nest secondary links inside a parent item or move them to a sub-nav." },
+        do:{ text:"Group related destinations together under labelled sections: it reduces the cognitive load of scanning a long nav list." },
+        dont:{ text:"Don't put more than 7–8 top-level nav items in the sidebar: nest secondary links inside a parent item or move them to a sub-nav." },
       },
     },
   ],
@@ -1103,7 +1103,7 @@ const Sidebar = {
 
 const Menu = {
   id:"menu", name:"Menu", variants:"4 states · 2 layouts",
-  description:"A bordered dropdown-trigger button — icon, label, and chevron — that opens a panel of options below it. Figma's own component description frames it precisely: \"Secondary menu pattern for nested navigation, 4 layout variants.\" It's a trigger for a small options panel, not a sidebar navigation row — see Sidebar for primary, multi-level navigation.",
+  description:"A bordered dropdown-trigger button (icon, label, and chevron) that opens a panel of options below it. Figma's own component description frames it precisely: \"Secondary menu pattern for nested navigation, 4 layout variants.\" It's a trigger for a small options panel, not a sidebar navigation row: see Sidebar for primary, multi-level navigation.",
   sections:[
     {
       id:"anatomy", title:"Anatomy",
@@ -1111,14 +1111,14 @@ const Menu = {
         head:["Part","Role"],
         rows:[
           ["Icon","14px leading glyph identifying the trigger (a plain circle in the source file)"],
-          ["Label","IBM Plex Sans Light 16px/24px — \"Menu\" by default, or any short trigger label"],
+          ["Label","IBM Plex Sans Light 16px/24px: \"Menu\" by default, or any short trigger label"],
           ["Chevron","14px trailing icon; rotates 180° while the dropdown is open"],
           ["Dropdown panel","210px-wide bordered panel anchored below the trigger, holding the option list"],
           ["Option row","One selectable row per option; the row under keyboard/mouse focus is highlighted"],
         ],
       },
       demo: () => {
-        // Self-contained demo — all hooks declared unconditionally at the top
+        // Self-contained demo - all hooks declared unconditionally at the top
         // so SdDemoRenderer (app/_docs/shell.tsx) can mount this fn as its
         // own component without tripping the Rules of Hooks when navigating
         // between docs pages.
@@ -1149,11 +1149,11 @@ const Menu = {
         }, [open, activeIndex]);
 
         // property1 state resolution: Clicked (open) > Selected (has a value,
-        // panel closed) > Hover > Default — matches the 4 states in Figma.
+        // panel closed) > Hover > Default - matches the 4 states in Figma.
         const isActionColoured = open || !!selected;
-        const bg = open || selected ? "var(--colour-neutral-100)" /* Figma Layer/Accent/Layer-accent-01 #e9ebee — exact match, no semantic alias for this specific layer name */
-          : hover ? "var(--background-hover)" /* Figma Background/Background-hover #f5f6f8 — exact */
-          : "var(--surface-page)"; /* Figma Background/Background #ffffff — exact */
+        const bg = open || selected ? "var(--colour-neutral-100)" /* Figma Layer/Accent/Layer-accent-01 #e9ebee - exact match, no semantic alias for this specific layer name */
+          : hover ? "var(--background-hover)" /* Figma Background/Background-hover #f5f6f8 - exact */
+          : "var(--surface-page)"; /* Figma Background/Background #ffffff - exact */
 
         return (
           <div ref={rootRef} style={{ position:"relative", display:"inline-block" }}>
@@ -1167,10 +1167,10 @@ const Menu = {
               style={{
                 display:"flex", alignItems:"center", gap:8,
                 padding:"8px 16px", background:bg, border:"none",
-                borderRadius:"var(--radius-sm)" /* Figma radius/small 4px — exact */,
-                boxShadow:"var(--shadow-md)" /* closest token to Figma's Elevation/2 — Medium (Dropdown): 0 4px 4px rgba(0,0,0,.1), 0 2px 2px rgba(0,0,0,.06) — approximated (softer/wider than --shadow-md, no exact token for that spread) */,
+                borderRadius:"var(--radius-sm)" /* Figma radius/small 4px - exact */,
+                boxShadow:"var(--shadow-md)" /* closest token to Figma's Elevation/2 - Medium (Dropdown): 0 4px 4px rgba(0,0,0,.1), 0 2px 2px rgba(0,0,0,.06) - approximated (softer/wider than --shadow-md, no exact token for that spread) */,
                 cursor:"pointer", font:"300 16px/24px var(--font-normal)",
-                color: isActionColoured ? "var(--text-action)" /* Figma Text/Text-action #0036dd — exact */ : "var(--text-title)" /* Figma Text/Text-primary #202225 — exact */,
+                color: isActionColoured ? "var(--text-action)" /* Figma Text/Text-action #0036dd - exact */ : "var(--text-title)" /* Figma Text/Text-primary #202225 - exact */,
               }}
             >
               <span style={{ display:"flex", color: isActionColoured ? "var(--text-action)" : "var(--text-caption)" }}>{IcCircle(14)}</span>
@@ -1181,7 +1181,7 @@ const Menu = {
               <div role="menu" aria-label="Menu options" style={{
                 position:"absolute", top:46, left:0, width:210,
                 background:"var(--surface-page)",
-                border:"1px solid var(--border-subtle)" /* Figma Border/border-subtle-00 #d5dbde — exact */,
+                border:"1px solid var(--border-subtle)" /* Figma Border/border-subtle-00 #d5dbde - exact */,
                 borderRadius:"var(--radius-sm)", boxShadow:"var(--shadow-md)",
                 padding:4, zIndex:10,
               }}>
@@ -1195,7 +1195,7 @@ const Menu = {
                     style={{
                       padding:"4px 8px", font:"300 12px/20px var(--font-normal)",
                       background: i === activeIndex ? "var(--background-hover)" : "transparent",
-                      color: i === activeIndex ? "var(--colour-primaryblue-600)" /* Figma Text/Text-action-hover #012bb6 — exact */ : "var(--text-title)",
+                      color: i === activeIndex ? "var(--colour-primaryblue-600)" /* Figma Text/Text-action-hover #012bb6 - exact */ : "var(--text-title)",
                       borderRadius:"var(--radius-xs)", cursor:"pointer",
                     }}
                   >{opt}</div>
@@ -1213,10 +1213,10 @@ const Menu = {
         ["Default","White background, 4px radius, soft two-layer drop shadow; icon + label + chevron"],
         ["Hover","Background shifts to background-hover (#f5f6f8)"],
         ["Clicked","Background becomes layer-accent-01 (#e9ebee), label + icons turn action blue, dropdown panel opens below"],
-        ["Selected","Same background and text colour as Clicked, but the panel is closed — a value has already been chosen and the trigger is back at rest"],
+        ["Selected","Same background and text colour as Clicked, but the panel is closed: a value has already been chosen and the trigger is back at rest"],
       ],
       demo: () => {
-        // Static illustrative layout — the interactive open/close behaviour
+        // Static illustrative layout - the interactive open/close behaviour
         // lives in the Anatomy example above; this just shows how the same
         // trigger sits inside Figma's horizontal-nav-bar layout variant.
         const linkStyle: React.CSSProperties = { font:"300 14px/20px var(--font-normal)", color:"var(--text-title)", padding:"8px 12px", cursor:"pointer" };
@@ -1224,7 +1224,7 @@ const Menu = {
           <div style={{
             display:"flex", alignItems:"center", gap:4, padding:"8px 12px",
             background:"var(--surface-page)",
-            borderRadius:"var(--radius-xl)" /* approximates Figma's radius/large 16px on the top-right/bottom-right corners — 12px is the largest radius token in this system */,
+            borderRadius:"var(--radius-xl)" /* approximates Figma's radius/large 16px on the top-right/bottom-right corners - 12px is the largest radius token in this system */,
             boxShadow:"var(--shadow-md)",
           }}>
             <span style={linkStyle}>Home</span>
@@ -1260,24 +1260,24 @@ const Menu = {
         ["Panel","role=\"menu\" on the dropdown container"],
         ["Options","role=\"menuitem\" on each row; the row under keyboard/mouse focus is visually highlighted"],
         ["Dismissal","Closes on Escape or on a click outside the trigger/panel"],
-        ["Scope note","This docs demo moves a highlighted index with the arrow keys rather than real DOM focus per row — simple and sufficient here, but a production implementation should follow the full WAI-ARIA menu-button pattern (roving tabindex or real focus moves) rather than copying this simplification verbatim"],
+        ["Scope note","This docs demo moves a highlighted index with the arrow keys rather than real DOM focus per row: simple and sufficient here, but a production implementation should follow the full WAI-ARIA menu-button pattern (roving tabindex or real focus moves) rather than copying this simplification verbatim"],
       ],
     },
     {
       id:"do-dont", title:"Do / Don't",
       doDont:{
-        do:{ text:"Use Menu for a secondary or nested navigation menu with a handful of options — a page-level \"more actions\" trigger, a filter, or a sub-section switcher." },
-        dont:{ text:"Don't use Menu as a replacement for Sidebar's primary navigation — it's a single dropdown trigger with an option list, not a multi-level nav tree." },
+        do:{ text:"Use Menu for a secondary or nested navigation menu with a handful of options: a page-level \"more actions\" trigger, a filter, or a sub-section switcher." },
+        dont:{ text:"Don't use Menu as a replacement for Sidebar's primary navigation: it's a single dropdown trigger with an option list, not a multi-level nav tree." },
       },
     },
   ],
   props:[
     ["label","string","Trigger text (defaults to \"Menu\")"],
     ["icon","boolean","Show the 14px leading icon"],
-    ["dropdown","boolean","Whether the trigger opens a dropdown panel at all — false renders a plain nav link with no chevron, for use in the horizontal-nav-bar layout"],
+    ["dropdown","boolean","Whether the trigger opens a dropdown panel at all: false renders a plain nav link with no chevron, for use in the horizontal-nav-bar layout"],
     ["options","string[]","Option labels rendered in the dropdown panel"],
-    ["property1","enum","Default, Hover, Clicked, Selected — visual state, normally derived from interaction rather than set directly"],
-    ["onSelect","func","(option: string) => void — called when an option row is chosen"],
+    ["property1","enum","Default, Hover, Clicked, Selected: visual state, normally derived from interaction rather than set directly"],
+    ["onSelect","func","(option: string) => void. Called when an option row is chosen"],
   ],
 };
 const Pagination = {
@@ -1351,7 +1351,7 @@ const Pagination = {
       id:"variants", title:"Variants",
       bullets:[
         ["Numbered","Full page number list with ellipsis truncation (default)"],
-        ["Simple","Previous / Next buttons only with a 'Page X of Y' label — best for mobile or very long lists"],
+        ["Simple","Previous / Next buttons only with a 'Page X of Y' label: best for mobile or very long lists"],
       ],
     },
     {
@@ -1366,8 +1366,8 @@ const Pagination = {
     {
       id:"do-dont", title:"Do / Don't",
       doDont:{
-        do:{ text:"Always include the total count summary — users need to know how deep the list is to decide whether to filter before paginating." },
-        dont:{ text:"Don't show pagination for lists under ~15 items — just render all rows; the extra chrome adds noise without benefit." },
+        do:{ text:"Always include the total count summary: users need to know how deep the list is to decide whether to filter before paginating." },
+        dont:{ text:"Don't show pagination for lists under ~15 items: just render all rows; the extra chrome adds noise without benefit." },
       },
     },
   ],
@@ -1408,7 +1408,7 @@ const AlertDoc = {
     () => { const { Alert } = S(); const [show, setShow] = React.useState(true); return (
       <div style={{ display:"flex", flexDirection:"column", gap:10, maxWidth:460 }}>
         <Alert tone="success" title="Saved">Your changes were saved successfully.</Alert>
-        {show && <Alert tone="warning" title="Heads up" onClose={() => setShow(false)}>Your trial ends in 3 days — click × to dismiss.</Alert>}
+        {show && <Alert tone="warning" title="Heads up" onClose={() => setShow(false)}>Your trial ends in 3 days. Click × to dismiss.</Alert>}
         {!show && <div style={{ font:"12px/1 var(--font-normal)", color:"var(--text-caption)" }}>Alert dismissed. Reload to restore.</div>}
         <Alert tone="error">Something went wrong. Please try again.</Alert>
       </div>
@@ -1424,10 +1424,10 @@ const TooltipDoc = {
   sections:[usage(
     () => { const { Tooltip, Button:B } = S(); return (
       <div style={{ padding:"48px 32px 32px", display:"flex", gap:20, flexWrap:"wrap", alignItems:"center" }}>
-        <Tooltip label="Tooltip — top" side="top"><B hierarchy="tertiary">Top</B></Tooltip>
-        <Tooltip label="Tooltip — right" side="right"><B hierarchy="tertiary">Right</B></Tooltip>
-        <Tooltip label="Tooltip — bottom" side="bottom"><B hierarchy="tertiary">Bottom</B></Tooltip>
-        <Tooltip label="Tooltip — left" side="left"><B hierarchy="tertiary">Left</B></Tooltip>
+        <Tooltip label="Tooltip: top" side="top"><B hierarchy="tertiary">Top</B></Tooltip>
+        <Tooltip label="Tooltip: right" side="right"><B hierarchy="tertiary">Right</B></Tooltip>
+        <Tooltip label="Tooltip: bottom" side="bottom"><B hierarchy="tertiary">Bottom</B></Tooltip>
+        <Tooltip label="Tooltip: left" side="left"><B hierarchy="tertiary">Left</B></Tooltip>
       </div>
     ); },
     `<Tooltip label="Copy to clipboard" side="top">\n  <IconButton icon={<Copy/>} ariaLabel="Copy" />\n</Tooltip>`
@@ -1499,7 +1499,7 @@ const Accordion = {
     {
       id:"variants", title:"Variants",
       bullets:[
-        ["Single","Only one panel can be open at a time — opening a new panel closes the current one"],
+        ["Single","Only one panel can be open at a time: opening a new panel closes the current one"],
         ["Multiple","Multiple panels can be open simultaneously (pass multiple prop)"],
       ],
     },
@@ -1521,14 +1521,14 @@ const Accordion = {
       bullets:[
         ["Role","Panel headers are <button> elements; the body region has role=\"region\" with aria-labelledby pointing to its header"],
         ["Expanded","Each button has aria-expanded reflecting the panel's open state"],
-        ["Animation","Height transition respects prefers-reduced-motion — collapses instantly when reduced-motion is set"],
+        ["Animation","Height transition respects prefers-reduced-motion: collapses instantly when reduced-motion is set"],
       ],
     },
     {
       id:"do-dont", title:"Do / Don't",
       doDont:{
-        do:{ text:"Use accordion for secondary / supplementary content — FAQs, optional config, or progressive disclosure in long forms." },
-        dont:{ text:"Don't hide critical information inside a closed panel by default — if the user must read it, show it." },
+        do:{ text:"Use accordion for secondary / supplementary content: FAQs, optional config, or progressive disclosure in long forms." },
+        dont:{ text:"Don't hide critical information inside a closed panel by default: if the user must read it, show it." },
       },
     },
   ],
@@ -1537,7 +1537,7 @@ const Accordion = {
 
 const Drawer = {
   id:"drawer", name:"Drawer", variants:"4 sides · Open=True",
-  description:"A resizable panel anchored to a screen edge — used for detail views, filter panels, and secondary content. A drag handle (dragger pill) marks the resizable edge. Content is an instance slot with 32px padding.",
+  description:"A resizable panel anchored to a screen edge: used for detail views, filter panels, and secondary content. A drag handle (dragger pill) marks the resizable edge. Content is an instance slot with 32px padding.",
   sections:[
     {
       id:"anatomy", title:"Anatomy",
@@ -1546,7 +1546,7 @@ const Drawer = {
         rows:[
           ["Panel","White surface (background/background) anchored to an edge; padding 32px; gap 24px between dragger and content"],
           ["Dragger","Pill-shaped resize handle: 64×8px (top/bottom) or 8×64px (left/right); background layer-accent-01 (#e9ebee); border-radius full (999px)"],
-          ["Instance slot","Content placeholder area — receives any component or layout (form, list, detail view)"],
+          ["Instance slot","Content placeholder area: receives any component or layout (form, list, detail view)"],
         ],
       },
       demo: () => {
@@ -1557,7 +1557,7 @@ const Drawer = {
               <button onClick={() => setSide("right")} style={{ padding:"6px 14px", borderRadius:"var(--radius-xl)", border:"1px solid var(--border-default)", background: side==="right" ? "var(--colour-primaryblue-500)" : "var(--surface-page)", color: side==="right" ? "#fff" : "var(--text-body)", cursor:"pointer", font:"12px/1 var(--font-normal)" }}>Right</button>
               <button onClick={() => setSide("bottom")} style={{ padding:"6px 14px", borderRadius:"var(--radius-xl)", border:"1px solid var(--border-default)", background: side==="bottom" ? "var(--colour-primaryblue-500)" : "var(--surface-page)", color: side==="bottom" ? "#fff" : "var(--text-body)", cursor:"pointer", font:"12px/1 var(--font-normal)" }}>Bottom</button>
             </div>
-            {/* Right drawer — user detail panel */}
+            {/* Right drawer - user detail panel */}
             {side === "right" && (
               <div style={{ position:"absolute", top:0, right:0, bottom:0, width:260, background:"var(--surface-page)", display:"flex", flexDirection:"row" }}>
                 <div style={{ width:8, display:"flex", alignItems:"center", justifyContent:"center", flexShrink:0 }}>
@@ -1586,7 +1586,7 @@ const Drawer = {
                 </div>
               </div>
             )}
-            {/* Bottom drawer — quick filters */}
+            {/* Bottom drawer - quick filters */}
             {side === "bottom" && (
               <div style={{ position:"absolute", left:0, right:0, bottom:0, height:140, background:"var(--surface-page)", display:"flex", flexDirection:"column" }}>
                 <div style={{ padding:"16px 24px", flex:1, display:"flex", flexDirection:"column", gap:12 }}>
@@ -1609,7 +1609,7 @@ const Drawer = {
           </div>
         );
       },
-      code:`<Drawer align="Right" open="True">\n  {/* Instance slot — any content */}\n  <YourFormOrDetailView />\n</Drawer>`,
+      code:`<Drawer align="Right" open="True">\n  {/* Instance slot: any content */}\n  <YourFormOrDetailView />\n</Drawer>`,
     },
     {
       id:"variants", title:"Alignment variants",
@@ -1642,8 +1642,8 @@ const Drawer = {
     {
       id:"do-dont", title:"Do / Don't",
       doDont:{
-        do:{ text:"Use Bottom or Right alignment for detail views that supplement the main content — the user should be able to see both simultaneously." },
-        dont:{ text:"Don't use Drawer as a navigation panel — use Sidebar. Drawer is for contextual detail and secondary content that co-exists with the main view." },
+        do:{ text:"Use Bottom or Right alignment for detail views that supplement the main content: the user should be able to see both simultaneously." },
+        dont:{ text:"Don't use Drawer as a navigation panel: use Sidebar. Drawer is for contextual detail and secondary content that co-exists with the main view." },
       },
     },
   ],
@@ -1673,7 +1673,7 @@ const Carousel = {
         const colours = ["var(--colour-neutral-100)","var(--colour-neutral-200)","var(--colour-neutral-300)"];
         return (
           <div style={{ display:"flex", flexDirection:"column", gap:24, width:"100%" }}>
-            {/* Control row — top right */}
+            {/* Control row - top right */}
             <div style={{ display:"flex", gap:12, justifyContent:"flex-end", alignItems:"center" }}>
               <button
                 disabled={slide === 0}
@@ -1703,7 +1703,7 @@ const Carousel = {
           </div>
         );
       },
-      code:`<Carousel slide="1" />\n{/* slide prop: "1"–"10" — controls which image is shown */}\n{/* TODO: AutoPlay and Indicators properties (not yet in design) */}`,
+      code:`<Carousel slide="1" />\n{/* slide prop: "1"–"10": controls which image is shown */}\n{/* TODO: AutoPlay and Indicators properties (not yet in design) */}`,
     },
     {
       id:"variants", title:"Variants",
@@ -1726,12 +1726,12 @@ const Carousel = {
     {
       id:"do-dont", title:"Do / Don't",
       doDont:{
-        do:{ text:"Use full-bleed images that have a consistent aspect ratio — the 665px height is fixed, so images should be cropped to fit at 16:9 or wider." },
-        dont:{ text:"Don't use the Carousel for interactive content (forms, lists, tables) — it is an image display component only." },
+        do:{ text:"Use full-bleed images that have a consistent aspect ratio: the 665px height is fixed, so images should be cropped to fit at 16:9 or wider." },
+        dont:{ text:"Don't use the Carousel for interactive content (forms, lists, tables): it is an image display component only." },
       },
     },
   ],
-  props:[["slide","enum","\"1\" – \"10\" — active slide index"],["autoPlay","boolean","TODO: not yet in design — do not implement"],["showDots","boolean","TODO: not yet in design — do not implement"]],
+  props:[["slide","enum","\"1\" – \"10\": active slide index"],["autoPlay","boolean","TODO: not yet in design, do not implement"],["showDots","boolean","TODO: not yet in design, do not implement"]],
 };
 
 const GROUPS: any[] = [

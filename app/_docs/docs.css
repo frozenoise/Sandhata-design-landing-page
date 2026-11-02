@@ -1,4 +1,4 @@
-/* Sandhata docs — shared layout for Components + Documentation pages. */
+/* Sandhata docs - shared layout for Components + Documentation pages. */
 
 :root {
   --doc-bg: #FBF6F1;          /* warm paper */
@@ -13,10 +13,10 @@
 /* ── Dark theme overrides for doc tokens ─────────────────────────────────
    --c-kw/str/tag/prop/func/var/com read directly off a real Cursor
    screenshot (2026-08-25, user's own editor, not a generic VS Code guess)
-   — visual sampling, not a pixel-perfect colour-picker read, so treat as a
+   - visual sampling, not a pixel-perfect colour-picker read, so treat as a
    close approximation to refine against the rendered result, not gospel.
    Only the dark-theme values were sourced this way; light-theme (--c-func/
-   --c-var above) are new but not screenshot-verified — no light-theme
+   --c-var above) are new but not screenshot-verified - no light-theme
    Cursor screenshot was provided to sample from. */
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) {
@@ -90,7 +90,7 @@ body { margin: 0; background: var(--doc-bg); }
 .doc-head p { font-family: var(--font-normal); font-size: 16px; line-height: 1.55; color: var(--text-subtitle); margin: 0; max-width: 720px; }
 .doc-rule { height: 1px; background: var(--doc-line); margin: 24px 0 8px; }
 
-/* Header row — title/description plus the Copy for AI action */
+/* Header row - title/description plus the Copy for AI action */
 .doc-head-row { display: flex; align-items: flex-start; justify-content: space-between; gap: 20px; }
 .doc-head-text { min-width: 0; flex: 1; }
 .doc-copy-group { position: relative; flex-shrink: 0; margin-top: 2px; }
@@ -114,7 +114,7 @@ body { margin: 0; background: var(--doc-bg); }
 .doc-copy-chevron[aria-expanded="true"] svg { transform: rotate(180deg); }
 .doc-copy-divider { align-self: center; width: 1px; height: 18px; background: var(--doc-line); }
 
-/* Icon + label cross-fade for the main copy button — old state fades/slides
+/* Icon + label cross-fade for the main copy button - old state fades/slides
    out while the new one fades/slides in, stacked in the same grid cell. */
 .doc-copy-fade { display: inline-grid; }
 .doc-copy-state {
@@ -161,11 +161,11 @@ body { margin: 0; background: var(--doc-bg); }
 .doc-preview { padding: 28px 24px; overflow: visible; }
 .doc-divider { height: 1px; background: var(--doc-line); }
 
-/* Code block chrome — figure > figcaption (icon + language) > pre, matching
+/* Code block chrome - figure > figcaption (icon + language) > pre, matching
    ui.shadcn.com's rehype-pretty-code structure. .doc-example-header (tabs)
    already owns the top corners when it's rendered above this; when the code
    block is the only thing in .doc-example, its own figcaption takes the top
-   corners instead — mirrors the old pre.doc-code:only-child rule. */
+   corners instead - mirrors the old pre.doc-code:only-child rule. */
 .doc-code-figure { margin: 0; }
 .doc-example > .doc-code-figure:first-child .doc-code-caption { border-radius: var(--radius-lg) var(--radius-lg) 0 0; }
 .doc-code-caption {
@@ -189,10 +189,10 @@ pre.doc-code .c-tag { color: var(--c-tag); } pre.doc-code .c-prop { color: var(-
 pre.doc-code .c-func { color: var(--c-func); } pre.doc-code .c-var { color: var(--c-var); }
 pre.doc-code .c-com { color: var(--c-com); }
 
-/* Line-number gutter — Base UI docs reference: a muted, right-aligned digit
+/* Line-number gutter - Base UI docs reference: a muted, right-aligned digit
    column with a small gap before the code starts. The number is drawn by
    ::before reading a CSS counter incremented per .doc-code-line, so it is
-   generated content, never a real character in the DOM — it cannot become
+   generated content, never a real character in the DOM - it cannot become
    part of a selection or a copy/paste, on top of the copy button already
    sending the original `code` string rather than scraped DOM text. Sized in
    `ch` (this font is monospace, so 1ch == 1 digit's width) instead of a
@@ -233,11 +233,11 @@ code.doc-code-lines { display: block; counter-reset: sd-line; }
 .doc-code-copy:focus-visible { opacity: 1; }
 .doc-code-copy:hover { background: rgba(20,22,24,0.06); color: var(--text-title); }
 .doc-code-copy.is-copied { opacity: 1; color: var(--text-success); border-color: var(--text-success); }
-/* Hover can't reveal what a touch device never hovers — keep it visible there. */
+/* Hover can't reveal what a touch device never hovers - keep it visible there. */
 @media (hover: none) { .doc-code-copy { opacity: 1; } }
 @media (prefers-reduced-motion: reduce) { .doc-code-copy { transition: opacity 1ms linear; } }
 
-/* Do / Don't — paired correct/incorrect example cards */
+/* Do / Don't - paired correct/incorrect example cards */
 .doc-dodont { display: flex; gap: 16px; margin-bottom: 18px; }
 .doc-dodont-card { flex: 1; min-width: 0; border: 1px solid var(--doc-line); border-radius: var(--radius-lg); overflow: hidden; background: var(--doc-surface); }
 .doc-dodont-head { display: flex; align-items: center; gap: 8px; padding: 12px 16px; border-bottom: 1px solid var(--doc-line); font: 700 13px/1 var(--font-bold); }
@@ -257,11 +257,11 @@ code.doc-code-lines { display: block; counter-reset: sd-line; }
 .doc-table .type-cell { font-family: var(--font-mono); font-size: 12.5px; color: var(--text-caption); }
 .prop-pill { font-family: var(--font-mono); font-size: 12.5px; background: rgba(20,22,24,0.05); padding: 2px 7px; border-radius: var(--radius-xs); color: var(--text-body); }
 
-/* Tokens used — colour swatch + token name pill */
+/* Tokens used - colour swatch + token name pill */
 .token-cell { display: inline-flex; align-items: center; gap: 8px; }
 .token-swatch { width: 13px; height: 13px; border-radius: var(--radius-xs); border: 1px solid rgba(20,22,24,0.12); flex-shrink: 0; }
 
-/* Right rail — quick scroll navigation (scroll-spy) */
+/* Right rail - quick scroll navigation (scroll-spy) */
 .doc-toc { width: 180px; flex-shrink: 0; position: sticky; top: 0; align-self: flex-start; }
 .toc-inner { border-left: 1px solid var(--doc-line); padding: 2px 0; }
 .doc-toc a { display: block; padding: 6px 16px; font: 13px/1.4 var(--font-normal); color: var(--text-caption); text-decoration: none; border-left: 2px solid transparent; margin-left: -1px; cursor: pointer; }

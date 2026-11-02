@@ -10,7 +10,7 @@ function ChevronIcon({ open }) {
 }
 
 /**
- * Accordion — a list of collapsible panels. Single-open by default;
+ * Accordion - a list of collapsible panels. Single-open by default;
  * pass `multiple` to allow more than one panel open at once.
  */
 export function Accordion({ items = [], multiple = false, defaultOpen = [], onToggle, style = {} }) {

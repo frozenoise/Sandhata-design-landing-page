@@ -8,7 +8,7 @@ type Params = { params: Promise<{ id: string; memberId: string }> };
 // :memberId is either a ProjectMember id or a ProjectInvite id (pending), so
 // the share dialog can treat both kinds of row the same way.
 
-// PATCH /api/projects/:id/members/:memberId — owner changes a role.
+// PATCH /api/projects/:id/members/:memberId - owner changes a role.
 export async function PATCH(req: Request, props: Params) {
   const params = await props.params;
   const session = await auth();
@@ -31,7 +31,7 @@ export async function PATCH(req: Request, props: Params) {
   return NextResponse.json({ ok: true });
 }
 
-// DELETE /api/projects/:id/members/:memberId — the owner removes anyone;
+// DELETE /api/projects/:id/members/:memberId - the owner removes anyone;
 // a member can remove themselves ("Leave project").
 export async function DELETE(_req: Request, props: Params) {
   const params = await props.params;

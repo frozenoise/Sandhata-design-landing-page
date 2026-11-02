@@ -14,7 +14,7 @@ const EDGE = {
 };
 
 /**
- * Drawer — a panel anchored to a screen edge (right by default), used for
+ * Drawer - a panel anchored to a screen edge (right by default), used for
  * detail views, filter panels, and secondary content. Renders nothing when
  * `open` is false. A drag handle marks the resizable edge for left/right
  * drawers (matches the Figma "dragger pill" anatomy).

@@ -1,14 +1,14 @@
 # Colour
 
 Clean, cool and corporate. A royal electric blue is the one action colour;
-neutrals are slightly cool greys. Reference semantic aliases in product UI —
+neutrals are slightly cool greys. Reference semantic aliases in product UI:
 reach for a raw numbered scale step only when no semantic alias fits.
 
 ## Brand & action
 
 | Token | Hex | Use |
 |---|---|---|
-| `--colour-primaryblue-500` | `#0036DD` | The action colour — buttons, links, selected states |
+| `--colour-primaryblue-500` | `#0036DD` | The action colour: buttons, links, selected states |
 | `--colour-primaryblue-400` | `#445CFF` | Brighter emphasis variant |
 | `--colour-alternativepurple-500` | `#602DEA` | Focus ring, data-viz lead |
 | `--colour-secondaryblue-500` | `#1F2A54` | Deep navy for dense chrome |
@@ -35,11 +35,11 @@ surfaces at 0–100.**
 | `--colour-alert-500` | `#FFC228` |
 | `--colour-info-500` | `#508FED` |
 
-Each status family has its own 50→900 ramp — use the 50 step for tinted
+Each status family has its own 50→900 ramp: use the 50 step for tinted
 backgrounds, 500 for the primary status colour (icons, borders), 700 for text
 on a tinted background (better contrast than 500 for body text).
 
-## Semantic aliases — prefer these over raw scale steps
+## Semantic aliases: prefer these over raw scale steps
 
 | Token | Maps to | Use |
 |---|---|---|
@@ -51,9 +51,9 @@ on a tinted background (better contrast than 500 for body text).
 | `--background-action` | primaryblue-500 | Primary buttons |
 | `--border-default` | neutral-300 | Default input/control borders |
 | `--border-subtle` | neutral-200 | Hairlines and card borders |
-| `--focus-ring` (`--shadow-focus`) | purple-500 @ 35% | Keyboard focus halo — `0 0 0 3px rgba(96,45,234,0.35)` |
+| `--focus-ring` (`--shadow-focus`) | purple-500 @ 35% | Keyboard focus halo: `0 0 0 3px rgba(96,45,234,0.35)` |
 
-Aliases re-map automatically in the dark theme (`data-theme="dark"`) — always
+Aliases re-map automatically in the dark theme (`data-theme="dark"`): always
 prefer an alias over a raw `--colour-neutral-800` when one exists, so dark
 mode keeps working without touching the component.
 
@@ -65,12 +65,12 @@ Charts run violet → blue → cyan, with soft area fills fading to transparent:
 
 ## Brand gradient
 
-`var(--gradient-brand)` — magenta → deep blue
+`var(--gradient-brand)`: magenta → deep blue
 (`linear-gradient(114.77deg, #DF00C1 1.85%, #002289 98.15%)`), reserved for
 brand and marketing surfaces only. Product UI stays white/neutral.
 
 ## The one naming trap to know
 
 Figma's `radius/medium` variable is 12px, which maps to code's
-`--radius-xl` — **not** `--radius-md` (which is 6px). Verify a Figma variable's
+`--radius-xl`: **not** `--radius-md` (which is 6px). Verify a Figma variable's
 *resolved value* against the CSS token table before assuming the names line up.

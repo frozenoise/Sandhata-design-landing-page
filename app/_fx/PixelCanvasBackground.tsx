@@ -1,18 +1,18 @@
 "use client";
 
-/* Ambient pixel-grid background for a dark section — a grid of small cells
+/* Ambient pixel-grid background for a dark section - a grid of small cells
  * that light up near the cursor and fade back out, giving the section's
  * flat navy background some life without competing with foreground content.
  *
  * This is an original implementation of a common "reactive pixel grid"
  * effect family (seen in various component libraries, e.g. componentry.dev's
- * "Pixel Canvas"). It was NOT built from that or any other site's source —
+ * "Pixel Canvas"). It was NOT built from that or any other site's source -
  * a live fetch of that page's docs only yielded its public prop surface
  * (cell size / decay speed / colour list / a couple of named variants), not
  * anything reproduced here; the grid math, cell model, colour blending, and
  * ambient-idle-shimmer behaviour below are this file's own.
  *
- * Renders nothing under prefers-reduced-motion — the section keeps its
+ * Renders nothing under prefers-reduced-motion - the section keeps its
  * plain flat navy background, same fallback pattern as .hero-aurora and
  * the hero particle heading.
  */

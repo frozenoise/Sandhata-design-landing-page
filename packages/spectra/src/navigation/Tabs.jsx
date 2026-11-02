@@ -1,7 +1,7 @@
 import React from "react";
 
 /**
- * Tabs — underline-style tab bar. Controlled via `value` + `onChange`.
+ * Tabs - underline-style tab bar. Controlled via `value` + `onChange`.
  * Each tab: { value, label, icon? }.
  */
 export function Tabs({ tabs = [], value, onChange, style = {} }) {

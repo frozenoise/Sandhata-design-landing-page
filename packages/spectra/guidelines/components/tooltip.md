@@ -12,10 +12,10 @@ Dark label shown on hover/focus of its child trigger.
 ## Do / Don't
 
 - **Do** wrap a single focusable child (a `Button`/`IconButton`, or something
-  else that can receive hover/focus) — `Tooltip` shows on both mouse hover
+  else that can receive hover/focus): `Tooltip` shows on both mouse hover
   and keyboard focus of its child.
 - **Don't** expect a visible arrow/caret pointing at the trigger, or a focus
-  ring on the tooltip itself — this component doesn't render either.
+  ring on the tooltip itself: this component doesn't render either.
 
 ## Example
 

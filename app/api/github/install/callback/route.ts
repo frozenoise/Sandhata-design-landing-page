@@ -3,12 +3,12 @@ import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { isGitHubAppConfigured, verifyInstallState, getInstallationAccount } from "@/lib/github";
 
-// GET /api/github/install/callback — GitHub redirects here after the user
+// GET /api/github/install/callback - GitHub redirects here after the user
 // installs/authorizes the App, with `installation_id`, `setup_action`
 // ("install" | "update" | "request"), and the `state` we signed in
 // /api/github/install. Always resolves by redirecting back into /builder
 // (never a bare JSON error page) so the user lands somewhere useful whether
-// this succeeded or not — the outcome is carried as a query param the
+// this succeeded or not - the outcome is carried as a query param the
 // builder UI reads once and clears.
 function redirectToBuilder(req: Request, params: Record<string, string>) {
   const url = new URL("/builder", req.url);
@@ -30,7 +30,7 @@ export async function GET(req: Request) {
   const setupAction = searchParams.get("setup_action");
 
   if (setupAction === "request") {
-    // Installation requires org-owner approval — nothing to persist yet.
+    // Installation requires org-owner approval - nothing to persist yet.
     return redirectToBuilder(req, { github_error: "install_requested" });
   }
 
@@ -52,7 +52,7 @@ export async function GET(req: Request) {
       where: { installationId },
       // If this installationId was previously linked to a different
       // Sandhata user (e.g. re-installed under a shared org account by a
-      // teammate), the most recent linker wins — same "last write wins"
+      // teammate), the most recent linker wins - same "last write wins"
       // simplicity as the rest of Phase 1's single-repo, single-commit scope.
       update: { userId: session.user.id, accountLogin: account.login, accountType: account.type },
       create: {

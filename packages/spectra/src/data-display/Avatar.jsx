@@ -1,6 +1,6 @@
 import React from "react";
 
-/** Avatar — circular user marker. Shows `src` image or `name` initials. */
+/** Avatar - circular user marker. Shows `src` image or `name` initials. */
 export function Avatar({ name = "", src, size = 36, tone = "action", style = {} }) {
   const initials = name.split(" ").map((w) => w[0]).slice(0, 2).join("").toUpperCase();
   const tones = {

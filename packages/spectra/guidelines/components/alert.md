@@ -9,11 +9,11 @@ dismissible banner.
 |---|---|---|
 | `tone` | `"info" \| "success" \| "warning" \| "error"` | |
 | `title` | node | Bold heading |
-| `onClose` | func | Renders a dismiss button — **Alert only shows a working close button when you pass this** |
+| `onClose` | func | Renders a dismiss button: **Alert only shows a working close button when you pass this** |
 
 ## Do / Don't
 
-- **Don't** expect a close button to appear without `onClose` — it's the
+- **Don't** expect a close button to appear without `onClose`: it's the
   callback that both renders the button and handles the dismissal; there's
   no separate `dismissible` boolean.
 

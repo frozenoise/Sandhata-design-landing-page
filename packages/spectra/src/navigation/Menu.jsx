@@ -12,7 +12,7 @@ const ChevIcon = () => (
 );
 
 /**
- * Menu — a trigger button that opens a dropdown option list. Follows the
+ * Menu - a trigger button that opens a dropdown option list. Follows the
  * WAI-ARIA menu-button pattern (`aria-haspopup`, `aria-expanded`,
  * `role="menu"`/`role="menuitem"`), closes on outside click and Escape.
  * Pass `dropdown={false}` to render a plain nav link with no chevron/panel

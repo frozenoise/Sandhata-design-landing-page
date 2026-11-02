@@ -64,7 +64,7 @@ const SURFACES = {
     "--border-default":"rgba(255,255,255,0.12)","--field-02":"rgba(255,255,255,0.06)",
     // This surface is selectable independent of the site-wide data-theme
     // toggle, so it needs its own --text-action rather than relying on the
-    // global dark override — otherwise picking "Ink Dark" while global theme
+    // global dark override - otherwise picking "Ink Dark" while global theme
     // is still "light" leaves Button's ghost hierarchy at primaryblue-500
     // (~2:1 contrast here, fails AA).
     "--text-action":"var(--colour-primaryblue-300)",
@@ -82,7 +82,7 @@ const RADII = [
 // cards actually use, so nothing leaks in from whatever surface (incl. Ink
 // Dark) the showcase page itself is on. Found incomplete live: it covered
 // --surface-raised/page and the --text-* scale, but missed --surface-secondary
-// and --text-disabled — under Ink Dark those two fell through to the ambient
+// and --text-disabled - under Ink Dark those two fell through to the ambient
 // dark values (#16162a, a light-on-dark grey), producing dark-on-dark card
 // rows (e.g. Recent Claims) even though the rest of the same card was
 // correctly reset to light.
@@ -213,7 +213,7 @@ function SectionSep({ bg }: { bg: string; dark?: boolean }) {
       SEP_COLORS.forEach((c, i) => g.addColorStop(i / (SEP_COLORS.length - 1), c));
       ctx.fillStyle = g;
 
-      /* 1px top + bottom border — solid horizontal, same gradient */
+      /* 1px top + bottom border - solid horizontal, same gradient */
       ctx.fillRect(0, 0, W, 1);
       ctx.fillRect(0, H - 1, W, 1);
 
@@ -263,7 +263,7 @@ function BandTag({ children }: { children:React.ReactNode }) {
   );
 }
 
-/* Module-level ShowToken — avoids stale-closure issues, gets enabled as explicit prop */
+/* Module-level ShowToken - avoids stale-closure issues, gets enabled as explicit prop */
 function ShowToken({ token, children, side="top", enabled }: {
   token: string; children: React.ReactElement;
   side?: "top"|"bottom"|"left"|"right"; enabled: boolean;
@@ -292,7 +292,7 @@ function AnimatedCounter({ to, prefix="", suffix="" }: { to:number; prefix?:stri
   return <span ref={wrapRef}><span ref={spanRef}>{prefix}{Number.isInteger(to) ? to.toLocaleString() : to.toFixed(2)}{suffix}</span></span>;
 }
 
-/* ── Animated bar chart — bars grow from bottom baseline ────── */
+/* ── Animated bar chart - bars grow from bottom baseline ────── */
 function AnimatedBarChart({ data, labels, color="var(--colour-primaryblue-500)" }:
   { data:number[]; labels:string[]; color?:string }) {
   const ref    = React.useRef<HTMLDivElement>(null);
@@ -301,7 +301,7 @@ function AnimatedBarChart({ data, labels, color="var(--colour-primaryblue-500)" 
   const BAR_H  = 80;
   return (
     <div ref={ref}>
-      {/* Bar area — bars grow upward from a shared baseline */}
+      {/* Bar area - bars grow upward from a shared baseline */}
       <div style={{ display:"flex", alignItems:"flex-end", gap:5, height:BAR_H }}>
         {data.map((v, i) => (
           <motion.div key={i}
@@ -415,7 +415,7 @@ function DonutChart() {
           {Array.from({length:TICKS}).map((_,t)=>{const a=(t/TICKS)*Math.PI*2-Math.PI/2;return<line key={t} x1={(cx+ir0*Math.cos(a)).toFixed(2)} y1={(cy+ir0*Math.sin(a)).toFixed(2)} x2={(cx+ir1*Math.cos(a)).toFixed(2)} y2={(cy+ir1*Math.sin(a)).toFixed(2)} stroke="rgba(0,0,0,0.18)" strokeWidth="0.9"/>;}) }
           <circle cx={cx} cy={cy} r={OR} fill="none" stroke="rgba(0,0,0,0.07)" strokeWidth={Osw}/>
           {arcs.map((arc,i)=><path key={`${month}-${i}`} d={arc.d} fill="none" stroke={arc.color} strokeWidth={hiArc===i?Osw+3:Osw} strokeLinecap="round" style={{ cursor:"pointer", transition:"stroke-width .15s ease" }} onMouseEnter={()=>setHiArc(i)} onMouseLeave={()=>setHiArc(null)}/>)}
-          {/* Same fix as app/page.tsx's copy of this component — hardcoded
+          {/* Same fix as app/page.tsx's copy of this component - hardcoded
               near-black text was ~1.1:1 against the card's dark background. */}
           <text x={cx} y={cy-10} textAnchor="middle" dominantBaseline="middle" fontSize="22" fontWeight="700" fill="var(--text-title)" style={{ fontFamily:"var(--font-bold)" }}>{vals[0]}</text>
           <text x={cx} y={cy+10} textAnchor="middle" dominantBaseline="middle" fontSize="10" fill="var(--text-caption)" style={{ fontFamily:"var(--font-normal)" }}>Visitors</text>
@@ -484,13 +484,13 @@ function InteractiveLineChart() {
   return (
     <div className="cc rtu-line" style={{ marginTop:20 }}>
       <div className="rtu-line-head">
-        <div><div className="rtu-card-h">Line Chart · Interactive</div><div className="rtu-card-sub">Total visitors over 3 months — click a series to switch</div></div>
+        <div><div className="rtu-card-h">Line Chart · Interactive</div><div className="rtu-card-sub">Total visitors over 3 months: click a series to switch</div></div>
         <div className="rtu-line-stats">
           {(Object.keys(LC_SERIES) as SeriesKey[]).map(k=>(
             // Was: inline `background:"#f4f5f7"` (always light) + hardcoded
             // `borderLeft` on the active tab, both fighting the .rtu-stat.on /
             // .rtu-stat CSS classes' own theme-aware values (inline style
-            // wins over any stylesheet rule, dark-mode overrides included) —
+            // wins over any stylesheet rule, dark-mode overrides included) -
             // the pill stayed light while its <strong> text correctly turned
             // near-white in dark mode, making "24,828" unreadable. Only reset
             // the button's own top/right/bottom chrome inline; leave
@@ -606,7 +606,7 @@ function ShowcaseSelect({ label, options, value: vProp, onChange, placeholder }:
 }
 
 /* ── Interactive pipeline line chart (TechNip dashboard) ─────── */
-/* Uses ResizeObserver so viewBox always equals rendered pixel size — no
+/* Uses ResizeObserver so viewBox always equals rendered pixel size - no
    squashing or letterboxing at any viewport width. */
 function PipelineChart({ data, labels, color="#0036DD" }: {
   data: number[]; labels: string[]; color?: string;
@@ -721,7 +721,7 @@ export default function ShowcasePage() {
   const [toast, setToast] = React.useState<string|null>(null);
 
   // Sync the global light/dark switch (ThemeToggle, same one every other
-  // page uses) into this page's own "surface" state — showcase has its own
+  // page uses) into this page's own "surface" state - showcase has its own
   // richer Pure White/Warm/Ink Dark picker rather than the site-wide
   // [data-theme] CSS layer, so toggling the global switch here maps onto
   // that existing system (dark -> "dark"/Ink Dark, anything else -> "white")
@@ -788,7 +788,7 @@ export default function ShowcasePage() {
 // Mirror atomicP into a ref so the canvas rAF loop can read it without re-mounting
   React.useEffect(() => { apRef.current = atomicP; }, [atomicP]);
 
-  // Canvas particle system — multiple scenes, each converging dots to a new element's shape
+  // Canvas particle system - multiple scenes, each converging dots to a new element's shape
   React.useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
@@ -835,7 +835,7 @@ export default function ShowcasePage() {
           a: 0.45 + Math.random()*0.55,
         }));
 
-      // Scene 1 — Atoms: input field border + cursor + button fill
+      // Scene 1 - Atoms: input field border + cursor + button fill
       const iW = 280, iH = 44, ix = cx-140, iy = cy-54;
       const bx = cx-140, by = iy+iH+18;
       const s1 = [
@@ -844,12 +844,12 @@ export default function ShowcasePage() {
         ...fillPts(bx, by, 280, 44, 110),
       ];
 
-      // Scene 2 — Organisms: password input border
+      // Scene 2 - Organisms: password input border
       // Target is the midpoint of the input's travel: it starts ~20px below cy and ends ~20px above,
       // so cy-4 gives the best alignment across the whole crossfade.
       const s2 = borderPts(cx-140, cy-4, 280, 44, 150);
 
-      // Scene 3 — Templates: browser frame outer border + chrome/nav/footer dividers + traffic lights + URL bar
+      // Scene 3 - Templates: browser frame outer border + chrome/nav/footer dividers + traffic lights + URL bar
       const fW = 460, fH = 383, fx = cx-230, fy = cy-fH/2-20;
       const chromeH = 36, navH = 55, footerH = 52;
       const s3 = [
@@ -1159,7 +1159,7 @@ export default function ShowcasePage() {
               <div className="rtu-card-foot">Peak May · 91 sessions ↑</div>
             </div>
             <div className="cc rtu-card">
-              <div className="rtu-card-tag">— Trend</div>
+              <div className="rtu-card-tag">Trend</div>
               <div className="rtu-card-h">Trend Line</div>
               <div className="rtu-card-sub">Monthly sessions Aug 2023–May 2024</div>
               <div style={{ marginTop:8 }}><MiniLineChart/></div>
@@ -1211,7 +1211,7 @@ export default function ShowcasePage() {
     </section>
   );
 
-  /* ─ Theming — tabbed brand dashboards ────────────────── */
+  /* ─ Theming - tabbed brand dashboards ────────────────── */
   const activeBrand = CLIENT_THEMES.find(t=>t.id===brandTab)!;
 
   /* Shared brand header */
@@ -1229,7 +1229,7 @@ export default function ShowcasePage() {
     </div>
   );
 
-  /* Layout: pipeline (TechNip) — wide chart + activity side-by-side */
+  /* Layout: pipeline (TechNip) - wide chart + activity side-by-side */
   const PipelineLayout = ({ brand }: { brand: typeof CLIENT_THEMES[0] }) => (
     <>
       <BrandHeader brand={brand}/>
@@ -1271,7 +1271,7 @@ export default function ShowcasePage() {
     </>
   );
 
-  /* Layout: insurance (Aviva) — KPI column + policy breakdown + claims table */
+  /* Layout: insurance (Aviva) - KPI column + policy breakdown + claims table */
   const InsuranceLayout = ({ brand }: { brand: typeof CLIENT_THEMES[1] }) => {
     const maxPct = Math.max(...(brand.policyTypes||[]).map((p: any)=>p.pct));
     return (
@@ -1331,7 +1331,7 @@ export default function ShowcasePage() {
     );
   };
 
-  /* Layout: network (Vodafone) — two gauges + incident board */
+  /* Layout: network (Vodafone) - two gauges + incident board */
   const NetworkLayout = ({ brand }: { brand: typeof CLIENT_THEMES[2] }) => (
     <>
       <BrandHeader brand={brand}/>
@@ -1387,7 +1387,7 @@ export default function ShowcasePage() {
           </p>
         </div>
 
-        {/* Brand tab selector — this row is the showcase's own chrome (follows
+        {/* Brand tab selector - this row is the showcase's own chrome (follows
             the surface/theme tokens); the dashboard card below it is a fixed
             "real client screenshot" (LIGHT_RESETS, deliberately always light)
             and shouldn't follow suit. */}
@@ -1408,7 +1408,7 @@ export default function ShowcasePage() {
 
         {/* Dashboard with brand glow behind it */}
         <div style={{ position:"relative" }}>
-          {/* Ambient glow — just behind the card */}
+          {/* Ambient glow - just behind the card */}
           <div style={{
             position:"absolute", top:"30%", left:"50%", transform:"translate(-50%,-50%)",
             width:"60%", height:"50%", pointerEvents:"none", zIndex:0,
@@ -1431,21 +1431,21 @@ export default function ShowcasePage() {
     </section>
   );
 
-  /* ─ Foundations — single morphing view ──────────── */
+  /* ─ Foundations - single morphing view ──────────── */
   const c01 = (v: number) => Math.max(0, Math.min(1, v));
   const fi  = (p: number, s: number, e: number) => c01((p - s) / (e - s));
   const fo  = (p: number, s: number, e: number) => 1 - fi(p, s, e);
   const fr  = (p: number, is: number, ie: number, os: number, oe: number) => fi(p,is,ie) * fo(p,os,oe);
 
   const STAGES = [
-    { name:"Sub-atomic", num:"01", sub:"Design tokens — the invisible foundation that unifies every surface." },
-    { name:"Atoms",      num:"02", sub:"The smallest, indivisible units — each one a single, perfectly formed purpose." },
+    { name:"Sub-atomic", num:"01", sub:"Design tokens: the invisible foundation that unifies every surface." },
+    { name:"Atoms",      num:"02", sub:"The smallest, indivisible units: each one a single, perfectly formed purpose." },
     { name:"Molecules",  num:"03", sub:"Atoms combined into simple, functional units that work toward one goal." },
     { name:"Organisms",  num:"04", sub:"Complete, reusable UI patterns built from molecules." },
-    { name:"Templates",  num:"05", sub:"Page structure — organisms arranged into reusable layout patterns." },
+    { name:"Templates",  num:"05", sub:"Page structure: organisms arranged into reusable layout patterns." },
   ];
 
-  // Per-stage in/out progress — used for both opacity and translateY so headings
+  // Per-stage in/out progress - used for both opacity and translateY so headings
   // physically separate (slide out upward / slide in from below) and never ghost.
   const sIn  = [
     fi(atomicP, 0,    0.06),
@@ -1462,16 +1462,16 @@ export default function ShowcasePage() {
     1,
   ];
   const hOps = sIn.map((v, i) => v * sOut[i]);
-  // Heading slides in from +24px below, exits to −24px above — no Y overlap when two are partial
+  // Heading slides in from +24px below, exits to −24px above - no Y overlap when two are partial
   const hTy  = (i: number) => `${(1 - sIn[i]) * 24 + (1 - sOut[i]) * -24}px`;
 
   // Stage "reached" thresholds for progress dots
   const dotReached = [0, 0.26, 0.55, 0.75, 0.93];
 
-  // Content layer opacities — strictly non-overlapping windows with a 0.02 gap between each
+  // Content layer opacities - strictly non-overlapping windows with a 0.02 gap between each
   const subOp    = fi(atomicP, 0,    0.04)  * fo(atomicP, 0.12, 0.20);
   const atomsOp  = fi(atomicP, 0.36, 0.43)  * fo(atomicP, 0.50, 0.55);
-  // Persistent form — fades in at Atoms, stays visible while browser chrome fades in around it
+  // Persistent form - fades in at Atoms, stays visible while browser chrome fades in around it
   const formVis     = fi(atomicP, 0.36, 0.43);
   const cursorVis   = fo(atomicP, 0.57, 0.62);  // cursor gone once typing starts
   const emailLblOp  = fi(atomicP, 0.57, 0.63);
@@ -1488,11 +1488,11 @@ export default function ShowcasePage() {
       <style>{`@keyframes sc-cursor{0%,100%{opacity:1}50%{opacity:0}}`}</style>
       <div style={{ position:"sticky", top:0, height:"100vh", overflow:"hidden" }}>
 
-        {/* Canvas — particle dots converge to form input + button during sub-atomic→atoms */}
+        {/* Canvas - particle dots converge to form input + button during sub-atomic→atoms */}
         <canvas ref={canvasRef} style={{ position:"absolute", inset:0, width:"100%", height:"100%",
           pointerEvents:"none", zIndex:1 }}/>
 
-        {/* Stage headings — slide in from below (+24px), exit upward (−24px) */}
+        {/* Stage headings - slide in from below (+24px), exit upward (−24px) */}
         <div style={{ position:"absolute", top:64, left:0, right:0, zIndex:5, pointerEvents:"none" }}>
           {STAGES.map((s,i) => (
             <div key={i} style={{ position:"absolute", left:0, right:0, textAlign:"center",
@@ -1515,7 +1515,7 @@ export default function ShowcasePage() {
           ))}
         </div>
 
-        {/* Content — centered stack */}
+        {/* Content - centered stack */}
         <div style={{ position:"absolute", inset:0, display:"flex", alignItems:"center",
           justifyContent:"center", zIndex:2 }}>
 
@@ -1549,14 +1549,14 @@ export default function ShowcasePage() {
           <div style={{ position:"absolute", opacity:formVis, pointerEvents:"none",
             display:"flex", flexDirection:"column", gap:14, width:280 }}>
 
-            {/* Email field — label fades in (Molecules), field stays throughout */}
+            {/* Email field - label fades in (Molecules), field stays throughout */}
             <div>
               <p style={{ fontFamily:"var(--font-normal)", fontSize:13, margin:"0 0 6px",
                 color:"rgba(255,255,255,0.65)", opacity:emailLblOp }}>Email</p>
               <div style={{ height:44, border:"1.5px solid rgba(255,255,255,0.38)", borderRadius:8,
                 display:"flex", alignItems:"center", paddingLeft:12, gap:1,
                 boxSizing:"border-box" as const }}>
-                {/* Cursor — visible until typing starts */}
+                {/* Cursor - visible until typing starts */}
                 <span style={{ width:2, height:20, background:"rgba(255,255,255,0.75)", borderRadius:1,
                   flexShrink:0, display:"block", animation:"sc-cursor 1s step-start infinite",
                   opacity:cursorVis }}/>
@@ -1568,7 +1568,7 @@ export default function ShowcasePage() {
               </div>
             </div>
 
-            {/* Password field — slides in via max-height (Organisms) */}
+            {/* Password field - slides in via max-height (Organisms) */}
             <div style={{ overflow:"hidden",
               maxHeight:`${Math.round(passwordOp * 82)}px`, opacity:passwordOp }}>
               <p style={{ fontFamily:"var(--font-normal)", fontSize:13, margin:"0 0 6px",
@@ -1580,7 +1580,7 @@ export default function ShowcasePage() {
               </div>
             </div>
 
-            {/* Button — "Submit" cross-fades to "Login" at Organisms */}
+            {/* Button - "Submit" cross-fades to "Login" at Organisms */}
             <div style={{ height:44, background:"var(--colour-primaryblue-500,#0036DD)",
               borderRadius:8, display:"flex", alignItems:"center", justifyContent:"center",
               position:"relative" }}>
@@ -1591,7 +1591,7 @@ export default function ShowcasePage() {
             </div>
           </div>
 
-          {/* ── Templates: browser chrome hollow overlay — form shows through transparent center ── */}
+          {/* ── Templates: browser chrome hollow overlay - form shows through transparent center ── */}
           <div style={{ position:"absolute", opacity:tplOp, pointerEvents:"none",
             display:"flex", alignItems:"center", justifyContent:"center", inset:0 }}>
             {/*
@@ -1639,7 +1639,7 @@ export default function ShowcasePage() {
                 </div>
               </div>
 
-              {/* Transparent center — persistent form shows through */}
+              {/* Transparent center - persistent form shows through */}
               <div style={{ height:240 }}/>
 
               {/* Footer */}
@@ -1656,7 +1656,7 @@ export default function ShowcasePage() {
 
         </div>{/* end content */}
 
-        {/* Vertical stage indicator — right edge */}
+        {/* Vertical stage indicator - right edge */}
         <div style={{ position:"absolute", right:28, top:0, bottom:0, zIndex:10,
           pointerEvents:"none", display:"flex", alignItems:"center" }}>
           <div style={{ position:"relative", display:"flex", flexDirection:"column", gap:22 }}>
@@ -1717,7 +1717,7 @@ export default function ShowcasePage() {
           <p className="sc-cap">Accent colour</p>
           <div style={{ display:"flex", gap:8, flexWrap:"wrap" }}>
             {ACCENTS.map((a,i)=>(
-              <button key={a.hex} title={`${a.name} — ${a.token}`} onClick={()=>setAccentIdx(i)} style={{
+              <button key={a.hex} title={`${a.name}: ${a.token}`} onClick={()=>setAccentIdx(i)} style={{
                 width:26, height:26, borderRadius:"50%", background:a.hex, border:"none", cursor:"pointer",
                 outline:accentIdx===i?`2px solid ${si(0.60)}`:"2px solid transparent", outlineOffset:2, transition:"outline .15s",
               }}/>

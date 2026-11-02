@@ -1,7 +1,7 @@
 import React from "react";
 
 /**
- * Sandhata Card — the base surface for grouped content. White layer,
+ * Sandhata Card - the base surface for grouped content. White layer,
  * subtle border, small radius and a faint shadow. Optional title /
  * subtitle header and a trailing `action` slot.
  */

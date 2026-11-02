@@ -1,4 +1,4 @@
-// Sandhata showcase — lightweight SVG data-viz mocks (purple/blue palette).
+// Sandhata showcase - lightweight SVG data-viz mocks (purple/blue palette).
 // Exported to window for use across showcase view files.
 
 function smoothPath(points) {

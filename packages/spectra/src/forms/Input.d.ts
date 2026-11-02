@@ -10,7 +10,7 @@ export interface InputProps extends Omit<React.InputHTMLAttributes<HTMLInputElem
   label?: string;
   /** Helper / instruction text below the control. */
   helper?: string;
-  /** Error message — turns the border red and replaces the helper. */
+  /** Error message - turns the border red and replaces the helper. */
   error?: string;
   /** Show a required asterisk next to the label. */
   required?: boolean;

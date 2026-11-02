@@ -10,12 +10,12 @@ Checkbox with label. Supports checked, indeterminate, and disabled states.
 | `checked` | boolean | |
 | `indeterminate` | boolean | Dash state, visually distinct from checked |
 | `disabled` | boolean | |
-| `onChange` | func | Wraps a native `<input type="checkbox">` — receives a `React.ChangeEvent<HTMLInputElement>`. Read `e.target.checked`, **not** a bare boolean. |
+| `onChange` | func | Wraps a native `<input type="checkbox">`: receives a `React.ChangeEvent<HTMLInputElement>`. Read `e.target.checked`, **not** a bare boolean. |
 
 ## Do / Don't
 
 - **Don't** confuse `Checkbox.onChange`'s event signature with `Switch.onChange`'s
-  bare-boolean signature (see `switch.md`) — they're different, and mixing
+  bare-boolean signature (see `switch.md`): they're different, and mixing
   them up is a real, previously-made mistake in this codebase.
 
 ## Example

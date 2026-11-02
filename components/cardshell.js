@@ -1,4 +1,4 @@
-/* Sandhata DS — shared "Preview / Code" card shell for @dsCard component cards.
+/* Sandhata DS - shared "Preview / Code" card shell for @dsCard component cards.
    Plain JS (no JSX) so it loads via a normal <script src> before Babel.
    Usage in a card:  <window.CardShell code={htmlString}> …preview… </window.CardShell>
    `code` is an HTML string; wrap tokens in <span class="t|p|s"> for colour. */

@@ -1,4 +1,4 @@
-// Sandhata docs — Components page. Uses the shared shell (DocsShell.jsx).
+// Sandhata docs - Components page. Uses the shared shell (DocsShell.jsx).
 
 function AllComponents({ groups, setCurrent }) {
   const total = groups.reduce((n, g) => n + g.items.length, 0);

@@ -42,7 +42,7 @@ function IconTile({ name, content, style, size }: { name: string; content: strin
         background: copied ? "var(--colour-primaryblue-50)" : "var(--doc-surface)",
         // Buttons don't reliably inherit `color` from the page in every
         // browser (the UA stylesheet's own `button { color: buttontext }`
-        // default can win) — the icon SVGs use stroke/fill="currentColor",
+        // default can win) - the icon SVGs use stroke/fill="currentColor",
         // so without this they render in a fixed, theme-blind grey instead
         // of tracking dark/light mode.
         color: "var(--text-body)",
@@ -122,7 +122,7 @@ export default function IconsPage() {
             <h1>Icon Library</h1>
             <p>
               {allNames.length} icons across 6 styles. Click any icon to copy its SVG. Icons inherit{" "}
-              <code style={{ fontFamily: "var(--font-mono)", fontSize: 13 }}>currentColor</code> — set{" "}
+              <code style={{ fontFamily: "var(--font-mono)", fontSize: 13 }}>currentColor</code>: set{" "}
               <code style={{ fontFamily: "var(--font-mono)", fontSize: 13 }}>color</code> on the parent to tint.
             </p>
           </header>

@@ -1,7 +1,7 @@
-// GitHub App integration — server-only helpers.
+// GitHub App integration - server-only helpers.
 //
 // This is a *separate* auth surface from lib/auth.ts's GitHubProvider, which
-// is wired for login only (no `repo` scope) and must stay that way — see
+// is wired for login only (no `repo` scope) and must stay that way - see
 // CLAUDE.md. A GitHub App gives us installation-scoped tokens (minted
 // on-demand, never stored) with exactly the `contents: write` + `metadata:
 // read` permissions the push flow needs, instead of broadening a user's
@@ -9,7 +9,7 @@
 //
 // The app itself has to be registered by a human at
 // github.com/settings/apps/new (Repository permissions: Contents: Read &
-// write, Metadata: Read-only) — see readme note in .env.local.example for
+// write, Metadata: Read-only) - see readme note in .env.local.example for
 // the exact env vars this expects. Until that happens, isGitHubAppConfigured()
 // returns false and every API route under app/api/github/** short-circuits
 // with a clear "github_app_not_configured" response instead of throwing.
@@ -24,7 +24,7 @@ function env(name: string): string | undefined {
 
 /** Required to mint installation tokens at all. CLIENT_ID/SECRET are only
  *  needed for user-to-server OAuth flows we don't use in Phase 1, so they're
- *  not part of the "configured" gate — but still read from env when present. */
+ *  not part of the "configured" gate - but still read from env when present. */
 export function isGitHubAppConfigured(): boolean {
   return !!(env("GITHUB_APP_ID") && env("GITHUB_APP_PRIVATE_KEY") && env("GITHUB_APP_SLUG"));
 }
@@ -48,7 +48,7 @@ let appSingleton: App | null = null;
  *  Used for install-callback verification (looking up an installation by id). */
 export function getApp(): App {
   if (!isGitHubAppConfigured()) {
-    throw new Error("GitHub App is not configured — check GITHUB_APP_ID / GITHUB_APP_PRIVATE_KEY / GITHUB_APP_SLUG");
+    throw new Error("GitHub App is not configured: check GITHUB_APP_ID / GITHUB_APP_PRIVATE_KEY / GITHUB_APP_SLUG");
   }
   if (!appSingleton) {
     const clientId = env("GITHUB_APP_CLIENT_ID");
@@ -57,7 +57,7 @@ export function getApp(): App {
       appId: env("GITHUB_APP_ID")!,
       privateKey: privateKey(),
       // oauth is only used for user-to-server flows (not part of Phase 1's
-      // installation-token push path) — omit rather than pass partial/empty
+      // installation-token push path) - omit rather than pass partial/empty
       // creds, since @octokit/app's type requires both fields when present.
       ...(clientId && clientSecret ? { oauth: { clientId, clientSecret } } : {}),
     });
@@ -65,7 +65,7 @@ export function getApp(): App {
   return appSingleton;
 }
 
-/** Installation-scoped client — mints a short-lived installation access
+/** Installation-scoped client - mints a short-lived installation access
  *  token on demand via @octokit/auth-app under the hood. Never persisted:
  *  each request re-derives it from the App's JWT-signed credentials. */
 export async function getInstallationOctokit(installationId: number): Promise<Octokit> {
@@ -73,7 +73,7 @@ export async function getInstallationOctokit(installationId: number): Promise<Oc
 }
 
 /** Look up an installation's account (login/type) by id, JWT-authenticated
- *  as the App itself — used by the install callback to verify the
+ *  as the App itself - used by the install callback to verify the
  *  `installation_id` GitHub redirected back with actually belongs to this App. */
 export async function getInstallationAccount(
   installationId: number
@@ -83,26 +83,26 @@ export async function getInstallationAccount(
   });
   const account = data.account as any;
   if (!account) return null;
-  // Bots/orgs use `login`; the very rare "Enterprise" account object doesn't —
+  // Bots/orgs use `login`; the very rare "Enterprise" account object doesn't -
   // fall back to slug/name so we never store an empty accountLogin.
   return { login: account.login ?? account.slug ?? account.name ?? String(account.id), type: account.type ?? "Organization" };
 }
 
 // ── CSRF state for the /install → github.com → /install/callback round trip ──
-// Self-contained signed token (HMAC-SHA256, keyed off BUILDER_KEY_SECRET —
+// Self-contained signed token (HMAC-SHA256, keyed off BUILDER_KEY_SECRET -
 // the same at-rest-secret pattern lib/crypto.ts already establishes for this
 // app) instead of a short-lived DB row: nothing to garbage-collect, and the
 // callback has everything it needs without a lookup. Binds the state to the
 // initiating user (so the callback can't be replayed for a different
-// account) and, optionally, the project the user was trying to connect —
+// account) and, optionally, the project the user was trying to connect -
 // letting the callback redirect straight back into that project's repo
 // picker instead of dropping the user at a generic "connected" screen.
-const STATE_TTL_MS = 10 * 60 * 1000; // 10 minutes — this is a redirect round trip, not a session
+const STATE_TTL_MS = 10 * 60 * 1000; // 10 minutes - this is a redirect round trip, not a session
 
 function stateKey(): Buffer {
   const secret = process.env.BUILDER_KEY_SECRET;
   if (!secret) {
-    throw new Error("BUILDER_KEY_SECRET is not set — required to sign the GitHub install state param.");
+    throw new Error("BUILDER_KEY_SECRET is not set: required to sign the GitHub install state param.");
   }
   return crypto.createHash("sha256").update(secret).digest();
 }

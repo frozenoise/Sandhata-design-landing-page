@@ -5,7 +5,7 @@ import { isGitHubAppConfigured, getInstallationOctokit } from "@/lib/github";
 
 // POST /api/github/connect { projectId, installationId, owner, repo }
 // Links a project to a specific repo within an installation the caller owns.
-// Never trusts the client-supplied owner/repo blindly — re-fetches the
+// Never trusts the client-supplied owner/repo blindly - re-fetches the
 // installation's accessible-repos list server-side and checks membership
 // before writing anything. workingBranch/lastSyncedSha are deliberately left
 // unset here: the sandhata/<slug> branch is created lazily on first push
@@ -37,7 +37,7 @@ export async function POST(req: Request) {
     const octokit = await getInstallationOctokit(Number(installationId));
 
     // Confirm this repo is actually in the installation's accessible list
-    // (not just any repo the App happens to have JWT-level visibility into) —
+    // (not just any repo the App happens to have JWT-level visibility into) -
     // the authoritative "is this repo really reachable" check.
     const accessible = await octokit.paginate(octokit.rest.apps.listReposAccessibleToInstallation, { per_page: 100 });
     const match = accessible.find((r: any) => r.owner.login === owner && r.name === repo);
@@ -53,7 +53,7 @@ export async function POST(req: Request) {
         repoName: repo,
         defaultBranch: match.default_branch,
         // Reset any stale sync state from a previous connection to a
-        // different repo — this connection has no sync history yet.
+        // different repo - this connection has no sync history yet.
         workingBranch: null,
         lastSyncedSha: null,
         lastSyncedAt: null,

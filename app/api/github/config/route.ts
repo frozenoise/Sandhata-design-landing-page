@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { isGitHubAppConfigured } from "@/lib/github";
 
-// GET /api/github/config — lets the builder UI know whether the GitHub App
+// GET /api/github/config - lets the builder UI know whether the GitHub App
 // has been registered yet (env vars set) *before* rendering an interactive
 // "Connect GitHub" button, so the disabled/"not available" state is driven
 // by a real check instead of the button just failing when clicked.

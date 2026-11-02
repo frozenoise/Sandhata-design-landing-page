@@ -3,7 +3,7 @@ import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { claimInvites } from "@/lib/access";
 
-// GET /api/projects — list projects the user owns or has been added to
+// GET /api/projects - list projects the user owns or has been added to
 // (common workspace), most recently updated first, each with its session
 // ("page") count so the sidebar can show a badge without a second round trip.
 // `role` is the caller's role; `shared` says whether anyone else has access.
@@ -26,7 +26,7 @@ export async function GET() {
       userId: true,
       user: { select: { name: true, email: true } },
       members: { where: { userId }, select: { role: true } },
-      // GitHub push integration (Phase 1) — surfaced here so the sidebar can
+      // GitHub push integration (Phase 1) - surfaced here so the sidebar can
       // render each project's connected/disconnected state without a
       // separate round trip per project.
       repoOwner: true,
@@ -60,7 +60,7 @@ export async function GET() {
   });
 }
 
-// POST /api/projects — create a new project (folder)
+// POST /api/projects - create a new project (folder)
 export async function POST(req: Request) {
   const session = await auth();
   if (!session?.user?.id) return NextResponse.json({ error: "unauthenticated" }, { status: 401 });

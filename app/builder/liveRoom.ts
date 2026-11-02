@@ -121,7 +121,7 @@ export function useLivePage<M>({
   const roomRef = React.useRef<PageRoom | null>(null);
   const rootRef = React.useRef<LiveObject<Storage> | null>(null);
   // The last tree / msgs this hook itself put into React state from the
-  // room. A local change is anything else, and only that gets pushed — this
+  // room. A local change is anything else, and only that gets pushed - this
   // is what stops a remote update from echoing straight back as an edit.
   const appliedTreeRef = React.useRef<UINode | null | undefined>(undefined);
   const appliedMsgsRef = React.useRef<M[] | undefined>(undefined);

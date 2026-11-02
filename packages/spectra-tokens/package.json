@@ -1,7 +1,7 @@
 {
   "name": "@sandhata/spectra-tokens",
   "version": "0.1.0",
-  "description": "Design tokens (CSS custom properties) for Spectra, Sandhata's design system — colour, typography, spacing. Import this once at your app root; @sandhata/spectra's components read these variables and render unstyled without it.",
+  "description": "Design tokens (CSS custom properties) for Spectra, Sandhata's design system: colour, typography, spacing. Import this once at your app root; @sandhata/spectra's components read these variables and render unstyled without it.",
   "license": "UNLICENSED",
   "sideEffects": true,
   "main": "./dist/tokens.css",

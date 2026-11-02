@@ -1,5 +1,5 @@
 // Hand-authored barrel of type declarations mirroring index.js's runtime
-// exports — kept in `src/` (not generated into `dist/`) per this package's
+// exports - kept in `src/` (not generated into `dist/`) per this package's
 // existing convention: every component ships a hand-authored sibling
 // `.d.ts`, not build-time-generated types (tsup.config.ts sets `dts: false`
 // for the same reason). `package.json`'s `types` field points straight at

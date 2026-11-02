@@ -1,5 +1,5 @@
 /* ============================================================
-   Sandhata Design System — Typography tokens
+   Sandhata Design System - Typography tokens
    Typeface: IBM Plex Sans (Light 300 / Regular 400 / Bold 700) + IBM Plex Mono.
    Switched from Akkurat 2026-07-23 (see Figma file 1aC8QgJre333QRr4tUCNNt).
    Scale follows an 8-point rhythm. Values from Figma type tokens.
@@ -19,11 +19,11 @@
 
   /* ---- Type scale (font-size / line-height / tracking) ---
      Aligned to Atlassian's type scale (atlassian.design/foundations/
-     typography#brand-fonts), 2026-08-25 — Display maps onto Atlassian's
+     typography#brand-fonts), 2026-08-25 - Display maps onto Atlassian's
      Heading XXL/XL/L, Heading H1–H3 maps onto Atlassian's Heading M/S/XS.
      Atlassian doesn't publish letter-spacing values, so tracking is
      unchanged from the prior scale (not guessed to match a new size).
-     Display — IBM Plex Sans Bold, tight tracking, for hero & marketing. */
+     Display - IBM Plex Sans Bold, tight tracking, for hero & marketing. */
   --display-large-size: 32px;   /* Atlassian Heading XXL */
   --display-large-line: 36px;
   --display-large-tracking: -1px;
@@ -36,7 +36,7 @@
   --display-small-line: 28px;
   --display-small-tracking: -0.25px;
 
-  /* Headings — section & component titles */
+  /* Headings - section & component titles */
   --heading-h1-size: 20px;      /* Atlassian Heading M */
   --heading-h1-line: 24px;
   --heading-h1-tracking: -0.25px;

@@ -4,12 +4,12 @@ import React from "react";
 import { sdHighlightLines } from "./highlight";
 import { ThemeToggle } from "./ThemeToggle";
 
-// Sandhata docs — shared shell: top nav (page links), sidebar, doc page with
+// Sandhata docs - shared shell: top nav (page links), sidebar, doc page with
 // right-rail quick scroll navigation (scroll-spy). Loaded before each page's app.
 
-/* Generic file/code icon for the code-block header — matches shadcn's
+/* Generic file/code icon for the code-block header - matches shadcn's
    rehype-pretty-code figcaption convention (an icon that stands in for "this
-   is a code file"), not a per-language icon set — that would need a real
+   is a code file"), not a per-language icon set - that would need a real
    language→icon map for a highlighter we're deliberately not swapping in. */
 const SdCodeFileIcon = () => (
   <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -18,7 +18,7 @@ const SdCodeFileIcon = () => (
   </svg>
 );
 
-/* None of the call sites in data.tsx/documentationData.tsx pass a language —
+/* None of the call sites in data.tsx/documentationData.tsx pass a language -
    the samples aren't tied to real files, so there's nothing to read a language
    off of except the snippet's own shape. This is a lightweight heuristic, not
    a parser: JSX/keyword hits win first, then CSS-shaped selector/declaration
@@ -40,14 +40,14 @@ function inferCodeLanguage(code: string): string {
    codebase's own tokens instead of Tailwind/zinc. The copy button lives
    outside the scrolling <pre> (absolutely positioned within the relative
    .doc-code-body), hidden until the parent .doc-example is hovered or the
-   button itself gets keyboard focus — same reveal contract as shadcn's, same
+   button itself gets keyboard focus - same reveal contract as shadcn's, same
    icon-swap-on-copy pattern as SdCopyForAI's SdCopyIcon/SdCopiedIcon. The
    highlighter underneath is unchanged: still the hand-rolled sdHighlight()
-   regex tokenizer, not real Shiki — swapping that engine is a bigger,
+   regex tokenizer, not real Shiki - swapping that engine is a bigger,
    separate change than "make the chrome match". Each line renders through
    sdHighlightLines() into its own <span class="doc-code-line">, which owns
    a CSS counter (see docs.css) that draws the muted line number as
-   generated ::before content — never a real DOM text node, so it can't be
+   generated ::before content - never a real DOM text node, so it can't be
    selected/copied as code text no matter what. */
 function SdCodeBlock({ code, language }: { code: string; language?: string }) {
   const [copied, setCopied] = React.useState(false);
@@ -61,7 +61,7 @@ function SdCodeBlock({ code, language }: { code: string; language?: string }) {
       clearTimeout(timeoutRef.current);
       timeoutRef.current = setTimeout(() => setCopied(false), 1500);
     } catch {
-      // Clipboard API unavailable (permissions/insecure context) — fail quietly.
+      // Clipboard API unavailable (permissions/insecure context) - fail quietly.
     }
   };
 
@@ -91,11 +91,11 @@ function SdCodeBlock({ code, language }: { code: string; language?: string }) {
 
 /* fn is rendered AS a component (<Demo/>), never called directly (fn()).
    Demo functions in data.tsx/documentationData.tsx often call React hooks
-   (useState, etc.) — calling fn() inline would run those hooks against
+   (useState, etc.) - calling fn() inline would run those hooks against
    whatever component happens to be rendering at that point (this one),
    not their own instance. Since different demos call different numbers of
    hooks, navigating between two pages whose demos have different hook
-   counts would violate the Rules of Hooks and crash intermittently —
+   counts would violate the Rules of Hooks and crash intermittently -
    exactly the bug this fixes. Rendering fn as a component type instead
    gives each demo its own Fiber/hook state that mounts and unmounts
    cleanly when the page (and therefore the demo function reference)
@@ -134,7 +134,7 @@ function SdBullets({ items }: any) {
   return (
     <ul className="doc-bullets">
       {items.map(([term, desc], i) => (
-        <li key={i}><b>{term}</b>{desc ? ` — ${desc}` : ""}</li>
+        <li key={i}><b>{term}</b>{desc ? `: ${desc}` : ""}</li>
       ))}
     </ul>
   );
@@ -160,7 +160,7 @@ const SdCrossIcon = () => (
   <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" /></svg>
 );
 
-/* Copy-for-AI split button icons — same 24x24/stroke-2 convention as the
+/* Copy-for-AI split button icons - same 24x24/stroke-2 convention as the
    Plus/Pencil/ArrowR/Search icons in data.tsx, sized down to sit inline
    with 13px button text. */
 const SdCopyIcon = () => (
@@ -180,7 +180,7 @@ const SdChevronDownIcon = () => (
   </svg>
 );
 
-/* Paired correct/incorrect example — anatomy/accessibility reuse bullets/table,
+/* Paired correct/incorrect example - anatomy/accessibility reuse bullets/table,
    but nothing existing represents a side-by-side "Do this, not that" pair. */
 function SdDoDont({ pair }: any) {
   const cards = [
@@ -202,7 +202,7 @@ function SdDoDont({ pair }: any) {
   );
 }
 
-/* Tokens used — which design tokens this component's own styling actually
+/* Tokens used - which design tokens this component's own styling actually
    resolves to (code-token layer), read from the component's source/CSS.
    Colour tokens get a live swatch so the value is visible, not just named. */
 function SdTokensTable({ tokens }: any) {
@@ -242,7 +242,7 @@ function SdPropsTable({ rows }: any) {
 }
 
 /* ── Copy for AI ─────────────────────────────────────────────────────────────
-   Serialises a doc page's own data (not its rendered DOM) to clean Markdown —
+   Serialises a doc page's own data (not its rendered DOM) to clean Markdown -
    the format an LLM parses cleanly, but the button is labelled by what a
    reader would actually use it for, not the wire format underneath. Matches
    the site's "AI-ready design system" positioning: every page is structured
@@ -265,7 +265,7 @@ function sectionToMarkdown(section: any) {
 
   if (section.bullets) {
     parts.push(
-      section.bullets.map(([term, desc]: string[]) => `- **${term}**${desc ? ` — ${desc}` : ""}`).join("\n")
+      section.bullets.map(([term, desc]: string[]) => `- **${term}**${desc ? `: ${desc}` : ""}`).join("\n")
     );
   }
 
@@ -288,7 +288,7 @@ function sectionToMarkdown(section: any) {
     parts.push(mdTable(["Token", "Used for"], section.tokens.map((t: any) => [t.name, t.role])));
   }
 
-  // section.demo is a React element factory — not serialisable, so it's
+  // section.demo is a React element factory - not serialisable, so it's
   // intentionally skipped; the code sample beside it carries the same intent.
   if (section.code) {
     parts.push("```\n" + section.code + "\n```");
@@ -308,7 +308,7 @@ function pageToMarkdown(page: any) {
 /* Split button: main segment copies markdown to the clipboard (cross-fading
    icon+label between "Copy for AI" and "Copied"); chevron segment opens a
    small menu of export destinations. All three menu destinations reuse the
-   exact same pageToMarkdown(page) string — one canonical export, several
+   exact same pageToMarkdown(page) string - one canonical export, several
    redirect targets. */
 function SdCopyForAI({ page }: any) {
   const [copied, setCopied] = React.useState(false);
@@ -319,7 +319,7 @@ function SdCopyForAI({ page }: any) {
     try {
       await navigator.clipboard.writeText(md);
     } catch {
-      // Clipboard API unavailable (permissions/insecure context) — fail quietly,
+      // Clipboard API unavailable (permissions/insecure context) - fail quietly,
       // no toast dependency to lean on here.
     }
   };
@@ -340,15 +340,15 @@ function SdCopyForAI({ page }: any) {
   };
 
   // Both chatgpt.com/?q= and claude.ai/new?q= accept an unofficial, undocumented
-  // query-string prefill param — not part of either platform's public API, so it
+  // query-string prefill param - not part of either platform's public API, so it
   // could change or disappear without notice. Decided against silently-succeeds-
   // but-looks-broken (clipboard-only landing on an empty input) after live testing
   // confirmed chatgpt.com/?q= prefills AND auto-submits, while claude.ai/new?q=
-  // prefills the draft box only (no auto-submit) — that asymmetry is a platform
+  // prefills the draft box only (no auto-submit) - that asymmetry is a platform
   // difference, not a bug in this code.
   //
   // MAX_PREFILL_LENGTH guards the encoded string (not raw markdown) against
-  // unreasonably long URLs — browsers/servers commonly choke well before ~8k
+  // unreasonably long URLs - browsers/servers commonly choke well before ~8k
   // chars. 6000 comfortably covers a fully-documented single component page
   // (e.g. Button's current doc set) while still falling back safely for
   // anything longer, rather than risking a silently-truncated or rejected URL.
@@ -358,7 +358,7 @@ function SdCopyForAI({ page }: any) {
     const md = pageToMarkdown(page);
     const encoded = encodeURIComponent(md);
     if (encoded.length > MAX_PREFILL_LENGTH) {
-      // Too long to trust in a URL — fall back to the original clipboard-only behavior.
+      // Too long to trust in a URL - fall back to the original clipboard-only behavior.
       await copyToClipboard(md);
       window.open("https://chatgpt.com/", "_blank", "noopener,noreferrer");
       setOpen(false);
@@ -375,7 +375,7 @@ function SdCopyForAI({ page }: any) {
     const md = pageToMarkdown(page);
     const encoded = encodeURIComponent(md);
     if (encoded.length > MAX_PREFILL_LENGTH) {
-      // Too long to trust in a URL — fall back to the original clipboard-only behavior.
+      // Too long to trust in a URL - fall back to the original clipboard-only behavior.
       await copyToClipboard(md);
       window.open("https://claude.ai/new", "_blank", "noopener,noreferrer");
       setOpen(false);
@@ -555,7 +555,7 @@ function SdSidebar({ groups, current, setCurrent, topItem, searchPlaceholder }: 
   );
 }
 
-/* Top navigation — each tab is its own page. */
+/* Top navigation - each tab is its own page. */
 function SdTopNav({ active }: any) {
   const tabs = [
     ["Components", "/components"],

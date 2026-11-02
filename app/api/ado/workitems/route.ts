@@ -4,10 +4,10 @@ import { prisma } from "@/lib/prisma";
 import { decryptSecret } from "@/lib/crypto";
 import { AdoApiError, createWorkItem, workItemWebUrl, builderStatusForState, type StateMappingForType } from "@/lib/ado";
 
-// POST /api/ado/workitems — create-or-link a work item for a builder entity.
+// POST /api/ado/workitems - create-or-link a work item for a builder entity.
 // body { projectId, builderItemId, builderItemKind, title, description? }
 //
-// Phase 1 only produces links for builderItemKind "project" | "page" — any
+// Phase 1 only produces links for builderItemKind "project" | "page" - any
 // other kind still works end-to-end (falls back to typeMapping.default) but
 // nothing in the UI sends one yet, ahead of real task/RAID entities.
 export async function POST(req: Request) {

@@ -3,13 +3,13 @@
 import React from "react";
 
 /**
- * Bend — wraps its children in a scroll container that folds content over
+ * Bend - wraps its children in a scroll container that folds content over
  * a rounded cube edge at the top/bottom of the viewport as it scrolls,
  * using Chrome's experimental HTML-in-Canvas API (`drawElementImage`,
  * origin-trial in Chrome 148–150 / `chrome://flags/#canvas-draw-element`).
  *
  * Chromium-only, feature-detected. On any browser that doesn't expose the
- * API, this renders `children` completely unwrapped — normal document flow,
+ * API, this renders `children` completely unwrapped - normal document flow,
  * normal scroll, zero behavioural change from not using Bend at all. The
  * WebGL fold path only activates when the API is actually available, so the
  * live site's current (overwhelming majority) of visitors are unaffected;
@@ -18,19 +18,19 @@ import React from "react";
  *
  * REQUIRED STRUCTURE (this is the part the first draft of this component
  * got wrong): the spec requires the captured element to be a direct child
- * of a `<canvas layoutsubtree>` — `drawElementImage` cannot capture an
+ * of a `<canvas layoutsubtree>` - `drawElementImage` cannot capture an
  * arbitrary element elsewhere in the DOM. So the content div only ever
  * lives in one of two places: inside the `layoutsubtree` canvas (native
- * path) or as a plain sibling (fallback path) — never both, picked once at
+ * path) or as a plain sibling (fallback path) - never both, picked once at
  * mount via feature detection, not swapped live.
  *
  * KNOWN LIMITATION: content inside the fold's top/bottom zones is not
- * interactively clickable — real pointer coordinates land on the WebGL
+ * interactively clickable - real pointer coordinates land on the WebGL
  * output canvas, not on the DOM elements the fold is currently displaying,
  * so clicks/hovers on folded (not-flat) content don't reach the underlying
  * links/buttons. Remapping pointer events back through the inverse fold
  * transform to forward them to the right DOM element is a substantial
- * separate feature, intentionally out of scope for this pass — content in
+ * separate feature, intentionally out of scope for this pass - content in
  * the flat (unfolded) middle of the viewport is unaffected.
  *
  * The technique (own implementation): capture the content each paint via
@@ -42,7 +42,7 @@ import React from "react";
  * `perspective`), so content visually recedes over a rounded edge instead of
  * being cut off. The forward direction (theta -> screen offset) is a closed
  * form; the shader needs the inverse (screen offset -> theta) to know what
- * to sample, so it bisects for it — 12 iterations, more than enough
+ * to sample, so it bisects for it - 12 iterations, more than enough
  * precision for a `zone` a few hundred px tall. Scroll position, cursor
  * tilt, and overscroll "tumble" are all smoothed via simple exponential
  * decay (`k = 1 - exp(-dt / tau)`) on the JS side before being passed to
@@ -55,9 +55,9 @@ export interface BendProps {
   zone?: number;
   /** Maximum fold angle in degrees. @default 78 */
   angle?: number;
-  /** Arc radius for the fold crease in CSS px — 0 is a sharp hinge. @default 140 */
+  /** Arc radius for the fold crease in CSS px - 0 is a sharp hinge. @default 140 */
   rounding?: number;
-  /** Camera focal length in CSS px — smaller is a more aggressive perspective. @default 900 */
+  /** Camera focal length in CSS px - smaller is a more aggressive perspective. @default 900 */
   perspective?: number;
   /** Fold direction relative to the viewer. @default "out" */
   direction?: "out" | "in";
@@ -229,8 +229,8 @@ export function Bend({
   // during the initial client render (a plain `useState(() =>
   // supportsHtmlInCanvas())` lazy initializer) would make that very first
   // client render diverge from the server-sent HTML whenever the API is
-  // actually available — a real <canvas> structure hydrating onto a
-  // server-rendered plain <div> — which React can't reconcile in place and
+  // actually available - a real <canvas> structure hydrating onto a
+  // server-rendered plain <div> - which React can't reconcile in place and
   // has to discard and rebuild, silently breaking the canvas/layoutsubtree
   // setup rather than throwing a clean error. Deferring to an effect avoids
   // that mismatch entirely: hydration always completes on the div branch
@@ -320,7 +320,7 @@ export function Bend({
         contentDirty = true;
         if (!rafActive) startLoop();
       } catch {
-        // drawElementImage can throw on a mid-navigation/detached element —
+        // drawElementImage can throw on a mid-navigation/detached element -
         // skip this paint, the next one will pick up the current state.
       }
     };
@@ -435,13 +435,13 @@ export function Bend({
     };
   }, [supported, zone, angle, rounding, perspective, direction, smoothing, tumble, tilt]);
 
-  // Unsupported: render children completely unwrapped — normal document
+  // Unsupported: render children completely unwrapped - normal document
   // flow, normal scroll, no behavioural change from not using Bend at all.
   if (!supported) {
     return <div className={className} style={style}>{children}</div>;
   }
 
-  // `height: 100vh` is a default, not a hardcode — neither child con­tributes
+  // `height: 100vh` is a default, not a hardcode - neither child con­tributes
   // to normal document flow (the source canvas is display:none, the WebGL
   // output canvas is position:absolute), so wrap would collapse to a
   // zero-height box without an explicit height from somewhere. Callers can
@@ -449,7 +449,7 @@ export function Bend({
   return (
     <div ref={wrapRef} className={className} style={{ position: "relative", overflow: "hidden", height: "100vh", ...style }}>
       {/* display:none would suppress layout for the whole subtree, even
-          under layoutsubtree — its children (the real page content) would
+          under layoutsubtree - its children (the real page content) would
           all report zero size and there'd be nothing to capture. Give it
           real dimensions instead; the WebGL output canvas below it in DOM
           order paints over the same area every frame and visually hides it. */}

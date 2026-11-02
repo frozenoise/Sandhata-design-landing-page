@@ -13,7 +13,7 @@ const ACCENT_COLOR = "#d58b03";
 type Tok = { text: string; color: string; noBreak?: boolean; isClarity?: boolean };
 
 /** Read the current hero text color from the CSS token (theme-aware).
- * Queries .hero itself, not document.documentElement — --hero-text-color
+ * Queries .hero itself, not document.documentElement - --hero-text-color
  * is set scoped to .hero (e.g. forced white when the Grainient hero
  * background is active), and custom properties only cascade downward, so
  * reading from the <html> root (an ancestor of .hero) would silently miss
@@ -41,7 +41,7 @@ function buildTokens(baseColor: string): Tok[] {
 }
 const SENTENCE_TEXT    = "The AI-ready design system built for clarity";
 const MIN_PARTICLE_WIDTH = 960;
-const ENTRANCE_LERP      = 0.08;   // exponential decay — no overshoot possible
+const ENTRANCE_LERP      = 0.08;   // exponential decay - no overshoot possible
 const ENTRANCE_DURATION  = 1200;   // ms
 
 /* ─── Particle ─────────────────────────────────────────────────────────── */
@@ -66,7 +66,7 @@ class Particle {
 
   update(mouseX: number, mouseY: number, entering: boolean) {
     if (entering) {
-      // Pure lerp — mathematically cannot overshoot
+      // Pure lerp - mathematically cannot overshoot
       this.x += (this.originX - this.x) * ENTRANCE_LERP;
       this.y += (this.originY - this.y) * ENTRANCE_LERP;
       this.vx = 0; this.vy = 0;
@@ -234,7 +234,7 @@ export default function HeroParticleHeading() {
       }
     }
 
-    /* Full-viewport fixed canvas — particles visible across the entire screen */
+    /* Full-viewport fixed canvas - particles visible across the entire screen */
     const ec = document.createElement("canvas");
     ec.width  = vw * dpr;
     ec.height = vh * dpr;
@@ -341,7 +341,7 @@ export default function HeroParticleHeading() {
           if (img.data[i + 3] > 128) {
             particles.push(new Particle(
               px / dpr, py / dpr,
-              px / dpr, py / dpr,   // no scatter — already at origin post-entrance
+              px / dpr, py / dpr,   // no scatter - already at origin post-entrance
               pSize, `rgb(${img.data[i]},${img.data[i+1]},${img.data[i+2]})`,
               13, 0.12
             ));

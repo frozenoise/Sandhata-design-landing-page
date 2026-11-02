@@ -1,4 +1,4 @@
-// Sandhata intro film — shared helpers + scenes 1–3 (logo, colour, typography).
+// Sandhata intro film - shared helpers + scenes 1–3 (logo, colour, typography).
 // Loaded after animations.jsx; exports to window for IntroScenes2/IntroApp.
 
 const sdC = {
@@ -156,7 +156,7 @@ function SdScene2() {
         )}
       </Sprite>
       <SdItem x={160} y={850} at={3.1} dur={0.5}>
-        <div style={{ fontFamily: sdF.light, fontWeight: 300, fontSize: 26, color: sdC.n700 }}>A cool neutral scale — colour is used sparingly and purposefully.</div>
+        <div style={{ fontFamily: sdF.light, fontWeight: 300, fontSize: 26, color: sdC.n700 }}>A cool neutral scale: colour is used sparingly and purposefully.</div>
       </SdItem>
       {/* Status colours */}
       <Sprite start={5.5} end={11.5} keepMounted>
@@ -189,7 +189,7 @@ function SdScene3() {
   return (
     <SdScene start={11.5} end={17.5}>
       <SdSceneLabel num="02" title="Typography" />
-      {/* Giant specimen — tracking settles from loose to tight */}
+      {/* Giant specimen - tracking settles from loose to tight */}
       <Sprite start={11.5} end={17.5} keepMounted>
         {({ localTime }) => {
           const e = sdP(localTime, 0.5, 1.3, Easing.easeOutQuart);
@@ -212,7 +212,7 @@ function SdScene3() {
       <SdItem x={160} y={570 + 3 * 92} at={2.3} dur={0.6}>
         <div style={{ display: "flex", alignItems: "baseline", gap: 32 }}>
           <span style={{ fontFamily: sdF.mono, fontSize: 20, color: sdC.blue, width: 110 }}>Mono</span>
-          <span style={{ fontFamily: sdF.mono, fontSize: 38, color: sdC.n900 }}>Code and tabular numbers — 24,828</span>
+          <span style={{ fontFamily: sdF.mono, fontSize: 38, color: sdC.n900 }}>Code and tabular numbers: 24,828</span>
         </div>
       </SdItem>
       {/* Type scale ticker, typed on */}

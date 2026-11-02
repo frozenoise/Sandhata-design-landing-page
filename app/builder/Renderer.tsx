@@ -5,15 +5,15 @@ import {
   Button, Badge, Alert, Spinner, Avatar, Tag, StatCard, Card,
   Input, Textarea, Select, Switch, Checkbox, Radio, Tabs, Tooltip, IconButton,
 } from "@sandhata/spectra";
-// UINode + treeToJSX live in uiTree.ts (no React import) so server code —
-// e.g. app/api/github/push — can reuse the exact same JSX pretty-printer
+// UINode + treeToJSX live in uiTree.ts (no React import) so server code -
+// e.g. app/api/github/push - can reuse the exact same JSX pretty-printer
 // without pulling a "use client" component module into a route handler.
 // Re-exported here so existing imports of these from "./Renderer" keep working.
 import { treeToJSX, DS_COMPONENT_TYPES, LAYOUT_TYPES, type UINode } from "./uiTree";
 export { treeToJSX, type UINode };
 
 /* Design-system components the model may use. Keys must match
-   DS_COMPONENT_TYPES in uiTree.ts exactly — that list (not this object) is
+   DS_COMPONENT_TYPES in uiTree.ts exactly - that list (not this object) is
    what the report tab / auditTree() treats as "governed", so a component
    added only here would render fine but silently never get flagged as
    missing from the design system either. The dev-only check below catches
@@ -62,8 +62,8 @@ export function RenderNode({ node, editable = false }: { node: UINode; editable?
   if (!node || typeof node !== "object") return null;
   const { type, props = {}, children, id } = node;
   const key = `n${keyCounter++}`;
-  // Purely structural — no handlers, no state, so the zero-arg call sites
-  // (Preview tab, export/Code view — both omit `editable`, defaulting it to
+  // Purely structural - no handlers, no state, so the zero-arg call sites
+  // (Preview tab, export/Code view - both omit `editable`, defaulting it to
   // false) are completely unaffected: their output is byte-identical to
   // before this existed. The visual editor (app/builder/page.tsx, "edit"
   // view) resolves clicks/hover/drag via delegated listeners on its canvas
@@ -102,7 +102,7 @@ export function RenderNode({ node, editable = false }: { node: UINode; editable?
   }
   const { style, ...rest } = props;
   // Checkbox/Switch/Radio are always-controlled (checked always lands on
-  // the native input, no defaultChecked escape hatch — see their source in
+  // the native input, no defaultChecked escape hatch - see their source in
   // packages/spectra/src/forms/*.jsx). This Renderer is a preview surface
   // with no interactivity by design (see comment block above), so whenever
   // AI-generated props include `checked` with no onChange, supply a no-op
@@ -113,14 +113,14 @@ export function RenderNode({ node, editable = false }: { node: UINode; editable?
   // element: some (Alert, Avatar, Tag, StatCard, Spinner, Tooltip) don't
   // spread `...rest` at all, and Switch/Checkbox/Radio spread it onto a
   // visually-hidden/overlay input rather than the element you actually see
-  // and click — in both cases `{...nodeAttrs}` above lands on something the
+  // and click - in both cases `{...nodeAttrs}` above lands on something the
   // visual editor's canvas delegation can never hit-test. A `display:contents`
   // wrapper carrying the same id is layout-transparent (renders as if it
-  // weren't there — verified this doesn't change existing layout/CSS, only
+  // weren't there - verified this doesn't change existing layout/CSS, only
   // adds a DOM node) but is always a real, always-clickable ancestor, so
   // selection works uniformly regardless of what the wrapped component does
   // internally. Only pays for itself once a tree actually has ids (i.e. edit
-  // mode has been entered at least once for this tab) — id is undefined for
+  // mode has been entered at least once for this tab) - id is undefined for
   // any tree that predates that, so this is a no-op wrapper-per-node most of
   // the time (Preview/Code, or any session that's never opened Edit).
   return id ? <span key={key} {...nodeAttrs} style={{ display: "contents" }}>{comp}</span> : comp;

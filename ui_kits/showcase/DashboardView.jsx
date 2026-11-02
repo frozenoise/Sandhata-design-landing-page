@@ -1,4 +1,4 @@
-// Sandhata showcase — Dashboard view: stat header, charts, data table.
+// Sandhata showcase - Dashboard view: stat header, charts, data table.
 
 function DashboardView() {
   const { Card, StatCard, Badge } = window.SandhataDesignSystem_081a0e;
@@ -14,7 +14,7 @@ function DashboardView() {
       <Card padding={0}>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", padding: "20px 24px 0" }}>
           <div>
-            <div className="sd-h2">Line Chart — Interactive</div>
+            <div className="sd-h2">Line Chart: Interactive</div>
             <div style={{ marginTop: 4, fontFamily: "var(--font-light)", fontWeight: 300, fontSize: 14, color: "var(--text-caption)" }}>Showing total visitors for the last 3 months</div>
           </div>
           <div style={{ display: "flex", gap: 0, border: "1px solid var(--border-subtle)", borderRadius: "var(--radius-md)", overflow: "hidden" }}>

@@ -12,7 +12,7 @@ const __ds_scope = {};
 try { (() => {
 function _extends() { return _extends = Object.assign ? Object.assign.bind() : function (n) { for (var e = 1; e < arguments.length; e++) { var t = arguments[e]; for (var r in t) ({}).hasOwnProperty.call(t, r) && (n[r] = t[r]); } return n; }, _extends.apply(null, arguments); }
 /**
- * Sandhata Button — the primary interactive control.
+ * Sandhata Button - the primary interactive control.
  * Hierarchies map to the Figma button set: primary (royal blue),
  * secondary (tinted), tertiary (ghost), inverse (dark) and danger (red).
  */
@@ -139,7 +139,7 @@ Object.assign(__ds_scope, { Button });
 try { (() => {
 function _extends() { return _extends = Object.assign ? Object.assign.bind() : function (n) { for (var e = 1; e < arguments.length; e++) { var t = arguments[e]; for (var r in t) ({}).hasOwnProperty.call(t, r) && (n[r] = t[r]); } return n; }, _extends.apply(null, arguments); }
 /**
- * Sandhata IconButton — a square button holding a single icon.
+ * Sandhata IconButton - a square button holding a single icon.
  * Same hierarchies as Button. Sizes keep a 40px hit target by default.
  */
 function IconButton({
@@ -222,7 +222,7 @@ Object.assign(__ds_scope, { IconButton });
 
 // components/cardshell.js
 try { (() => {
-/* Sandhata DS — shared "Preview / Code" card shell for @dsCard component cards.
+/* Sandhata DS - shared "Preview / Code" card shell for @dsCard component cards.
    Plain JS (no JSX) so it loads via a normal <script src> before Babel.
    Usage in a card:  <window.CardShell code={htmlString}> …preview… </window.CardShell>
    `code` is an HTML string; wrap tokens in <span class="t|p|s"> for colour. */
@@ -293,7 +293,7 @@ try { (() => {
 
 // components/data-display/Avatar.jsx
 try { (() => {
-/** Avatar — circular user marker. Shows `src` image or `name` initials. */
+/** Avatar - circular user marker. Shows `src` image or `name` initials. */
 function Avatar({
   name = "",
   src,
@@ -350,7 +350,7 @@ Object.assign(__ds_scope, { Avatar });
 // components/data-display/Badge.jsx
 try { (() => {
 /**
- * Status Badge — small status pill. Tones map to the semantic palette.
+ * Status Badge - small status pill. Tones map to the semantic palette.
  * `variant="subtle"` (default) uses a tinted background; "solid" fills.
  */
 function Badge({
@@ -431,7 +431,7 @@ Object.assign(__ds_scope, { Badge });
 try { (() => {
 function _extends() { return _extends = Object.assign ? Object.assign.bind() : function (n) { for (var e = 1; e < arguments.length; e++) { var t = arguments[e]; for (var r in t) ({}).hasOwnProperty.call(t, r) && (n[r] = t[r]); } return n; }, _extends.apply(null, arguments); }
 /**
- * Sandhata Card — the base surface for grouped content. White layer,
+ * Sandhata Card - the base surface for grouped content. White layer,
  * subtle border, small radius and a faint shadow. Optional title /
  * subtitle header and a trailing `action` slot.
  */
@@ -493,7 +493,7 @@ Object.assign(__ds_scope, { Card });
 // components/data-display/StatCard.jsx
 try { (() => {
 /**
- * StatCard — a KPI tile: label, large value and an optional trend.
+ * StatCard - a KPI tile: label, large value and an optional trend.
  * Used across the Sandhata dashboard (e.g. Desktop / Mobile visitors).
  */
 function StatCard({
@@ -563,7 +563,7 @@ Object.assign(__ds_scope, { StatCard });
 
 // components/data-display/Tag.jsx
 try { (() => {
-/** Tag / chip — a removable label. Pass `onRemove` to show the × button. */
+/** Tag / chip - a removable label. Pass `onRemove` to show the × button. */
 function Tag({
   children,
   onRemove,
@@ -794,7 +794,7 @@ Object.assign(__ds_scope, { Alert });
 
 // components/feedback/Spinner.jsx
 try { (() => {
-/** Spinner — indeterminate loading indicator in brand blue. */
+/** Spinner - indeterminate loading indicator in brand blue. */
 function Spinner({
   size = 20,
   stroke = 2.5,
@@ -830,7 +830,7 @@ Object.assign(__ds_scope, { Spinner });
 // components/feedback/Tooltip.jsx
 try { (() => {
 /**
- * Tooltip — dark label on hover/focus. Wraps its child trigger.
+ * Tooltip - dark label on hover/focus. Wraps its child trigger.
  * `side` controls placement. Matches the Figma dark tooltip chip.
  */
 function Tooltip({
@@ -981,7 +981,7 @@ Object.assign(__ds_scope, { Checkbox });
 try { (() => {
 function _extends() { return _extends = Object.assign ? Object.assign.bind() : function (n) { for (var e = 1; e < arguments.length; e++) { var t = arguments[e]; for (var r in t) ({}).hasOwnProperty.call(t, r) && (n[r] = t[r]); } return n; }, _extends.apply(null, arguments); }
 /**
- * Sandhata text Input — field with optional label, helper text, and
+ * Sandhata text Input - field with optional label, helper text, and
  * error/disabled states. Matches the Figma form-field anatomy.
  */
 function Input({
@@ -1404,7 +1404,7 @@ Object.assign(__ds_scope, { Textarea });
 // components/navigation/Tabs.jsx
 try { (() => {
 /**
- * Tabs — underline-style tab bar. Controlled via `value` + `onChange`.
+ * Tabs - underline-style tab bar. Controlled via `value` + `onChange`.
  * Each tab: { value, label, icon? }.
  */
 function Tabs({
@@ -1465,7 +1465,7 @@ Object.assign(__ds_scope, { Tabs });
 
 // docs/DocsApp.jsx
 try { (() => {
-// Sandhata docs — Components page. Uses the shared shell (DocsShell.jsx).
+// Sandhata docs - Components page. Uses the shared shell (DocsShell.jsx).
 
 function AllComponents({
   groups,
@@ -1538,7 +1538,7 @@ if (typeof document !== "undefined" && !window.__sdDocsMounted && document.getEl
 
 // docs/DocsData.jsx
 try { (() => {
-// Sandhata docs — component documentation registry.
+// Sandhata docs - component documentation registry.
 // Each component: { id, name, description, sections:[...], props:[...] }
 // Section kinds: bullets (intro list), demo (live preview + code), table (states), props.
 
@@ -1775,7 +1775,7 @@ const IconButtonDoc = {
 const Input = {
   id: "text-input",
   name: "Single-line Text input",
-  description: "A labelled text field with built-in helper text and error handling — the standard Sandhata form control.",
+  description: "A labelled text field with built-in helper text and error handling: the standard Sandhata form control.",
   sections: [usage(() => {
     const {
       Input: I
@@ -2063,7 +2063,7 @@ const AvatarDoc = {
 const TabsDoc = {
   id: "tabs",
   name: "Tabs",
-  description: "Underline-style tab bar — the Sandhata navigation pattern. Active tab is bold + blue with a 2px underline.",
+  description: "Underline-style tab bar: the Sandhata navigation pattern. Active tab is bold + blue with a 2px underline.",
   sections: [usage(() => {
     const {
       Tabs
@@ -2178,7 +2178,7 @@ window.SANDHATA_DOCS = GROUPS;
 
 // docs/DocsShell.jsx
 try { (() => {
-// Sandhata docs — shared shell: top nav (page links), sidebar, doc page with
+// Sandhata docs - shared shell: top nav (page links), sidebar, doc page with
 // right-rail quick scroll navigation (scroll-spy). Loaded before each page's app.
 
 function SdCodeBlock({
@@ -2211,7 +2211,7 @@ function SdBullets({
     className: "doc-bullets"
   }, items.map(([term, desc], i) => /*#__PURE__*/React.createElement("li", {
     key: i
-  }, /*#__PURE__*/React.createElement("b", null, term), desc ? ` — ${desc}` : "")));
+  }, /*#__PURE__*/React.createElement("b", null, term), desc ? `: ${desc}` : "")));
 }
 function SdStatesTable({
   table
@@ -2375,7 +2375,7 @@ function SdSidebar({
   }));
 }
 
-/* Top navigation — each tab is its own page. */
+/* Top navigation - each tab is its own page. */
 function SdTopNav({
   active
 }) {
@@ -2414,7 +2414,7 @@ Object.assign(window, {
 
 // docs/DocumentationApp.jsx
 try { (() => {
-// Sandhata documentation — design-system page. Uses the shared shell (DocsShell.jsx).
+// Sandhata documentation - design-system page. Uses the shared shell (DocsShell.jsx).
 
 function App() {
   const groups = window.SANDHATA_DOC_PAGES;
@@ -2452,7 +2452,7 @@ if (typeof document !== "undefined" && !window.__sdDocumentationMounted && docum
 
 // docs/DocumentationData.jsx
 try { (() => {
-// Sandhata documentation — design-system pages (foundations, guidelines, theming).
+// Sandhata documentation - design-system pages (foundations, guidelines, theming).
 // Same shape as the components registry: { id, name, description, sections:[...] }.
 
 const Sw = ({
@@ -2503,11 +2503,11 @@ const docOverview = {
   }, {
     id: "whats-included",
     title: "What's included",
-    bullets: [["Foundations", "colour scales, type, 8-point spacing, radii, elevation, motion"], ["Components", "buttons, forms, data display, feedback and navigation primitives"], ["UI kit", "dashboard, forms and pricing surfaces built from the components"], ["Docs", "this site — component API references and these guidelines"]]
+    bullets: [["Foundations", "colour scales, type, 8-point spacing, radii, elevation, motion"], ["Components", "buttons, forms, data display, feedback and navigation primitives"], ["UI kit", "dashboard, forms and pricing surfaces built from the components"], ["Docs", "this site: component API references and these guidelines"]]
   }, {
     id: "principles",
     title: "Principles",
-    bullets: [["Crisp and enterprise-grade", "restrained radii, hairline borders, faint shadows"], ["White space dominates", "colour is used sparingly and purposefully"], ["Tokens first", "semantic aliases keep surfaces re-themeable"], ["Quiet motion", "fast, functional easing — no bounces, no decorative loops"]]
+    bullets: [["Crisp and enterprise-grade", "restrained radii, hairline borders, faint shadows"], ["White space dominates", "colour is used sparingly and purposefully"], ["Tokens first", "semantic aliases keep surfaces re-themeable"], ["Quiet motion", "fast, functional easing: no bounces, no decorative loops"]]
   }]
 };
 const docColour = {
@@ -2517,7 +2517,7 @@ const docColour = {
   sections: [{
     id: "brand-action",
     title: "Brand & action",
-    bullets: [["Primary blue 500", "the action colour — buttons, links, selected states"], ["Primary blue 400", "brighter emphasis variant"], ["Alternative purple 500", "focus ring and data-viz lead"], ["Secondary blue 500", "deep navy for dense chrome"]],
+    bullets: [["Primary blue 500", "the action colour: buttons, links, selected states"], ["Primary blue 400", "brighter emphasis variant"], ["Alternative purple 500", "focus ring and data-viz lead"], ["Secondary blue 500", "deep navy for dense chrome"]],
     demo: () => /*#__PURE__*/React.createElement(SwRow, null, /*#__PURE__*/React.createElement(Sw, {
       c: "var(--colour-primaryblue-500)",
       name: "primaryblue-500",
@@ -2601,7 +2601,7 @@ const docColour = {
 const docTypography = {
   id: "typography",
   name: "Typography",
-  description: "Akkurat throughout — Light for soft body and captions, Regular for UI, Bold for display and headings, Mono for code and numbers. The scale follows an 8-point rhythm.",
+  description: "Akkurat throughout: Light for soft body and captions, Regular for UI, Bold for display and headings, Mono for code and numbers. The scale follows an 8-point rhythm.",
   sections: [{
     id: "families",
     title: "Families",
@@ -2644,7 +2644,7 @@ const docTypography = {
   }, {
     id: "type-usage",
     title: "Usage",
-    bullets: [["Sentence case everywhere", "headings, buttons, labels, tabs — never Title Case"], ["Display sizes carry tight negative tracking", "body is neutral"], ["Comfortable line lengths", "body copy maxes around 720px"]],
+    bullets: [["Sentence case everywhere", "headings, buttons, labels, tabs: never Title Case"], ["Display sizes carry tight negative tracking", "body is neutral"], ["Comfortable line lengths", "body copy maxes around 720px"]],
     code: `h1 { font: 700 var(--heading-h1-size)/var(--heading-h1-line) var(--font-bold); }\nbody { font: var(--body-medium-size)/var(--body-medium-line) var(--font-normal); }`
   }]
 };
@@ -2698,7 +2698,7 @@ const docSpacing = {
 const docShape = {
   id: "shape",
   name: "Radius & elevation",
-  description: "Restrained corners and soft, low-contrast shadows. Cards lean on a 1px subtle border with a faint shadow — never heavy elevation.",
+  description: "Restrained corners and soft, low-contrast shadows. Cards lean on a 1px subtle border with a faint shadow: never heavy elevation.",
   sections: [{
     id: "radius",
     title: "Border radius",
@@ -2730,7 +2730,7 @@ const docShape = {
   }, {
     id: "shadows",
     title: "Shadows",
-    note: "Soft neutral shadows, rgba(20,22,24,…). The only coloured glow is the focus ring — a 3px violet halo.",
+    note: "Soft neutral shadows, rgba(20,22,24,…). The only coloured glow is the focus ring: a 3px violet halo.",
     demo: () => /*#__PURE__*/React.createElement(SwRow, null, ["xs", "sm", "md", "lg"].map(s => /*#__PURE__*/React.createElement("div", {
       key: s,
       style: {
@@ -2789,11 +2789,11 @@ const docContent = {
   sections: [{
     id: "voice",
     title: "Voice & tone",
-    bullets: [["Benefit-first", "\u201cA set of beautifully designed components that you can customise, extend, and build on.\u201d"], ["Second person", "components you can customise — avoid \u201cwe\u201d and \u201cour\u201d"], ["Calm and instructional", "helper text is neutral and descriptive, never cute"], ["No emoji", "in UI or copy, ever"]]
+    bullets: [["Benefit-first", "\u201cA set of beautifully designed components that you can customise, extend, and build on.\u201d"], ["Second person", "components you can customise: avoid \u201cwe\u201d and \u201cour\u201d"], ["Calm and instructional", "helper text is neutral and descriptive, never cute"], ["No emoji", "in UI or copy, ever"]]
   }, {
     id: "mechanics",
     title: "Mechanics",
-    bullets: [["Sentence case", "headings, buttons, labels, tabs — proper nouns only"], ["British spelling", "colour, customise, organise"], ["Numbers", "grouped with commas (24,828); compact currency ($0/mo)"], ["Errors", "direct — \u201cThis is a mandatory field!\u201d"], ["CTAs", "verb-first and short — Submit, Get started, View documentation"]]
+    bullets: [["Sentence case", "headings, buttons, labels, tabs: proper nouns only"], ["British spelling", "colour, customise, organise"], ["Numbers", "grouped with commas (24,828); compact currency ($0/mo)"], ["Errors", "direct: \u201cThis is a mandatory field!\u201d"], ["CTAs", "verb-first and short: Submit, Get started, View documentation"]]
   }]
 };
 const docBrand = {
@@ -2803,7 +2803,7 @@ const docBrand = {
   sections: [{
     id: "logo",
     title: "Logo",
-    bullets: [["Lockup", "sandhata-logo.svg for headers and marketing"], ["Mark", "sandhata-mark.svg — cyan twist + orange dot — for square and favicon use"], ["Mark colours", "cyan #00A4DC, orange #F68136, ink #48484F"]],
+    bullets: [["Lockup", "sandhata-logo.svg for headers and marketing"], ["Mark", "sandhata-mark.svg (cyan twist + orange dot) for square and favicon use"], ["Mark colours", "cyan #00A4DC, orange #F68136, ink #48484F"]],
     demo: () => /*#__PURE__*/React.createElement("div", {
       style: {
         display: "flex",
@@ -2880,7 +2880,7 @@ window.SANDHATA_DOC_PAGES = [{
 
 // docs/highlight.js
 try { (() => {
-/* Sandhata docs — tiny JSX syntax highlighter (light theme). window.sdHighlight(src) -> HTML. */
+/* Sandhata docs - tiny JSX syntax highlighter (light theme). window.sdHighlight(src) -> HTML. */
 (function () {
   window.sdHighlight = function (src) {
     var esc = String(src).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
@@ -2899,7 +2899,7 @@ try { (() => {
 
 // motion/IntroApp.jsx
 try { (() => {
-// Sandhata intro film — stage composition.
+// Sandhata intro film - stage composition.
 
 function SdTimecode() {
   const t = useTime();
@@ -2927,7 +2927,7 @@ if (!window.__sdIntroMounted && document.getElementById("video-root")) {
 
 // motion/IntroScenes1.jsx
 try { (() => {
-// Sandhata intro film — shared helpers + scenes 1–3 (logo, colour, typography).
+// Sandhata intro film - shared helpers + scenes 1–3 (logo, colour, typography).
 // Loaded after animations.jsx; exports to window for IntroScenes2/IntroApp.
 
 const sdC = {
@@ -3514,7 +3514,7 @@ Object.assign(window, {
 
 // motion/IntroScenes2.jsx
 try { (() => {
-// Sandhata intro film — scenes 4–6 (components, surfaces, outro).
+// Sandhata intro film - scenes 4–6 (components, surfaces, outro).
 // Uses helpers from IntroScenes1.jsx (sdC, sdF, sdP, SdItem, SdScene, …).
 
 // ── Scene 4 · Components (17.5–24.5) ────────────────────────────────────────
@@ -4309,7 +4309,7 @@ function interpolate(input, output, ease = Easing.linear) {
   };
 }
 
-// animate({from, to, start, end, ease})(t) — simpler single-segment tween.
+// animate({from, to, start, end, ease})(t) - simpler single-segment tween.
 // Returns `from` before `start`, `to` after `end`.
 function animate({
   from = 0,
@@ -4344,7 +4344,7 @@ const useTimeline = () => React.useContext(TimelineContext);
 //     {({ localTime, progress }) => <Thing x={progress * 100} />}
 //   </Sprite>
 //
-// Or as a plain wrapper — children can call useSprite() themselves.
+// Or as a plain wrapper - children can call useSprite() themselves.
 
 const SpriteContext = React.createContext({
   localTime: 0,
@@ -4509,7 +4509,7 @@ function ImageSprite({
 }
 
 // RectSprite: simple rectangle that animates position/size/color via props.
-// Useful demo primitive — takes a `render` fn for per-frame customization.
+// Useful demo primitive - takes a `render` fn for per-frame customization.
 function RectSprite({
   x = 0,
   y = 0,
@@ -4947,7 +4947,7 @@ Object.assign(window, {
 
 // ui_kits/showcase/Charts.jsx
 try { (() => {
-// Sandhata showcase — lightweight SVG data-viz mocks (purple/blue palette).
+// Sandhata showcase - lightweight SVG data-viz mocks (purple/blue palette).
 // Exported to window for use across showcase view files.
 
 function smoothPath(points) {
@@ -5470,7 +5470,7 @@ Object.assign(window, {
 
 // ui_kits/showcase/DashboardView.jsx
 try { (() => {
-// Sandhata showcase — Dashboard view: stat header, charts, data table.
+// Sandhata showcase - Dashboard view: stat header, charts, data table.
 
 function DashboardView() {
   const {
@@ -5662,7 +5662,7 @@ window.DashboardView = DashboardView;
 
 // ui_kits/showcase/DataTable.jsx
 try { (() => {
-// Sandhata showcase — interactive data table (bulk-edit pattern from the dashboard).
+// Sandhata showcase - interactive data table (bulk-edit pattern from the dashboard).
 
 function DataTable() {
   const {
@@ -5906,7 +5906,7 @@ window.DataTable = DataTable;
 
 // ui_kits/showcase/FormsView.jsx
 try { (() => {
-// Sandhata showcase — Forms view: small, standard and stepper forms.
+// Sandhata showcase - Forms view: small, standard and stepper forms.
 
 function FormsView() {
   const {
@@ -6193,7 +6193,7 @@ window.FormsView = FormsView;
 // ui_kits/showcase/ProductCardsView.jsx
 try { (() => {
 function _extends() { return _extends = Object.assign ? Object.assign.bind() : function (n) { for (var e = 1; e < arguments.length; e++) { var t = arguments[e]; for (var r in t) ({}).hasOwnProperty.call(t, r) && (n[r] = t[r]); } return n; }, _extends.apply(null, arguments); }
-// Sandhata showcase — Product Cards view: pricing tiers (Basic / Extra / Pro).
+// Sandhata showcase - Product Cards view: pricing tiers (Basic / Extra / Pro).
 
 function ProductCardsView() {
   const {

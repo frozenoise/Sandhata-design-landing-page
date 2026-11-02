@@ -1,5 +1,5 @@
 // Azure DevOps REST API helpers (Phase 1: manual PAT connect + one-way push
-// status). Basic auth with an empty username and the PAT as the password —
+// status). Basic auth with an empty username and the PAT as the password -
 // ADO's documented scheme for PAT-based REST calls.
 // https://learn.microsoft.com/en-us/azure/devops/integrate/how-to/call-rest-api
 
@@ -66,7 +66,7 @@ export type AdoWorkItemState = {
   category: string; // "Proposed" | "InProgress" | "Resolved" | "Completed" | "Removed"
 };
 
-// GET /_apis/wit/workitemtypes — used both to validate a PAT (cheap call)
+// GET /_apis/wit/workitemtypes - used both to validate a PAT (cheap call)
 // and to pick the Phase-1 default work item type.
 export async function listWorkItemTypes(
   organization: string,
@@ -92,7 +92,7 @@ export async function listWorkItemTypeStates(
 
 // Pick a generic default work item type for the Phase-1 "project"/"page"
 // kinds: prefer "Task", else "Issue" (Basic process), else the first
-// non-Bug/non-Epic type found. Never defaults to Bug or Epic — those carry
+// non-Bug/non-Epic type found. Never defaults to Bug or Epic - those carry
 // process-specific required fields/semantics we don't want to assume.
 export function pickDefaultWorkItemType(types: AdoWorkItemType[]): AdoWorkItemType {
   const byName = (n: string) => types.find(t => t.name.toLowerCase() === n.toLowerCase());
@@ -103,7 +103,7 @@ export function pickDefaultWorkItemType(types: AdoWorkItemType[]): AdoWorkItemTy
   const generic = types.find(t => !["bug", "epic"].includes(t.name.toLowerCase()));
   if (generic) return generic;
   if (types.length === 0) {
-    throw new Error("Azure DevOps project has no work item types — cannot pick a default.");
+    throw new Error("Azure DevOps project has no work item types: cannot pick a default.");
   }
   return types[0];
 }
@@ -140,7 +140,7 @@ export function buildStateMapping(states: AdoWorkItemState[]): StateMappingForTy
   };
 }
 
-// POST /_apis/wit/workitems/${type} — JSON Patch body, Content-Type
+// POST /_apis/wit/workitems/${type} - JSON Patch body, Content-Type
 // application/json-patch+json (ADO's create-work-item convention).
 export async function createWorkItem(
   organization: string,
@@ -165,7 +165,7 @@ export async function createWorkItem(
   return { id: data.id, url: data.url, state: data.fields?.["System.State"] };
 }
 
-// PATCH /_apis/wit/workitems/{id} — change System.State.
+// PATCH /_apis/wit/workitems/{id} - change System.State.
 export async function updateWorkItemState(
   organization: string,
   adoProject: string,
@@ -183,7 +183,7 @@ export async function updateWorkItemState(
   return { id: data.id, state: data.fields?.["System.State"] };
 }
 
-// GET /_apis/wit/workitems?ids=1,2,3 — batch fetch for reconciliation.
+// GET /_apis/wit/workitems?ids=1,2,3 - batch fetch for reconciliation.
 export async function getWorkItemsBatch(
   organization: string,
   adoProject: string,

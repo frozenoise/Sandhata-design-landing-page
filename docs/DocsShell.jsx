@@ -1,4 +1,4 @@
-// Sandhata docs — shared shell: top nav (page links), sidebar, doc page with
+// Sandhata docs - shared shell: top nav (page links), sidebar, doc page with
 // right-rail quick scroll navigation (scroll-spy). Loaded before each page's app.
 
 function SdCodeBlock({ code }) {
@@ -19,7 +19,7 @@ function SdBullets({ items }) {
   return (
     <ul className="doc-bullets">
       {items.map(([term, desc], i) => (
-        <li key={i}><b>{term}</b>{desc ? ` — ${desc}` : ""}</li>
+        <li key={i}><b>{term}</b>{desc ? `: ${desc}` : ""}</li>
       ))}
     </ul>
   );
@@ -149,7 +149,7 @@ function SdSidebar({ groups, current, setCurrent, topItem, searchPlaceholder }) 
   );
 }
 
-/* Top navigation — each tab is its own page. */
+/* Top navigation - each tab is its own page. */
 function SdTopNav({ active }) {
   const tabs = [
     ["Components", "index.html"],

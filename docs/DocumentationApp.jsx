@@ -1,4 +1,4 @@
-// Sandhata documentation — design-system page. Uses the shared shell (DocsShell.jsx).
+// Sandhata documentation - design-system page. Uses the shared shell (DocsShell.jsx).
 
 function App() {
   const groups = window.SANDHATA_DOC_PAGES;

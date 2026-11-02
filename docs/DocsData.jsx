@@ -1,4 +1,4 @@
-// Sandhata docs — component documentation registry.
+// Sandhata docs - component documentation registry.
 // Each component: { id, name, description, variants, sections:[...], props:[...] }
 // "variants" is the short descriptor shown in the All Components grid.
 
@@ -136,7 +136,7 @@ const IconButtonDoc = {
 
 const Input = {
   id:"text-input", name:"Single-line Text input", variants:"7 variants · 5 states · 3 sizes",
-  description:"A labelled text field with built-in helper text and error handling — the standard Sandhata form control.",
+  description:"A labelled text field with built-in helper text and error handling: the standard Sandhata form control.",
   sections:[usage(
     () => { const { Input:I } = S(); return (
       <div style={{ display:"flex", flexDirection:"column", gap:16, maxWidth:360 }}>
@@ -229,7 +229,7 @@ const SwitchDoc = {
 
 const DateRangePicker = {
   id:"date-range-picker", name:"Date range picker", variants:"7 variants · 5 states · 3 sizes",
-  description:"A two-field date range control — start and end — with a calendar popover. Supports keyboard navigation and locale formatting.",
+  description:"A two-field date range control (start and end) with a calendar popover. Supports keyboard navigation and locale formatting.",
   sections: comingSoon("Date range picker"),
   props:[["startLabel","string","Start date label"],["endLabel","string","End date label"],["value","object","{ start, end } date values"],["onChange","func","Change handler"],["minDate","string","Minimum selectable date"],["maxDate","string","Maximum selectable date"]],
 };
@@ -343,7 +343,7 @@ const Timeline = {
 
 const TabsDoc = {
   id:"tabs", name:"Tabs", variants:"2 variants",
-  description:"Underline-style tab bar — the Sandhata navigation pattern. Active tab is bold + blue with a 2px underline.",
+  description:"Underline-style tab bar: the Sandhata navigation pattern. Active tab is bold + blue with a 2px underline.",
   sections:[usage(
     () => { const { Tabs } = S(); const [t, setT] = React.useState("dashboard"); return (
       <Tabs value={t} onChange={setT} tabs={[
@@ -456,7 +456,7 @@ const Accordion = {
 
 const Drawer = {
   id:"drawer", name:"Drawer", variants:"4 sides · 3 sizes",
-  description:"A panel that slides in from the edge of the screen — used for secondary navigation, forms, and detail views.",
+  description:"A panel that slides in from the edge of the screen: used for secondary navigation, forms, and detail views.",
   sections: comingSoon("Drawer"),
   props:[["open","boolean","Controlled open state"],["onClose","func","Close handler"],["side","enum","left, right, top, bottom"],["title","node","Drawer header title"],["size","enum","Small, Medium, Large"]],
 };

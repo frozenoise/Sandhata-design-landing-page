@@ -3,7 +3,7 @@ import { Liveblocks } from "@liveblocks/node";
 import { auth } from "@/lib/auth";
 import { sessionRole, canEdit } from "@/lib/access";
 
-// POST /api/liveblocks-auth — issues a Liveblocks token for one shared page's
+// POST /api/liveblocks-auth - issues a Liveblocks token for one shared page's
 // live room. The room id names the page ("spectra:page:<sessionId>"), and
 // access comes from the same rules as the REST routes (lib/access.ts):
 // owners and editors get full access, viewers read-only, anyone else nothing.
