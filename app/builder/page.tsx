@@ -2264,26 +2264,6 @@ export default function BuilderPage() {
               {tree && view === "code" && (
                 <button className="bld-copy" onClick={() => navigator.clipboard.writeText(code)}>Copy</button>
               )}
-              {view === "edit" && (
-                <div className="bld-edit-undo-redo">
-                  <button onClick={undoEdit} disabled={livePage.live ? !livePage.canUndo : editHistory.length === 0} title="Undo" aria-label="Undo"><UndoIcon /></button>
-                  <button onClick={redoEdit} disabled={livePage.live ? !livePage.canRedo : editRedoStack.length === 0} title="Redo" aria-label="Redo"><RedoIcon /></button>
-                </div>
-              )}
-              {tree && (view === "preview" || view === "edit") && (
-                <button
-                  className="bld-canvas-theme-btn"
-                  onClick={() => {
-                    const next = canvasTheme === "light" ? "dark" : "light";
-                    setCanvasTheme(next);
-                    try { localStorage.setItem(CANVAS_THEME_STORAGE, next); } catch {}
-                  }}
-                  title={canvasTheme === "light" ? "Canvas: light (switch to dark)" : "Canvas: dark (switch to light)"}
-                  aria-label="Toggle canvas theme"
-                >
-                  {canvasTheme === "light" ? <SunIcon /> : <MoonIcon />}
-                </button>
-              )}
               {tree && (
                 <button className="bld-export-btn" onClick={exportZip} title="Download component as ZIP">
                   <DownloadIcon /> Export ZIP
@@ -2292,6 +2272,30 @@ export default function BuilderPage() {
             </div>
           </div>
 
+          {/* Floating canvas toolbar, bottom centre like Framer's: undo/redo
+              while editing, plus the canvas's own light/dark switch. */}
+          {tree && (view === "preview" || view === "edit") && (
+            <div className="bld-float-toolbar" role="toolbar" aria-label="Canvas tools">
+              {view === "edit" && (
+                <>
+                  <button onClick={undoEdit} disabled={livePage.live ? !livePage.canUndo : editHistory.length === 0} title="Undo" aria-label="Undo"><UndoIcon /></button>
+                  <button onClick={redoEdit} disabled={livePage.live ? !livePage.canRedo : editRedoStack.length === 0} title="Redo" aria-label="Redo"><RedoIcon /></button>
+                  <span className="bld-float-toolbar-sep" aria-hidden="true" />
+                </>
+              )}
+              <button
+                onClick={() => {
+                  const next = canvasTheme === "light" ? "dark" : "light";
+                  setCanvasTheme(next);
+                  try { localStorage.setItem(CANVAS_THEME_STORAGE, next); } catch {}
+                }}
+                title={canvasTheme === "light" ? "Canvas: light (switch to dark)" : "Canvas: dark (switch to light)"}
+                aria-label="Toggle canvas theme"
+              >
+                {canvasTheme === "light" ? <SunIcon /> : <MoonIcon />}
+              </button>
+            </div>
+          )}
           <div className="bld-canvas">
             {!tree && !loading && (
               <div className="bld-state bld-empty">

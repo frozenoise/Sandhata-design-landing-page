@@ -262,7 +262,7 @@
 .bld-viewport button.on { background: var(--doc-surface); color: var(--text-title); box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
 .bld-viewport button:hover:not(.on) { color: var(--text-body); }
 
-.bld-canvas { flex: 1; overflow: auto; padding: 36px; display: flex; }
+.bld-canvas { flex: 1; overflow: auto; padding: 36px 36px 84px; display: flex; } /* bottom room for the floating toolbar */
 
 /* surface with viewport variants */
 /* The surface carries its own .light/.dark class (canvasTheme in page.tsx),
@@ -338,22 +338,24 @@
 .bld-report-jump:disabled { opacity: 0.35; cursor: not-allowed; }
 
 /* ── Visual editor (Edit view) ─────────────────────────────────────────── */
-/* ── Edit toolbar: undo/redo + canvas theme ─────────────────────────── */
-.bld-edit-undo-redo {
-  display: flex; gap: 2px; padding: 2px;
-  border: 1px solid var(--doc-line); border-radius: var(--radius-sm); background: var(--doc-bg);
+/* ── Floating canvas toolbar (bottom centre, Framer-style) ──────────── */
+.bld-main { position: relative; }
+.bld-float-toolbar {
+  position: absolute; left: 50%; bottom: 20px; transform: translateX(-50%); z-index: 20;
+  display: flex; align-items: center; gap: 2px; padding: 4px;
+  background: var(--doc-surface); border: 1px solid var(--doc-line); border-radius: 12px;
+  box-shadow: 0 1px 2px rgba(0,0,0,0.06), 0 8px 24px rgba(0,0,0,0.12);
 }
-.bld-edit-undo-redo button, .bld-canvas-theme-btn {
-  width: 28px; height: 28px; border: none; border-radius: 4px;
+.bld-float-toolbar button {
+  width: 32px; height: 32px; border: none; border-radius: 8px;
   background: none; color: var(--text-body); cursor: pointer;
   display: flex; align-items: center; justify-content: center;
   transition: background .1s, color .1s;
 }
-.bld-edit-undo-redo button svg, .bld-canvas-theme-btn svg { display: block; flex-shrink: 0; }
-.bld-edit-undo-redo button:hover:not(:disabled) { background: var(--doc-surface); color: var(--text-title); }
-.bld-edit-undo-redo button:disabled { color: var(--text-caption); opacity: 0.45; cursor: not-allowed; }
-.bld-canvas-theme-btn { width: 34px; height: 34px; border: 1px solid var(--doc-line); border-radius: var(--radius-sm); background: var(--doc-bg); }
-.bld-canvas-theme-btn:hover { color: var(--text-title); border-color: var(--border-strong); }
+.bld-float-toolbar button svg { display: block; flex-shrink: 0; }
+.bld-float-toolbar button:hover:not(:disabled) { background: var(--doc-bg); color: var(--text-title); }
+.bld-float-toolbar button:disabled { color: var(--text-caption); opacity: 0.4; cursor: not-allowed; }
+.bld-float-toolbar-sep { width: 1px; height: 18px; margin: 0 4px; background: var(--doc-line); }
 
 .bld-edit-layout { flex: 1; display: flex; gap: 20px; align-items: flex-start; min-width: 0; }
 .bld-edit-canvas-wrap { flex: 1; min-width: 0; display: flex; }
