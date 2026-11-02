@@ -70,6 +70,41 @@ export function findNodeById(node: UINode | null, id: string): UINode | null {
   return null;
 }
 
+/** The node whose children include `id`, or null for the root / a missing id. */
+export function findParent(node: UINode | null, id: string): UINode | null {
+  if (!node || !Array.isArray(node.children)) return null;
+  for (const child of node.children) {
+    if (child.id === id) return node;
+    const found = findParent(child, id);
+    if (found) return found;
+  }
+  return null;
+}
+
+/** Deep copy with fresh ids on every node, so a duplicate never shares
+ * identity (selection, live-room entries) with the original. */
+export function cloneWithNewIds(node: UINode): UINode {
+  return {
+    ...node,
+    id: genNodeId(),
+    props: node.props ? { ...node.props } : node.props,
+    children: Array.isArray(node.children) ? node.children.map(cloneWithNewIds) : node.children,
+  };
+}
+
+/** First text found in a subtree (depth-first), for short human labels. */
+export function firstText(node: UINode | null): string | null {
+  if (!node) return null;
+  if (typeof node.children === "string") return node.children;
+  if (Array.isArray(node.children)) {
+    for (const c of node.children) { const t = firstText(c); if (t) return t; }
+  }
+  for (const k of ["title", "label", "placeholder"]) {
+    if (typeof node.props?.[k] === "string" && node.props[k]) return node.props[k];
+  }
+  return null;
+}
+
 /** Merges `patch` into the target node's `props` (shallow merge — a field
  * set to `undefined` removes that prop, matching how the property panel's
  * "clear" affordance for an optional field should behave). */

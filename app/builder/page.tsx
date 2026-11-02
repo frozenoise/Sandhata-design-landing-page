@@ -8,7 +8,7 @@ import "./builder.css";
 import { SdTopNav } from "../_docs/shell";
 import { sdHighlightLines } from "../_docs/highlight";
 import { RenderTree, treeToJSX, type UINode } from "./Renderer";
-import { ensureIds, findNodeById, updateNodeProps, updateNodeText, removeNodeById, moveNode, insertNodeAt, createNode, CONTAINER_TYPES, auditTree, type AuditIssue } from "./uiTree";
+import { ensureIds, findNodeById, findParent, cloneWithNewIds, firstText, updateNodeProps, updateNodeText, removeNodeById, moveNode, insertNodeAt, createNode, CONTAINER_TYPES, auditTree, type AuditIssue } from "./uiTree";
 import { PROP_SCHEMA, type PropField } from "./propSchema";
 import { PALETTE_CATEGORIES, paletteDefaults } from "./paletteDefaults";
 import { useLivePage, ROOM_PREFIX } from "./liveRoom";
@@ -170,6 +170,9 @@ const RedoIcon     = () => (<svg width="14" height="14" viewBox="0 0 24 24" fill
 const SunIcon      = () => (<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"/></svg>);
 const MoonIcon     = () => (<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/></svg>);
 const SearchIcon   = () => (<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>);
+const SparkleIcon  = () => (<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 3l1.9 5.1L19 10l-5.1 1.9L12 17l-1.9-5.1L5 10l5.1-1.9z"/><path d="M19 15l.8 2.2L22 18l-2.2.8L19 21l-.8-2.2L16 18l2.2-.8z"/></svg>);
+const MoreIcon     = () => (<svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor"><circle cx="5" cy="12" r="1.8"/><circle cx="12" cy="12" r="1.8"/><circle cx="19" cy="12" r="1.8"/></svg>);
+const BackIcon     = () => (<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="15 18 9 12 15 6"/></svg>);
 const TrashIcon    = () => (<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/><path d="M10 11v6M14 11v6M9 6V4a1 1 0 011-1h4a1 1 0 011 1v2"/></svg>);
 
 export default function BuilderPage() {
@@ -217,7 +220,18 @@ export default function BuilderPage() {
   // adding a whole extra column — auto-follows selection (see the effect
   // below) but the user can still switch to Insert manually to add a sibling
   // near the current spot.
-  const [inspectorTab, setInspectorTab] = React.useState<"insert" | "properties" | "layers">("insert");
+  const [inspectorTab, setInspectorTab] = React.useState<"insert" | "layers">("insert");
+  // With an element selected the panel becomes that element's editor
+  // (Vzy/Framer style), split into what it says (Content) and how it looks
+  // (Style).
+  const [propTab, setPropTab] = React.useState<"content" | "style">("content");
+  // Section bar: the top-level block under the cursor, its open "more" menu,
+  // and where a click in the Insert grid should land (set by the bar's +).
+  const [sectionHoverId, setSectionHoverId] = React.useState<string | null>(null);
+  const [sectionMenuId, setSectionMenuId] = React.useState<string | null>(null);
+  const [insertTarget, setInsertTarget] = React.useState<{ id: string; position: "before" | "after" } | null>(null);
+  const [sectionRect, setSectionRect] = React.useState<{ top: number; left: number; width: number } | null>(null);
+  const canvasWrapRef = React.useRef<HTMLDivElement>(null);
   // Layers tab: which container nodes are collapsed, by id. Starts empty
   // (everything expanded) — a generated tree is capped around ~200 nodes by
   // the AI's own system prompt, so a full expand-by-default is cheap and,
@@ -401,7 +415,7 @@ export default function BuilderPage() {
   // brings the inspector to Properties automatically — you shouldn't have to
   // manually flip the tab every time just to see what you clicked.
   React.useEffect(() => {
-    if (selectedNodeId) setInspectorTab("properties");
+    if (selectedNodeId) { setPropTab("content"); setInsertTarget(null); }
   }, [selectedNodeId]);
 
   const selectedNode = React.useMemo(
@@ -480,6 +494,130 @@ export default function BuilderPage() {
     // commitTreeEdit accepts that directly; it still goes through
     // history/redo and gets flushed back into the chat like any other edit.
     commitTreeEdit(next);
+  }
+
+  // ── Sections: the root container's direct children ─────────────────────
+  // What Vzy calls sections. Each gets a hover bar on the canvas with add,
+  // AI and a move/duplicate/delete menu. A root that isn't a container is
+  // treated as the only section.
+  const sectionIds = React.useMemo<string[]>(() => {
+    if (!tree) return [];
+    if (Array.isArray(tree.children) && CONTAINER_TYPES.has(tree.type)) {
+      return tree.children.map(c => c.id).filter((id): id is string => !!id);
+    }
+    return tree.id ? [tree.id] : [];
+  }, [tree]);
+
+  /** The section containing `id` (itself if it is one), or null. */
+  function sectionOf(id: string | null): string | null {
+    if (!tree || !id) return null;
+    let cur: string | null = id;
+    while (cur) {
+      if (sectionIds.includes(cur)) return cur;
+      cur = findParent(tree, cur)?.id ?? null;
+    }
+    return null;
+  }
+
+  // The project the page on screen belongs to (sharing is per project).
+  const activePageProjectId = history.find(h => h.id === activeTabId)?.projectId ?? openTabs.find(t => t.id === activeTabId)?.projectId ?? null;
+
+  const barSectionId = readOnly ? null : (sectionMenuId ?? sectionHoverId ?? sectionOf(selectedNodeId));
+
+  // Position the bar on the section's top edge, relative to the canvas
+  // wrapper (which scrolls with the canvas, so only layout changes matter).
+  React.useLayoutEffect(() => {
+    function measure() {
+      const wrap = canvasWrapRef.current;
+      if (!wrap || !barSectionId) { setSectionRect(null); return; }
+      const el = wrap.querySelector(`[data-node-id="${barSectionId}"]`) as HTMLElement | null;
+      if (!el) { setSectionRect(null); return; }
+      const w = wrap.getBoundingClientRect();
+      // Design-system components are wrapped in a display:contents <span>
+      // that carries the node id but has no box of its own, so measure the
+      // union of its children instead.
+      let r = el.getBoundingClientRect();
+      if (r.width === 0 && r.height === 0 && el.children.length > 0) {
+        const rects = Array.from(el.children).map(c => c.getBoundingClientRect());
+        const top = Math.min(...rects.map(x => x.top));
+        const left = Math.min(...rects.map(x => x.left));
+        const right = Math.max(...rects.map(x => x.right));
+        r = { top, left, width: right - left } as DOMRect;
+      }
+      setSectionRect({ top: r.top - w.top, left: r.left - w.left, width: r.width });
+    }
+    measure();
+    window.addEventListener("resize", measure);
+    return () => window.removeEventListener("resize", measure);
+  }, [barSectionId, tree, viewport, view]);
+
+  function moveSection(id: string, dir: -1 | 1) {
+    if (!tree) return;
+    const i = sectionIds.indexOf(id);
+    const target = sectionIds[i + dir];
+    if (i < 0 || !target) return;
+    commitTreeEdit(moveNode(tree, id, target, dir < 0 ? "before" : "after"));
+  }
+
+  function duplicateSection(id: string) {
+    if (!tree) return;
+    const node = findNodeById(tree, id);
+    if (!node) return;
+    const copy = cloneWithNewIds(node);
+    if (id === tree.id) return; // the root can't have a sibling
+    commitTreeEdit(insertNodeAt(tree, id, "after", copy));
+    setSelectedNodeId(copy.id ?? null);
+  }
+
+  function deleteSection(id: string) {
+    if (!tree) return;
+    if (sectionOf(selectedNodeId) === id) setSelectedNodeId(null);
+    setSectionHoverId(null);
+    commitTreeEdit(removeNodeById(tree, id));
+  }
+
+  /** Starts a chat message scoped to one section, for the AI to change. */
+  function askAiAboutSection(id: string) {
+    const node = tree ? findNodeById(tree, id) : null;
+    if (!node) return;
+    const label = firstText(node);
+    const short = label && label.length > 40 ? `${label.slice(0, 40)}…` : label;
+    setInput(`In the ${node.type} section${short ? ` ("${short}")` : ""}, `);
+    requestAnimationFrame(() => {
+      const el = inputRef.current;
+      if (el) { el.focus(); el.setSelectionRange(el.value.length, el.value.length); }
+    });
+  }
+
+  /** The bar's +: the Insert grid's next click lands above this section. */
+  function openInsertAt(id: string) {
+    setSelectedNodeId(null);
+    setInspectorTab("insert");
+    setInsertTarget({ id, position: "before" });
+  }
+
+  /** Click-to-insert from the Insert grid (dragging still works too): at the
+   * section bar's spot if one is set, else after the selection, else at the
+   * end of the page. */
+  function insertFromPalette(type: string) {
+    if (!tree || readOnly) return;
+    const d = paletteDefaults(type);
+    const node = createNode(type, d.props, d.children);
+    let next: UINode = tree;
+    if (insertTarget && findNodeById(tree, insertTarget.id)) next = insertNodeAt(tree, insertTarget.id, insertTarget.position, node);
+    else if (selectedNodeId && selectedNodeId !== tree.id) next = insertNodeAt(tree, selectedNodeId, "after", node);
+    else if (tree.id && CONTAINER_TYPES.has(tree.type)) next = insertNodeAt(tree, tree.id, "inside", node);
+    if (next === tree) return;
+    commitTreeEdit(next);
+    setInsertTarget(null);
+    setSelectedNodeId(node.id ?? null);
+  }
+
+  /** Panel back arrow: up to the parent element, or out to Insert/Layers. */
+  function selectParent() {
+    if (!tree || !selectedNodeId) return;
+    const parent = findParent(tree, selectedNodeId);
+    setSelectedNodeId(parent && parent.id !== tree.id ? parent.id ?? null : null);
   }
 
   // Folds any edits made in "edit" view back into the chat transcript as a
@@ -1339,7 +1477,6 @@ export default function BuilderPage() {
   function goToAuditIssue(issue: AuditIssue) {
     if (!issue.nodeId) return;
     setView("edit");
-    setInspectorTab("properties");
     setSelectedNodeId(issue.nodeId);
   }
 
@@ -1463,6 +1600,23 @@ export default function BuilderPage() {
         <div className="bld-prop-segmented" role="group" aria-label={field.label}>
           <button type="button" className={current ? "on" : ""} onClick={() => updateSelectedProp(field.key, true)}>Yes</button>
           <button type="button" className={!current ? "on" : ""} onClick={() => updateSelectedProp(field.key, false)}>No</button>
+        </div>
+      );
+    } else if (field.kind === "select" && field.options.length <= 4 && field.options.every(o => o.length <= 8)) {
+      // Short option sets as a segmented control (Framer/Vzy style); click
+      // the active option again to go back to the component's default.
+      const short: Record<string, string> = { small: "S", medium: "M", large: "L" };
+      control = (
+        <div className="bld-prop-segmented" role="group" aria-label={field.label} style={{ gridTemplateColumns: `repeat(${field.options.length}, 1fr)` }}>
+          {field.options.map(o => {
+            const on = String(current ?? "") === o;
+            const label = short[o] ?? (field.key === "level" ? `H${o}` : o);
+            return (
+              <button key={o} type="button" className={on ? "on" : ""} title={o} onClick={() => updateSelectedProp(field.key, on ? undefined : (field.key === "level" ? Number(o) : o))}>
+                {label}
+              </button>
+            );
+          })}
         </div>
       );
     } else if (field.kind === "select") {
@@ -2241,8 +2395,25 @@ export default function BuilderPage() {
             </div>
             <div className="bld-toolbar-right">
               {readOnly && <span className="bld-view-only" title="The project owner gave you view-only access">View only</span>}
+              {isLoggedIn && tree && (view === "edit" || view === "preview") && (() => {
+                // Invite people straight from the page (Vzy's Collaboration
+                // panel): opens the project's sharing dialog. Pages outside a
+                // project can't be shared, since access is per project.
+                const pid = activePageProjectId;
+                const owner = !activeAccess?.role || activeAccess.role === "owner";
+                return (
+                  <button
+                    className="bld-share-page-btn"
+                    disabled={!pid}
+                    onClick={() => pid && setShareProjectId(pid)}
+                    title={!pid ? "Move this page into a project to share it" : owner ? "Invite people to edit this page" : "See who has access"}
+                  >
+                    <ShareIcon /> {owner ? "Share" : "People"}
+                  </button>
+                );
+              })()}
               {livePage.live && (
-                <div className="bld-presence" title={livePage.status === "live" ? "Live: changes sync as you make them" : livePage.status === "error" ? "Live editing isn't connected" : "Connecting…"}>
+                <div className="bld-presence" onClick={() => activePageProjectId && setShareProjectId(activePageProjectId)} title={livePage.status === "live" ? "Live: changes sync as you make them" : livePage.status === "error" ? "Live editing isn't connected" : "Connecting…"}>
                   <span className={`bld-presence-dot bld-presence-dot--${livePage.status}`} />
                   {livePage.others.slice(0, 4).map(o => (
                     o.avatar
@@ -2370,7 +2541,11 @@ export default function BuilderPage() {
                     reach the real element's own bubble-phase handler. */}
                 <div
                   className="bld-edit-canvas-wrap"
+                  ref={canvasWrapRef}
                   onClickCapture={(e) => {
+                    // The section bar sits inside this wrapper; its buttons
+                    // handle their own clicks and must not change selection.
+                    if ((e.target as HTMLElement).closest(".bld-section-bar")) return;
                     // A real drag ends with a native `dragend`/`drop`, not a
                     // `click` — but some browsers still fire a trailing click
                     // right after, which would otherwise re-select whatever's
@@ -2383,10 +2558,13 @@ export default function BuilderPage() {
                     setSelectedNodeId(el.getAttribute("data-node-id"));
                   }}
                   onMouseOver={(e) => {
+                    if ((e.target as HTMLElement).closest(".bld-section-bar")) return; // keep the bar while using it
                     const el = (e.target as HTMLElement).closest("[data-node-id]");
-                    setHoveredNodeId(el ? el.getAttribute("data-node-id") : null);
+                    const id = el ? el.getAttribute("data-node-id") : null;
+                    setHoveredNodeId(id);
+                    setSectionHoverId(sectionOf(id));
                   }}
-                  onMouseLeave={() => setHoveredNodeId(null)}
+                  onMouseLeave={() => { setHoveredNodeId(null); setSectionHoverId(null); }}
                   onDragStart={(e) => {
                     const el = (e.target as HTMLElement).closest("[data-node-id]");
                     const id = el?.getAttribute("data-node-id");
@@ -2477,6 +2655,35 @@ export default function BuilderPage() {
                   <div className={`bld-surface bld-surface--${viewport} ${canvasTheme}`}>
                     <RenderTree tree={tree} editable />
                   </div>
+                  {barSectionId && sectionRect && (() => {
+                    const idx = sectionIds.indexOf(barSectionId);
+                    const isRoot = barSectionId === tree.id;
+                    return (
+                      <div
+                        className="bld-section-bar"
+                        style={{ top: sectionRect.top, left: sectionRect.left, width: sectionRect.width }}
+                      >
+                        <div className="bld-section-bar-pill" role="toolbar" aria-label="Section actions">
+                          <button onClick={() => openInsertAt(barSectionId)} title="Add above this section" aria-label="Add above this section"><PlusIcon /></button>
+                          <button onClick={() => askAiAboutSection(barSectionId)} title="Ask AI to change this section" aria-label="Ask AI to change this section"><SparkleIcon /></button>
+                          <button
+                            className={sectionMenuId === barSectionId ? "on" : ""}
+                            onClick={() => setSectionMenuId(m => (m === barSectionId ? null : barSectionId))}
+                            title="More" aria-label="More section actions" aria-haspopup="menu" aria-expanded={sectionMenuId === barSectionId}
+                          ><MoreIcon /></button>
+                          {sectionMenuId === barSectionId && (
+                            <div className="bld-section-menu" role="menu" onMouseLeave={() => setSectionMenuId(null)}>
+                              <button role="menuitem" disabled={idx <= 0} onClick={() => { moveSection(barSectionId, -1); setSectionMenuId(null); }}>Move up</button>
+                              <button role="menuitem" disabled={idx < 0 || idx >= sectionIds.length - 1} onClick={() => { moveSection(barSectionId, 1); setSectionMenuId(null); }}>Move down</button>
+                              <button role="menuitem" disabled={isRoot} onClick={() => { duplicateSection(barSectionId); setSectionMenuId(null); }}>Duplicate</button>
+                              <button role="menuitem" onClick={() => { setSelectedNodeId(barSectionId); setSectionMenuId(null); }}>Select</button>
+                              <button role="menuitem" className="danger" onClick={() => { deleteSection(barSectionId); setSectionMenuId(null); }}>Delete</button>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    );
+                  })()}
                 </div>
 
                 <div className="bld-prop-panel">
@@ -2486,106 +2693,144 @@ export default function BuilderPage() {
                       here to Properties (effect above), but the user can flip
                       back to Insert manually to drop a sibling near whatever's
                       currently selected, or to Layers to keep browsing. */}
-                  <div className="bld-inspector-tabs" role="tablist">
-                    {(["insert", "properties", "layers"] as const).map(t => (
-                      <button
-                        key={t}
-                        role="tab"
-                        aria-selected={inspectorTab === t}
-                        className={`bld-inspector-tab${inspectorTab === t ? " bld-inspector-tab--active" : ""}`}
-                        onClick={() => setInspectorTab(t)}
-                      >
-                        {t === "insert" ? "Insert" : t === "properties" ? "Properties" : "Layers"}
-                      </button>
-                    ))}
-                  </div>
-
-                  {inspectorTab === "layers" ? (
-                    <div className="bld-layers">
-                      {renderLayerRow(tree, 0)}
-                    </div>
-                  ) : inspectorTab === "insert" ? (
-                    <div className="bld-palette">
-                      <label className="bld-palette-search">
-                        <SearchIcon />
-                        <input
-                          type="search"
-                          placeholder="Search components"
-                          value={paletteQuery}
-                          onChange={e => setPaletteQuery(e.target.value)}
-                        />
-                      </label>
-                      {(() => {
-                        const q = paletteQuery.trim().toLowerCase();
-                        const cats = PALETTE_CATEGORIES
-                          .map(cat => ({ ...cat, types: q ? cat.types.filter(t => t.toLowerCase().includes(q)) : cat.types }))
-                          .filter(cat => cat.types.length > 0);
-                        if (cats.length === 0) return <p className="bld-prop-empty">No components match &ldquo;{paletteQuery}&rdquo;.</p>;
-                        return cats.map(cat => (
-                          <div key={cat.label} className="bld-palette-cat">
-                            <span className="bld-panel-section-label">{cat.label}</span>
-                            <div className="bld-palette-grid">
-                              {cat.types.map(type => (
-                                <div
-                                  key={type}
-                                  className="bld-palette-item"
-                                  draggable
-                                  title={`Drag ${type} onto the canvas`}
-                                  onDragStart={(e) => {
-                                    setDraggingPaletteType(type);
-                                    setDraggingNodeId(null); // mutually exclusive with reordering an existing node
-                                    e.dataTransfer.effectAllowed = "copy";
-                                    e.dataTransfer.setData("text/plain", `palette:${type}`);
-                                  }}
-                                  onDragEnd={() => { setDraggingPaletteType(null); setDropTarget(null); }}
-                                >
-                                  <span className="bld-palette-item-icon"><ComponentIcon type={type} /></span>
-                                  <span className="bld-palette-item-label">{type}</span>
-                                </div>
-                              ))}
-                            </div>
+                  {selectedNode ? (() => {
+                    // Element editor: Content is what it says (text and
+                    // text-valued props), Style is how it looks (everything
+                    // else). Tabs only appear when both have something.
+                    const fields = PROP_SCHEMA[selectedNode.type] ?? [];
+                    const contentFields = fields.filter(f => f.kind === "text");
+                    const styleFields = fields.filter(f => f.kind !== "text");
+                    const hasText = typeof selectedNode.children === "string";
+                    const hasContent = hasText || contentFields.length > 0;
+                    const hasStyle = styleFields.length > 0;
+                    const tab = hasContent && hasStyle ? propTab : hasContent ? "content" : "style";
+                    const parent = tree ? findParent(tree, selectedNode.id ?? "") : null;
+                    return (
+                      <>
+                        <div className="bld-prop-panel-head">
+                          <button className="bld-prop-back" onClick={selectParent} title={parent && parent.id !== tree.id ? `Back to ${parent.type}` : "Back"} aria-label="Back"><BackIcon /></button>
+                          <span className="bld-prop-type-icon"><ComponentIcon type={selectedNode.type} /></span>
+                          <span className="bld-prop-title">
+                            <span className="bld-prop-type">{selectedNode.type}</span>
+                            {parent && <span className="bld-prop-parent">in {parent.type}</span>}
+                          </span>
+                          {!readOnly && (
+                            <button className="bld-prop-delete" onClick={deleteSelectedNode} title="Delete element" aria-label="Delete element">
+                              <TrashIcon />
+                            </button>
+                          )}
+                        </div>
+                        {hasContent && hasStyle && (
+                          <div className="bld-prop-tabs" role="tablist">
+                            {(["content", "style"] as const).map(t => (
+                              <button key={t} role="tab" aria-selected={tab === t} className={tab === t ? "on" : ""} onClick={() => setPropTab(t)}>
+                                {t === "content" ? "Content" : "Style"}
+                              </button>
+                            ))}
                           </div>
-                        ));
-                      })()}
-                      <p className="bld-panel-hint">Drag a component onto the canvas to add it.</p>
-                    </div>
-                  ) : !selectedNode ? (
-                    <div className="bld-panel-empty">
-                      <span className="bld-panel-empty-icon"><ComponentIcon type="Box" size={18} /></span>
-                      <p className="bld-prop-empty">Select an element on the canvas or in Layers to edit it.</p>
-                    </div>
-                  ) : (
+                        )}
+                        {!hasContent && !hasStyle && (
+                          <p className="bld-prop-empty bld-prop-section">No editable properties for this element yet.</p>
+                        )}
+                        {tab === "content" && hasContent && (
+                          <div className="bld-prop-section">
+                            {hasText && (
+                              <div className="bld-prop-row bld-prop-row--stacked">
+                                <textarea
+                                  key={`${selectedNode.id}:__text`} className="bld-prop-input bld-prop-textarea"
+                                  defaultValue={selectedNode.children as string}
+                                  rows={2}
+                                  aria-label="Text"
+                                  onBlur={e => updateSelectedText(e.target.value)}
+                                  onKeyDown={e => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); (e.target as HTMLTextAreaElement).blur(); } }}
+                                />
+                              </div>
+                            )}
+                            {contentFields.map(field => renderPropField(field, selectedNode))}
+                          </div>
+                        )}
+                        {tab === "style" && hasStyle && (
+                          <div className="bld-prop-section">
+                            {styleFields.map(field => renderPropField(field, selectedNode))}
+                          </div>
+                        )}
+                      </>
+                    );
+                  })() : (
                     <>
-                      <div className="bld-prop-panel-head">
-                        <span className="bld-prop-type-icon"><ComponentIcon type={selectedNode.type} /></span>
-                        <span className="bld-prop-type">{selectedNode.type}</span>
-                        <button className="bld-prop-delete" onClick={deleteSelectedNode} title="Delete element" aria-label="Delete element">
-                          <TrashIcon />
-                        </button>
+                      <div className="bld-inspector-tabs" role="tablist">
+                        {(["insert", "layers"] as const).map(t => (
+                          <button
+                            key={t}
+                            role="tab"
+                            aria-selected={inspectorTab === t}
+                            className={`bld-inspector-tab${inspectorTab === t ? " bld-inspector-tab--active" : ""}`}
+                            onClick={() => setInspectorTab(t)}
+                          >
+                            {t === "insert" ? "Insert" : "Layers"}
+                          </button>
+                        ))}
                       </div>
-                      {typeof selectedNode.children === "string" && (
-                        <div className="bld-prop-section">
-                          <span className="bld-panel-section-label">Content</span>
-                          <div className="bld-prop-row bld-prop-row--stacked">
-                            <textarea
-                              key={`${selectedNode.id}:__text`} className="bld-prop-input bld-prop-textarea"
-                              defaultValue={selectedNode.children}
-                              rows={2}
-                              aria-label="Text content"
-                              onBlur={e => updateSelectedText(e.target.value)}
-                              onKeyDown={e => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); (e.target as HTMLTextAreaElement).blur(); } }}
+
+                      {inspectorTab === "layers" ? (
+                        <div className="bld-layers">
+                          {renderLayerRow(tree, 0)}
+                        </div>
+                      ) : (
+                        <div className="bld-palette">
+                          {insertTarget && (
+                            <div className="bld-insert-target">
+                              <span>Adding above <b>{findNodeById(tree, insertTarget.id)?.type ?? "section"}</b></span>
+                              <button onClick={() => setInsertTarget(null)}>Cancel</button>
+                            </div>
+                          )}
+                          <label className="bld-palette-search">
+                            <SearchIcon />
+                            <input
+                              type="search"
+                              placeholder="Search components"
+                              value={paletteQuery}
+                              onChange={e => setPaletteQuery(e.target.value)}
                             />
-                          </div>
+                          </label>
+                          {(() => {
+                            const q = paletteQuery.trim().toLowerCase();
+                            const cats = PALETTE_CATEGORIES
+                              .map(cat => ({ ...cat, types: q ? cat.types.filter(t => t.toLowerCase().includes(q)) : cat.types }))
+                              .filter(cat => cat.types.length > 0);
+                            if (cats.length === 0) return <p className="bld-prop-empty">No components match &ldquo;{paletteQuery}&rdquo;.</p>;
+                            return cats.map(cat => (
+                              <div key={cat.label} className="bld-palette-cat">
+                                <span className="bld-panel-section-label">{cat.label}</span>
+                                <div className="bld-palette-grid">
+                                  {cat.types.map(type => (
+                                    <div
+                                      key={type}
+                                      className="bld-palette-item"
+                                      role="button"
+                                      tabIndex={0}
+                                      draggable
+                                      title={`Add ${type} (click, or drag onto the canvas)`}
+                                      onClick={() => insertFromPalette(type)}
+                                      onKeyDown={e => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); insertFromPalette(type); } }}
+                                      onDragStart={(e) => {
+                                        setDraggingPaletteType(type);
+                                        setDraggingNodeId(null); // mutually exclusive with reordering an existing node
+                                        e.dataTransfer.effectAllowed = "copy";
+                                        e.dataTransfer.setData("text/plain", `palette:${type}`);
+                                      }}
+                                      onDragEnd={() => { setDraggingPaletteType(null); setDropTarget(null); }}
+                                    >
+                                      <span className="bld-palette-item-icon"><ComponentIcon type={type} /></span>
+                                      <span className="bld-palette-item-label">{type}</span>
+                                    </div>
+                                  ))}
+                                </div>
+                              </div>
+                            ));
+                          })()}
+                          <p className="bld-panel-hint">Click to add, or drag onto the canvas.</p>
                         </div>
-                      )}
-                      {(PROP_SCHEMA[selectedNode.type] ?? []).length > 0 && (
-                        <div className="bld-prop-section">
-                          <span className="bld-panel-section-label">Properties</span>
-                          {(PROP_SCHEMA[selectedNode.type] ?? []).map(field => renderPropField(field, selectedNode))}
-                        </div>
-                      )}
-                      {!PROP_SCHEMA[selectedNode.type] && typeof selectedNode.children !== "string" && (
-                        <p className="bld-prop-empty">No editable properties for this element yet.</p>
                       )}
                     </>
                   )}

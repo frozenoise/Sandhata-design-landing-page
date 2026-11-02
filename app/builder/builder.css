@@ -358,7 +358,7 @@
 .bld-float-toolbar-sep { width: 1px; height: 18px; margin: 0 4px; background: var(--doc-line); }
 
 .bld-edit-layout { flex: 1; display: flex; gap: 20px; align-items: flex-start; min-width: 0; }
-.bld-edit-canvas-wrap { flex: 1; min-width: 0; display: flex; }
+.bld-edit-canvas-wrap { flex: 1; min-width: 0; display: flex; position: relative; }
 /* Selected/hovered outlines are injected as scoped rules (see the inline
    <style> next to this wrapper in page.tsx) targeting [data-node-id] —
    cursor:pointer here signals the whole canvas is click-to-select. */
@@ -516,6 +516,82 @@ select.bld-prop-input { padding-right: 4px; cursor: pointer; }
   text-overflow: ellipsis; white-space: nowrap; min-width: 0;
 }
 .bld-layer-row--selected .bld-layer-text { color: rgba(255,255,255,0.75); }
+
+/* ── Section bar (Vzy-style): a line on the hovered section's top edge
+   with a small dark pill: add above, ask AI, more. ─────────────────── */
+.bld-section-bar {
+  position: absolute; height: 0; z-index: 15; pointer-events: none;
+  border-top: 1.5px solid var(--colour-primaryblue-500);
+}
+.bld-section-bar-pill {
+  position: absolute; left: 50%; top: -1px; transform: translateX(-50%);
+  display: flex; align-items: center; gap: 1px; padding: 2px 4px 3px;
+  background: #111318; border-radius: 0 0 9px 9px; pointer-events: auto;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.18);
+}
+.bld-section-bar-pill > button {
+  width: 26px; height: 22px; border: none; border-radius: 6px; background: none;
+  color: rgba(255,255,255,0.85); cursor: pointer; display: flex; align-items: center; justify-content: center;
+}
+.bld-section-bar-pill > button:hover, .bld-section-bar-pill > button.on { background: rgba(255,255,255,0.14); color: #fff; }
+.bld-section-bar-pill svg { display: block; }
+.bld-section-menu {
+  position: absolute; top: calc(100% + 6px); left: 50%; transform: translateX(-50%);
+  min-width: 148px; padding: 4px; background: #111318; border-radius: 10px;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.25); display: flex; flex-direction: column;
+}
+.bld-section-menu button {
+  text-align: left; padding: 7px 10px; border: none; border-radius: 6px; background: none;
+  font: 12px/1 var(--font-normal); color: rgba(255,255,255,0.9); cursor: pointer;
+}
+.bld-section-menu button:hover:not(:disabled) { background: rgba(255,255,255,0.1); }
+.bld-section-menu button:disabled { color: rgba(255,255,255,0.35); cursor: default; }
+.bld-section-menu button.danger { color: #ff6b5b; }
+
+/* ── Element editor header: back to parent, type, delete ──────────────── */
+.bld-prop-back {
+  width: 24px; height: 24px; margin-left: -4px; border: none; border-radius: 6px; background: none;
+  color: var(--text-caption); cursor: pointer; display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+}
+.bld-prop-back:hover { background: var(--doc-bg); color: var(--text-title); }
+.bld-prop-title { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 3px; }
+.bld-prop-title .bld-prop-type { flex: none; }
+.bld-prop-parent { font: 11px/1 var(--font-normal); color: var(--text-caption); }
+/* Content / Style: underline tabs, as in Vzy */
+.bld-prop-tabs {
+  display: grid; grid-template-columns: 1fr 1fr; border-bottom: 1px solid var(--doc-line);
+  padding-left: 0 !important; padding-right: 0 !important;
+}
+.bld-prop-tabs button {
+  height: 34px; border: none; background: none; cursor: pointer;
+  font: 12px/1 var(--font-normal); color: var(--text-caption);
+  border-bottom: 2px solid transparent; margin-bottom: -1px;
+}
+.bld-prop-tabs button:hover { color: var(--text-title); }
+.bld-prop-tabs button.on { color: var(--text-title); font-family: var(--font-bold); font-weight: 700; border-bottom-color: var(--text-title); }
+
+/* Insert grid: "Adding above <section>" banner set by the section bar's + */
+.bld-insert-target {
+  display: flex; align-items: center; justify-content: space-between; gap: 8px;
+  padding: 8px 10px; border-radius: 7px;
+  background: rgba(59,104,255,0.1); color: var(--text-title); font: 12px/1.3 var(--font-normal);
+}
+.bld-insert-target b { font-family: var(--font-bold); }
+.bld-insert-target button {
+  border: none; background: none; cursor: pointer; padding: 0;
+  font: 700 12px/1 var(--font-bold); color: var(--colour-primaryblue-500);
+}
+.bld-palette-item:focus-visible { outline: 2px solid var(--colour-primaryblue-400); outline-offset: 1px; }
+
+/* Toolbar: Share (invite people to this page's project) */
+.bld-share-page-btn {
+  height: 32px; padding: 0 12px; display: inline-flex; align-items: center; gap: 6px;
+  border: none; border-radius: var(--radius-sm); background: var(--colour-primaryblue-500); color: #fff;
+  font: 700 12px/1 var(--font-bold); cursor: pointer;
+}
+.bld-share-page-btn:hover:not(:disabled) { background: var(--colour-primaryblue-600, var(--colour-primaryblue-500)); }
+.bld-share-page-btn:disabled { background: var(--doc-bg); color: var(--text-caption); border: 1px solid var(--doc-line); cursor: not-allowed; }
+.bld-presence { cursor: pointer; }
 
 .bld-empty { color: var(--text-caption); }
 .bld-spinner {
