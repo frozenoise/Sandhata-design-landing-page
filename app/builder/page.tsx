@@ -2514,7 +2514,7 @@ export default function BuilderPage() {
               canvas light/dark, then Share and Export. Icon-only buttons
               show their label on hover (data-tip), as in Vzy. */}
           {tree && (
-            <div className="bld-float-toolbar" role="toolbar" aria-label="Canvas tools">
+            <div className={`bld-float-toolbar${view === "edit" && viewingVersion === null ? " bld-float--docked" : ""}`} role="toolbar" aria-label="Canvas tools">
               <div className="bld-float-group" role="group" aria-label="View">
                 <button
                   className={view === "edit" ? "on" : ""}
@@ -2630,7 +2630,7 @@ export default function BuilderPage() {
             </div>
           )}
           {tree && showVersions && (
-            <div className="bld-versions" role="dialog" aria-label="Version history">
+            <div className={`bld-versions${view === "edit" && viewingVersion === null ? " bld-float--docked" : ""}`} role="dialog" aria-label="Version history">
               <div className="bld-versions-head">
                 <span>Version history</span>
                 <button onClick={() => { setShowVersions(false); setViewingVersion(null); }} aria-label="Close version history"><XIcon /></button>
@@ -2663,7 +2663,7 @@ export default function BuilderPage() {
               </ul>
             </div>
           )}
-          <div className="bld-canvas">
+          <div className={`bld-canvas${tree && view === "edit" && viewingVersion === null ? " bld-canvas--edit" : ""}`}>
             {tree && viewingVersion !== null && msgs[viewingVersion]?.tree && (() => {
               const v = versions.find(x => x.idx === viewingVersion);
               return (
@@ -2752,6 +2752,7 @@ export default function BuilderPage() {
                     (a Switch toggling, a link navigating) while in edit mode:
                     stopPropagation on the capture phase never lets the click
                     reach the real element's own bubble-phase handler. */}
+                <div className="bld-edit-scroll">
                 <div
                   className="bld-edit-canvas-wrap"
                   ref={canvasWrapRef}
@@ -2898,7 +2899,10 @@ export default function BuilderPage() {
                     );
                   })()}
                 </div>
+                </div>
 
+                {/* Docked full height on the right, like the chat on the
+                    left (Framer/Vzy), rather than floating over the canvas. */}
                 <div className="bld-prop-panel">
                   {/* Insert, Properties, and Layers share this one panel
                       rather than adding extra layout columns - selecting an
