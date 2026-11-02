@@ -22,6 +22,78 @@ const ERRORS: Record<string, string> = {
   forbidden: "Only the project owner can change who has access.",
 };
 
+const ROLES = [
+  { value: "editor", label: "Editor", hint: "Can change pages and edit live" },
+  { value: "viewer", label: "Viewer", hint: "Can only look" },
+];
+
+const ChevronIcon = () => (
+  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><polyline points="6 9 12 15 18 9" /></svg>
+);
+const CheckIcon = () => (
+  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><polyline points="20 6 9 17 4 12" /></svg>
+);
+const CloseIcon = () => (
+  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden="true"><line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" /></svg>
+);
+
+// Styled stand-in for a native select: the OS popup ignores the page's fonts
+// and colours (macOS draws its own tick and accent highlight).
+function RoleMenu({ value, onChange, disabled, compact }: {
+  value: string;
+  onChange: (v: string) => void;
+  disabled?: boolean;
+  /** Text-only trigger for the people list; boxed trigger for the add row. */
+  compact?: boolean;
+}) {
+  const [open, setOpen] = React.useState(false);
+  const ref = React.useRef<HTMLDivElement>(null);
+  React.useEffect(() => {
+    if (!open) return;
+    const onDown = (e: MouseEvent) => { if (!ref.current?.contains(e.target as Node)) setOpen(false); };
+    const onKey = (e: KeyboardEvent) => { if (e.key === "Escape") { e.stopPropagation(); setOpen(false); } };
+    document.addEventListener("mousedown", onDown);
+    document.addEventListener("keydown", onKey, true);
+    return () => { document.removeEventListener("mousedown", onDown); document.removeEventListener("keydown", onKey, true); };
+  }, [open]);
+  const current = ROLES.find(r => r.value === value) ?? ROLES[0];
+  return (
+    <div className="bld-role" ref={ref}>
+      <button
+        type="button"
+        className={`bld-role-trigger${compact ? " bld-role-trigger--compact" : ""}`}
+        onClick={() => setOpen(o => !o)}
+        disabled={disabled}
+        aria-haspopup="listbox"
+        aria-expanded={open}
+      >
+        {current.label} <ChevronIcon />
+      </button>
+      {open && (
+        <ul className="bld-role-menu" role="listbox">
+          {ROLES.map(r => (
+            <li key={r.value}>
+              <button
+                type="button"
+                role="option"
+                aria-selected={r.value === value}
+                className={`bld-role-option${r.value === value ? " bld-role-option--on" : ""}`}
+                onClick={() => { setOpen(false); if (r.value !== value) onChange(r.value); }}
+              >
+                <span className="bld-role-check">{r.value === value && <CheckIcon />}</span>
+                <span className="bld-role-text">
+                  <span className="bld-role-label">{r.label}</span>
+                  <span className="bld-role-hint">{r.hint}</span>
+                </span>
+              </button>
+            </li>
+          ))}
+        </ul>
+      )}
+    </div>
+  );
+}
+
 export function ShareDialog({ projectId, projectName, currentUserId, onClose, onChanged }: {
   projectId: string;
   projectName: string;
@@ -94,8 +166,10 @@ export function ShareDialog({ projectId, projectName, currentUserId, onClose, on
   return (
     <div className="bld-modal-overlay" onClick={() => !busy && onClose()}>
       <div className="bld-modal bld-modal--share" onClick={e => e.stopPropagation()}>
-        <button className="bld-modal-close" onClick={onClose} title="Close" disabled={busy}>×</button>
-        <h2 className="bld-modal-title">Share “{projectName}”</h2>
+        <div className="bld-share-head">
+          <h2 className="bld-modal-title" title={projectName}>Share “{projectName}”</h2>
+          <button className="bld-share-close" onClick={onClose} title="Close" aria-label="Close" disabled={busy}><CloseIcon /></button>
+        </div>
         <p className="bld-modal-body">
           People with access can open every page in this project. Editors can change pages and add new ones, and see each other&apos;s edits live. Viewers can only look.
         </p>
@@ -103,7 +177,7 @@ export function ShareDialog({ projectId, projectName, currentUserId, onClose, on
         {isOwner && (
           <div className="bld-share-add">
             <input
-              className="bld-key-input"
+              className="bld-share-input"
               type="email"
               placeholder="Email address"
               value={email}
@@ -112,10 +186,7 @@ export function ShareDialog({ projectId, projectName, currentUserId, onClose, on
               disabled={busy}
               autoFocus
             />
-            <select className="bld-share-role" value={role} onChange={e => setRole(e.target.value)} disabled={busy}>
-              <option value="editor">Editor</option>
-              <option value="viewer">Viewer</option>
-            </select>
+            <RoleMenu value={role} onChange={setRole} disabled={busy} />
             <button className="bld-share-add-btn" onClick={add} disabled={busy || !email.trim()}>Add</button>
           </div>
         )}
@@ -144,10 +215,7 @@ export function ShareDialog({ projectId, projectName, currentUserId, onClose, on
                     {m.name && m.email && <span className="bld-share-email">{m.email}</span>}
                   </span>
                   {isOwner ? (
-                    <select className="bld-share-role" value={m.role} onChange={e => changeRole(m.id, e.target.value)}>
-                      <option value="editor">Editor</option>
-                      <option value="viewer">Viewer</option>
-                    </select>
+                    <RoleMenu compact value={m.role} onChange={v => changeRole(m.id, v)} />
                   ) : (
                     <span className="bld-share-badge">{m.role === "editor" ? "Editor" : "Viewer"}</span>
                   )}
@@ -167,10 +235,7 @@ export function ShareDialog({ projectId, projectName, currentUserId, onClose, on
                   <span className="bld-share-email">Invited, hasn&apos;t signed in yet</span>
                 </span>
                 {isOwner ? (
-                  <select className="bld-share-role" value={i.role} onChange={e => changeRole(i.id, e.target.value)}>
-                    <option value="editor">Editor</option>
-                    <option value="viewer">Viewer</option>
-                  </select>
+                  <RoleMenu compact value={i.role} onChange={v => changeRole(i.id, v)} />
                 ) : (
                   <span className="bld-share-badge">{i.role === "editor" ? "Editor" : "Viewer"}</span>
                 )}
