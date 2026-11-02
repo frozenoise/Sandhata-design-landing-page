@@ -14,12 +14,15 @@ import { PALETTE_CATEGORIES, paletteDefaults } from "./paletteDefaults";
 import { useLivePage, ROOM_PREFIX } from "./liveRoom";
 import { ShareDialog } from "./ShareDialog";
 import { ComponentIcon } from "./componentIcons";
+import { SECTION_TEMPLATES, buildSection } from "./sectionTemplates";
 
 type ChatMsg = {
   role: "user" | "assistant";
   content: string;
   label?: string;
   tree?: UINode;
+  /** When this turn was made (ISO). Older transcripts don't have it. */
+  at?: string;
   isError?: boolean;
   errorText?: string;
 };
@@ -148,6 +151,17 @@ const SendIcon     = () => (<svg width="14" height="14" viewBox="0 0 24 24" fill
 const MobileIcon   = () => (<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><rect x="7" y="2" width="10" height="20" rx="2"/><line x1="12" y1="18" x2="12" y2="18"/></svg>);
 const TabletIcon   = () => (<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><rect x="4" y="2" width="16" height="20" rx="2"/><line x1="12" y1="18" x2="12" y2="18"/></svg>);
 const DesktopIcon  = () => (<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>);
+/** "just now", "5 min ago", "3 h ago", else "2 Nov, 13:05". */
+function formatWhen(iso: string): string {
+  const t = Date.parse(iso);
+  if (Number.isNaN(t)) return "";
+  const mins = Math.round((Date.now() - t) / 60000);
+  if (mins < 1) return "just now";
+  if (mins < 60) return `${mins} min ago`;
+  if (mins < 24 * 60) return `${Math.round(mins / 60)} h ago`;
+  return new Date(t).toLocaleString("en-GB", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" });
+}
+
 const HistoryIcon  = () => (<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>);
 const UserIcon     = () => (<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>);
 const KeyIcon      = () => (<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="7.5" cy="15.5" r="5.5"/><path d="M10.5 12.5L21 2"/><path d="M18 5l3 3M15 8l3 3"/></svg>);
@@ -193,6 +207,12 @@ export default function BuilderPage() {
   const [canvasTheme,   setCanvasTheme]   = React.useState<"light" | "dark">("light");
   // Insert tab: filters the component grid by name.
   const [paletteQuery,  setPaletteQuery]  = React.useState("");
+  // Visual edits not yet folded into the transcript (autosaved after a pause).
+  const [editsDirty,    setEditsDirty]    = React.useState(false);
+  // Version history: the panel, and which version (index into msgs) is on
+  // the canvas for a look before restoring.
+  const [showVersions,  setShowVersions]  = React.useState(false);
+  const [viewingVersion, setViewingVersion] = React.useState<number | null>(null);
   // ── Visual editor (edit view) - Phase 1: select + property-panel editing.
   // Undo/redo is a snapshot stack, not a diff log - trees here are small
   // (the AI's own system prompt caps them around ~200 nodes), so a
@@ -409,6 +429,9 @@ export default function BuilderPage() {
     setDraggingPaletteType(null);
     setDropTarget(null);
     setInspectorTab("insert");
+    setEditsDirty(false);
+    setViewingVersion(null);
+    setShowVersions(false);
   }, [activeTabId]);
 
   // Selecting something (by click, or right after a palette insert below)
@@ -454,11 +477,13 @@ export default function BuilderPage() {
     setEditHistory(h => [...h, tree].slice(-50));
     setEditRedoStack([]);
     setTree(nextTree);
+    setEditsDirty(true);
   }
 
   function undoEdit() {
     // In a live room, undo goes through Liveblocks so it only reverts my own
     // edits, never someone else's that landed after mine.
+    setEditsDirty(true);
     if (livePage.live) { livePage.undo(); return; }
     if (!tree || editHistory.length === 0) return;
     const prev = editHistory[editHistory.length - 1];
@@ -468,6 +493,7 @@ export default function BuilderPage() {
   }
 
   function redoEdit() {
+    setEditsDirty(true);
     if (livePage.live) { livePage.redo(); return; }
     if (!tree || editRedoStack.length === 0) return;
     const next = editRedoStack[editRedoStack.length - 1];
@@ -613,6 +639,23 @@ export default function BuilderPage() {
     setSelectedNodeId(node.id ?? null);
   }
 
+  /** Drops a ready-made section in as a top-level block: above the "+"
+   * target, else after the section holding the selection, else at the end. */
+  function insertSection(key: string) {
+    if (!tree || readOnly) return;
+    const node = buildSection(key);
+    if (!node) return;
+    let next: UINode = tree;
+    const after = sectionOf(selectedNodeId);
+    if (insertTarget && findNodeById(tree, insertTarget.id)) next = insertNodeAt(tree, insertTarget.id, insertTarget.position, node);
+    else if (after && after !== tree.id) next = insertNodeAt(tree, after, "after", node);
+    else if (tree.id && CONTAINER_TYPES.has(tree.type)) next = insertNodeAt(tree, tree.id, "inside", node);
+    if (next === tree) return;
+    commitTreeEdit(next);
+    setInsertTarget(null);
+    setSelectedNodeId(node.id ?? null);
+  }
+
   /** Panel back arrow: up to the parent element, or out to Insert/Layers. */
   function selectParent() {
     if (!tree || !selectedNodeId) return;
@@ -620,31 +663,81 @@ export default function BuilderPage() {
     setSelectedNodeId(parent && parent.id !== tree.id ? parent.id ?? null : null);
   }
 
-  // Folds any edits made in "edit" view back into the chat transcript as a
-  // single synthetic assistant turn when you leave it - not on every
-  // keystroke/commit, which would spam the transcript. This is deliberately
-  // NOT a parallel/independent mutation path: send()'s system prompt already
-  // tells the model its prior JSON is in the conversation history as its own
-  // last assistant message and to modify it, so a visually-edited tree just
-  // becomes the AI's next starting point for free, same as any chat-driven
-  // edit - and it goes through the exact same saveToDb() the chat flow uses.
-  function flushVisualEditsToChat() {
-    if (editHistory.length === 0) return;
-    const isFirst = msgs.length === 0;
-    const updatedMsgs: ChatMsg[] = [
-      ...msgs,
-      { role: "assistant", content: tree ? JSON.stringify(tree) : "", label: "Edited visually", tree: tree ?? undefined },
-    ];
+  // Folds visual edits back into the chat transcript as a synthetic
+  // assistant turn ("Edited visually"), which is also what version history
+  // lists. Not on every commit, which would spam the transcript: after a few
+  // seconds' pause (autosave below), on leaving Edit and on switching tabs.
+  // A burst of edits within a few minutes updates the same turn rather than
+  // adding a new one. This is deliberately NOT a parallel mutation path:
+  // send()'s system prompt already tells the model its prior JSON is its own
+  // last assistant message, so a visually-edited tree just becomes the AI's
+  // next starting point, and it goes through the same saveToDb() as chat.
+  function saveVisualEdits() {
+    if (!editsDirty || !tree) return;
+    setEditsDirty(false);
+    const now = new Date().toISOString();
+    const last = msgs[msgs.length - 1];
+    const coalesce = last?.role === "assistant" && last.label === "Edited visually" && !!last.at
+      && Date.now() - Date.parse(last.at) < 5 * 60 * 1000;
+    const turn: ChatMsg = { role: "assistant", content: JSON.stringify(tree), label: "Edited visually", tree, at: now };
+    const updatedMsgs: ChatMsg[] = coalesce ? [...msgs.slice(0, -1), turn] : [...msgs, turn];
     setMsgs(updatedMsgs);
-    if (tree) saveToDb(updatedMsgs, tree, isFirst, activeTabId);
+    saveToDb(updatedMsgs, tree, msgs.length === 0, activeTabId);
+  }
+
+  function flushVisualEditsToChat() {
+    saveVisualEdits();
     setEditHistory([]);
     setEditRedoStack([]);
+  }
+
+  // Autosave: Edit is the default view now, so edits can't wait for the
+  // user to leave it.
+  React.useEffect(() => {
+    if (!editsDirty || readOnly) return;
+    const t = setTimeout(saveVisualEdits, 3000);
+    return () => clearTimeout(t);
+    // Re-arms on each edit (tree) so it fires 3s after the last one.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [editsDirty, tree, msgs, readOnly]);
+
+  // ── Version history ────────────────────────────────────────────────────
+  // Every assistant turn with a tree is a version: generated, updated by
+  // chat, edited visually, or restored.
+  const versions = React.useMemo(() => {
+    const out: { idx: number; num: number; label: string; prompt: string | null; at?: string }[] = [];
+    let prompt: string | null = null;
+    msgs.forEach((m, idx) => {
+      if (m.role === "user") { prompt = m.content; return; }
+      if (!m.tree) return;
+      out.push({ idx, num: out.length + 1, label: m.label ?? "Version", prompt: m.label === "Edited visually" || m.label?.startsWith("Restored") ? null : prompt, at: m.at });
+      prompt = null;
+    });
+    return out;
+  }, [msgs]);
+
+  function restoreVersion(idx: number) {
+    const v = versions.find(v => v.idx === idx);
+    const vTree = msgs[idx]?.tree;
+    if (!v || !vTree || !tree || readOnly) return;
+    const restored = ensureIds(vTree);
+    setEditHistory(h => [...h, tree].slice(-50));
+    setEditRedoStack([]);
+    setTree(restored);
+    setEditsDirty(false);
+    const updatedMsgs: ChatMsg[] = [...msgs, { role: "assistant", content: JSON.stringify(restored), label: `Restored version ${v.num}`, tree: restored, at: new Date().toISOString() }];
+    setMsgs(updatedMsgs);
+    saveToDb(updatedMsgs, restored, false, activeTabId);
+    setViewingVersion(null);
+    setShowVersions(false);
+    setView("edit");
   }
 
   function changeView(next: "preview" | "code" | "edit" | "report") {
     if (next === "edit" && readOnly) return;
     if (next === "edit" && view !== "edit") livePage.clearHistory();
     if (view === "edit" && next !== "edit") flushVisualEditsToChat();
+    setViewingVersion(null);
     setView(next);
   }
 
@@ -839,6 +932,7 @@ export default function BuilderPage() {
   // between several pages you're iterating on" payoff of having tabs at all -
   // and only falls back to loadSession's network fetch on a genuine first open.
   function openTab(item: HistoryItem) {
+    if (item.id !== activeTabId) saveVisualEdits();
     setShowHistory(false);
     setOpenTabs(tabs => (tabs.some(t => t.id === item.id) ? tabs : [...tabs, item]));
     const cached = tabCacheRef.current[item.id];
@@ -873,6 +967,7 @@ export default function BuilderPage() {
   // Opens a new blank draft tab. Distinct from reset() (which just clears the
   // canvas with no tab bookkeeping) - this is the user-facing "+" action.
   function newTab() {
+    saveVisualEdits();
     const draftId = `draft-${Date.now()}`;
     const draft: HistoryItem = { id: draftId, name: "Untitled", createdAt: new Date().toISOString(), updatedAt: new Date().toISOString(), projectId: activeProjectId };
     setOpenTabs(tabs => [...tabs, draft]);
@@ -1442,7 +1537,7 @@ export default function BuilderPage() {
       setOpenTabs(tabs => [...tabs, { id: currentTabId!, name: "Untitled", createdAt: new Date().toISOString(), updatedAt: new Date().toISOString(), projectId: activeProjectId }]);
     }
 
-    const userMsg: ChatMsg = { role: "user", content: txt };
+    const userMsg: ChatMsg = { role: "user", content: txt, at: new Date().toISOString() };
     const next = [...msgs, userMsg];
     setMsgs(next);
     setLoading(true);
@@ -1466,7 +1561,7 @@ export default function BuilderPage() {
         const isFirst = msgs.length === 0;
         const updatedMsgs: ChatMsg[] = [
           ...next,
-          { role: "assistant", content: data.raw || JSON.stringify(newTree), label: isFirst ? "Interface generated" : "Interface updated", tree: newTree },
+          { role: "assistant", content: data.raw || JSON.stringify(newTree), label: isFirst ? "Interface generated" : "Interface updated", tree: newTree, at: new Date().toISOString() },
         ];
         setMsgs(updatedMsgs);
         await saveToDb(updatedMsgs, newTree, isFirst, currentTabId);
@@ -2493,6 +2588,13 @@ export default function BuilderPage() {
               )}
 
               <span className="bld-float-toolbar-sep" aria-hidden="true" />
+              <button
+                className={showVersions ? "on" : ""}
+                onClick={() => setShowVersions(v => !v)}
+                disabled={versions.length === 0}
+                data-tip={showVersions ? undefined : "Version history"}
+                aria-label="Version history" aria-expanded={showVersions}
+              ><HistoryIcon /></button>
               <button onClick={exportZip} data-tip="Export ZIP" aria-label="Export ZIP"><DownloadIcon /></button>
               {livePage.live && (
                 <div
@@ -2527,7 +2629,58 @@ export default function BuilderPage() {
               })()}
             </div>
           )}
+          {tree && showVersions && (
+            <div className="bld-versions" role="dialog" aria-label="Version history">
+              <div className="bld-versions-head">
+                <span>Version history</span>
+                <button onClick={() => { setShowVersions(false); setViewingVersion(null); }} aria-label="Close version history"><XIcon /></button>
+              </div>
+              <ul className="bld-versions-list">
+                {[...versions].reverse().map((v, i) => {
+                  const current = i === 0;
+                  const on = viewingVersion === v.idx || (current && viewingVersion === null);
+                  return (
+                    <li key={v.idx}>
+                      <button
+                        className={`bld-version${on ? " on" : ""}`}
+                        onClick={() => {
+                          if (current) { setViewingVersion(null); return; }
+                          if (view === "edit") flushVisualEditsToChat();
+                          setViewingVersion(v.idx);
+                        }}
+                      >
+                        <span className="bld-version-top">
+                          <span className="bld-version-num">v{v.num}</span>
+                          <span className="bld-version-label">{v.label}</span>
+                          {current && <span className="bld-version-current">Current</span>}
+                        </span>
+                        {v.prompt && <span className="bld-version-prompt">{v.prompt}</span>}
+                        {v.at && <span className="bld-version-time">{formatWhen(v.at)}</span>}
+                      </button>
+                    </li>
+                  );
+                })}
+              </ul>
+            </div>
+          )}
           <div className="bld-canvas">
+            {tree && viewingVersion !== null && msgs[viewingVersion]?.tree && (() => {
+              const v = versions.find(x => x.idx === viewingVersion);
+              return (
+                <div className="bld-version-view" style={{ maxWidth: viewport === "mobile" ? 375 : viewport === "tablet" ? 768 : undefined }}>
+                  <div className="bld-version-banner">
+                    <span>Viewing <b>v{v?.num}</b>{v?.label ? `: ${v.label}` : ""}{v?.at ? `, ${formatWhen(v.at)}` : ""}</span>
+                    <span className="bld-version-banner-actions">
+                      <button onClick={() => setViewingVersion(null)}>Back to current</button>
+                      {!readOnly && <button className="primary" onClick={() => restoreVersion(viewingVersion)}>Restore this version</button>}
+                    </span>
+                  </div>
+                  <div className={`bld-surface bld-surface--${viewport} ${canvasTheme}`}>
+                    <RenderTree tree={msgs[viewingVersion].tree!} />
+                  </div>
+                </div>
+              );
+            })()}
             {!tree && !loading && (
               <div className="bld-state bld-empty">
                 <span>Your generated interface will appear here.</span>
@@ -2539,7 +2692,7 @@ export default function BuilderPage() {
                 <span>Generating interface…</span>
               </div>
             )}
-            {tree && view === "preview" && (
+            {tree && viewingVersion === null && view === "preview" && (
               <div
                 className={`bld-surface bld-surface--${viewport} ${canvasTheme}`}
                 style={{ opacity: loading ? 0.55 : 1, transition: "opacity 0.2s" }}
@@ -2547,7 +2700,7 @@ export default function BuilderPage() {
                 <RenderTree tree={tree} />
               </div>
             )}
-            {tree && view === "code" && (
+            {tree && viewingVersion === null && view === "code" && (
               <pre className="bld-code">
                 {/* Same hand-rolled tokenizer + Cursor-sourced colours as the
                     docs code blocks (app/_docs/highlight.ts) - reused rather
@@ -2556,7 +2709,7 @@ export default function BuilderPage() {
                 <code className="doc-code-lines" dangerouslySetInnerHTML={{ __html: sdHighlightLines(code) }} />
               </pre>
             )}
-            {tree && view === "report" && (
+            {tree && viewingVersion === null && view === "report" && (
               <div className="bld-report">
                 {auditIssues.length === 0 ? (
                   <div className="bld-report-clean">
@@ -2590,7 +2743,7 @@ export default function BuilderPage() {
                 )}
               </div>
             )}
-            {tree && view === "edit" && (
+            {tree && viewingVersion === null && view === "edit" && (
               <div className="bld-edit-layout">
                 {/* Selection/hover resolved via a single delegated listener
                     here, using RenderNode's data-node-id attribute - not
@@ -2848,11 +3001,29 @@ export default function BuilderPage() {
                             <SearchIcon />
                             <input
                               type="search"
-                              placeholder="Search components"
+                              placeholder="Search sections and components"
                               value={paletteQuery}
                               onChange={e => setPaletteQuery(e.target.value)}
                             />
                           </label>
+                          {(() => {
+                            const q = paletteQuery.trim().toLowerCase();
+                            const secs = SECTION_TEMPLATES.filter(t => !q || t.name.toLowerCase().includes(q) || t.hint.toLowerCase().includes(q));
+                            if (secs.length === 0) return null;
+                            return (
+                              <div className="bld-palette-cat">
+                                <span className="bld-panel-section-label">Sections</span>
+                                <div className="bld-section-list">
+                                  {secs.map(t => (
+                                    <button key={t.key} className="bld-section-item" onClick={() => insertSection(t.key)} title={`Add a ${t.name.toLowerCase()} section`}>
+                                      <span className="bld-section-item-name">{t.name}</span>
+                                      <span className="bld-section-item-hint">{t.hint}</span>
+                                    </button>
+                                  ))}
+                                </div>
+                              </div>
+                            );
+                          })()}
                           {(() => {
                             const q = paletteQuery.trim().toLowerCase();
                             const cats = PALETTE_CATEGORIES

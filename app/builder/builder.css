@@ -376,6 +376,71 @@
 .bld-float-toolbar .bld-presence { height: 32px; padding: 0 6px; margin-left: 2px; border-radius: 8px; position: relative; }
 .bld-float-toolbar .bld-presence:hover { background: var(--doc-bg); }
 
+/* Version history: a panel above the bottom toolbar, and a banner while an
+   older version is on the canvas. */
+.bld-versions {
+  position: absolute; left: 50%; bottom: 72px; transform: translateX(-50%); z-index: 21;
+  width: 340px; max-height: min(420px, calc(100% - 140px)); display: flex; flex-direction: column;
+  background: var(--doc-surface); border: 1px solid var(--doc-line); border-radius: 12px;
+  box-shadow: 0 12px 32px rgba(0,0,0,0.16); overflow: hidden;
+}
+.bld-versions-head {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 12px 12px 10px 16px; border-bottom: 1px solid var(--doc-line);
+  font: 700 13px/1 var(--font-bold); color: var(--text-title);
+}
+.bld-versions-head button {
+  width: 26px; height: 26px; border: none; background: none; border-radius: 6px; cursor: pointer;
+  color: var(--text-caption); display: flex; align-items: center; justify-content: center;
+}
+.bld-versions-head button:hover { background: var(--doc-bg); color: var(--text-body); }
+.bld-versions-list { list-style: none; margin: 0; padding: 6px; overflow-y: auto; display: flex; flex-direction: column; gap: 2px; }
+.bld-version {
+  width: 100%; display: flex; flex-direction: column; gap: 4px; padding: 9px 10px;
+  border: none; border-radius: 8px; background: none; text-align: left; cursor: pointer; color: var(--text-body);
+}
+.bld-version:hover { background: var(--doc-bg); }
+.bld-version.on { background: var(--colour-primaryblue-50); }
+.bld-version-top { display: flex; align-items: center; gap: 8px; }
+.bld-version-num { font: 700 11px/1 var(--font-mono); color: var(--text-caption); }
+.bld-version.on .bld-version-num { color: var(--colour-primaryblue-600); }
+.bld-version-label { flex: 1; font: 13px/1.3 var(--font-normal); }
+.bld-version-current {
+  font: 700 10px/1 var(--font-bold); padding: 3px 6px; border-radius: 999px;
+  background: var(--colour-success-50, #e8f5ee); color: var(--colour-success-700, #146c3f);
+}
+.bld-version-prompt {
+  font: 12px/1.4 var(--font-normal); color: var(--text-subtitle);
+  display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
+}
+.bld-version-time { font: 11px/1 var(--font-normal); color: var(--text-caption); }
+.bld-version-view { width: 100%; margin: 0 auto; display: flex; flex-direction: column; gap: 16px; }
+.bld-version-view .bld-surface { margin: 0; }
+.bld-version-banner {
+  display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap;
+  padding: 10px 12px 10px 16px;
+  border: 1px solid var(--colour-primaryblue-200, #c7d4ff); border-radius: 10px;
+  background: var(--colour-primaryblue-50); color: var(--text-body); font: 13px/1.4 var(--font-normal);
+}
+.bld-version-banner-actions { display: flex; gap: 8px; }
+.bld-version-banner button {
+  height: 30px; padding: 0 12px; border-radius: 8px; cursor: pointer;
+  border: 1px solid var(--doc-line); background: var(--doc-surface); color: var(--text-body);
+  font: 700 12px/1 var(--font-bold);
+}
+.bld-version-banner button.primary { border-color: var(--colour-primaryblue-500); background: var(--colour-primaryblue-500); color: #fff; }
+
+/* Sections library in the Insert panel */
+.bld-section-list { display: flex; flex-direction: column; gap: 4px; }
+.bld-section-item {
+  display: flex; flex-direction: column; gap: 3px; padding: 8px 10px; text-align: left;
+  border: 1px solid var(--doc-line); border-radius: 8px; background: var(--doc-surface); cursor: pointer;
+  transition: border-color .12s, background .12s;
+}
+.bld-section-item:hover { border-color: var(--colour-primaryblue-300); background: var(--colour-primaryblue-50); }
+.bld-section-item-name { font: 700 12px/1.2 var(--font-bold); color: var(--text-title); }
+.bld-section-item-hint { font: 11px/1.35 var(--font-normal); color: var(--text-caption); }
+
 /* Hover labels for icon-only buttons (Vzy-style): a small dark pill with
    the button's data-tip text. Above the bottom toolbar, below the section
    pill so it doesn't cover the section it acts on. */
