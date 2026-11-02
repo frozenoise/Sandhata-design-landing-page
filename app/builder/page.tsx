@@ -126,6 +126,7 @@ const OPEN_TABS_STORAGE  = "sd-builder-open-tabs";
 // The canvas keeps its own light/dark theme, independent of the site toggle,
 // so switching the docs chrome never changes the design being edited.
 const CANVAS_THEME_STORAGE = "sd-builder-canvas-theme";
+const PALETTE_COLLAPSED_STORAGE = "sd-builder-palette-collapsed";
 // Deliberately separate from SESSION_ID_STORAGE: that key only ever gets set
 // for a tab that's a real saved DB session (openTab's cache-hit branch,
 // loadSession's success path, or saveToDb) - a pure local draft tab (most of
@@ -207,6 +208,12 @@ export default function BuilderPage() {
   const [canvasTheme,   setCanvasTheme]   = React.useState<"light" | "dark">("light");
   // Insert tab: filters the component grid by name.
   const [paletteQuery,  setPaletteQuery]  = React.useState("");
+  // Insert panel groups the viewer has folded away (remembered per browser).
+  // First visit: Sections and Layout open, the rest folded, to keep the
+  // list short.
+  const [collapsedCats, setCollapsedCats] = React.useState<Set<string>>(
+    () => new Set(["Typography", "Actions", "Forms", "Data Display", "Navigation", "Feedback"]),
+  );
   // Visual edits not yet folded into the transcript (autosaved after a pause).
   const [editsDirty,    setEditsDirty]    = React.useState(false);
   // Version history: the panel, and which version (index into msgs) is on
@@ -340,6 +347,10 @@ export default function BuilderPage() {
     if (AVAILABLE_MODELS.some(m => m.id === savedModel)) setModel(savedModel);
 
     if (localStorage.getItem(CANVAS_THEME_STORAGE) === "dark") setCanvasTheme("dark");
+    try {
+      const rawCats = localStorage.getItem(PALETTE_COLLAPSED_STORAGE);
+      if (rawCats) setCollapsedCats(new Set(JSON.parse(rawCats)));
+    } catch {}
 
     let hadRestoredMsgs = false;
     try {
@@ -637,6 +648,29 @@ export default function BuilderPage() {
     commitTreeEdit(next);
     setInsertTarget(null);
     setSelectedNodeId(node.id ?? null);
+  }
+
+  /** Collapsible group header for the Insert panel. While searching every
+   * group with a match is open, so the header can't fold it. */
+  function catHeader(label: string, count: number) {
+    const searching = !!paletteQuery.trim();
+    const open = searching || !collapsedCats.has(label);
+    return (
+      <button className="bld-cat-head" onClick={() => toggleCat(label)} aria-expanded={open} disabled={searching}>
+        <span className={`bld-cat-chevron${open ? " open" : ""}`}><ChevronIcon /></span>
+        <span className="bld-cat-label">{label}</span>
+        <span className="bld-cat-count">{count}</span>
+      </button>
+    );
+  }
+
+  function toggleCat(label: string) {
+    setCollapsedCats(prev => {
+      const next = new Set(prev);
+      next.has(label) ? next.delete(label) : next.add(label);
+      try { localStorage.setItem(PALETTE_COLLAPSED_STORAGE, JSON.stringify([...next])); } catch {}
+      return next;
+    });
   }
 
   /** Drops a ready-made section in as a top-level block: above the "+"
@@ -3024,15 +3058,15 @@ export default function BuilderPage() {
                     if (secs.length === 0) return null;
                     return (
                       <div className="bld-palette-cat">
-                        <span className="bld-panel-section-label">Sections</span>
-                        <div className="bld-section-list">
+                        {catHeader("Sections", secs.length)}
+                        {(q || !collapsedCats.has("Sections")) && <div className="bld-section-list">
                           {secs.map(t => (
                             <button key={t.key} className="bld-section-item" onClick={() => insertSection(t.key)} title={`Add a ${t.name.toLowerCase()} section`}>
                               <span className="bld-section-item-name">{t.name}</span>
                               <span className="bld-section-item-hint">{t.hint}</span>
                             </button>
                           ))}
-                        </div>
+                        </div>}
                       </div>
                     );
                   })()}
@@ -3044,8 +3078,8 @@ export default function BuilderPage() {
                     if (cats.length === 0) return <p className="bld-prop-empty">No components match &ldquo;{paletteQuery}&rdquo;.</p>;
                     return cats.map(cat => (
                       <div key={cat.label} className="bld-palette-cat">
-                        <span className="bld-panel-section-label">{cat.label}</span>
-                        <div className="bld-palette-grid">
+                        {catHeader(cat.label, cat.types.length)}
+                        {(q || !collapsedCats.has(cat.label)) && <div className="bld-palette-grid">
                           {cat.types.map(type => (
                             <div
                               key={type}
@@ -3068,7 +3102,7 @@ export default function BuilderPage() {
                               <span className="bld-palette-item-label">{type}</span>
                             </div>
                           ))}
-                        </div>
+                        </div>}
                       </div>
                     ));
                   })()}

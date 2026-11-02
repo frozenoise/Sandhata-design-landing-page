@@ -523,19 +523,39 @@
 }
 
 /* Insert: search + icon grid */
-.bld-palette { display: flex; flex-direction: column; gap: 14px; padding-top: 8px; }
+.bld-palette { display: flex; flex-direction: column; gap: 4px; padding-top: 10px; }
+/* The palette scrolls inside a full-height panel: without this its rows
+   (the search field first) shrink to fit instead of scrolling. */
+.bld-palette > * { flex-shrink: 0; }
+.bld-palette-cat { padding-bottom: 6px; }
 .bld-palette-search {
-  display: flex; align-items: center; gap: 6px; height: 30px; padding: 0 9px;
+  display: flex; align-items: center; gap: 8px; height: 34px; padding: 0 10px; margin-bottom: 8px;
+  box-sizing: border-box;
   background: var(--doc-bg); border: 1px solid var(--doc-line); border-radius: 7px;
   color: var(--text-caption); position: sticky; top: 0; z-index: 1;
 }
+.bld-palette-search svg { flex-shrink: 0; }
 .bld-palette-search:focus-within { border-color: var(--colour-primaryblue-400); box-shadow: 0 0 0 3px rgba(0,54,221,0.12); }
 .bld-palette-search input {
-  flex: 1; min-width: 0; border: none; outline: none; background: transparent;
+  flex: 1; min-width: 0; height: 100%; padding: 0; border: none; outline: none; background: transparent;
   font: 12px/1 var(--font-normal); color: var(--text-title);
+  -webkit-appearance: none; appearance: none;
 }
+.bld-palette-search input::placeholder { color: var(--text-caption); }
 .bld-palette-search input::-webkit-search-cancel-button { display: none; }
 .bld-palette-cat { display: flex; flex-direction: column; }
+/* Collapsible group headers in the Insert panel */
+.bld-cat-head {
+  display: flex; align-items: center; gap: 6px; width: 100%;
+  margin: 0 0 6px; padding: 4px 4px 4px 2px; border: none; border-radius: 6px;
+  background: none; cursor: pointer; text-align: left; color: var(--text-title);
+}
+.bld-cat-head:hover:not(:disabled) { background: var(--doc-bg); }
+.bld-cat-head:disabled { cursor: default; }
+.bld-cat-chevron { display: flex; color: var(--text-caption); transition: transform .15s ease; }
+.bld-cat-chevron.open { transform: rotate(90deg); }
+.bld-cat-label { flex: 1; font: 700 11px/1 var(--font-bold); letter-spacing: 0.1px; }
+.bld-cat-count { font: 11px/1 var(--font-normal); color: var(--text-caption); }
 .bld-palette-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 4px; }
 .bld-palette-item {
   display: flex; align-items: center; gap: 8px; height: 34px; padding: 0 8px;
