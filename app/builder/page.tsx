@@ -2412,24 +2412,104 @@ export default function BuilderPage() {
               </button>
             </div>
           )}
-          <div className="bld-toolbar">
-            <div className="bld-tabs">
-              <button className={view === "preview" ? "on" : ""} onClick={() => changeView("preview")}><EyeIcon /> Preview</button>
-              <button className={view === "code" ? "on" : ""} onClick={() => changeView("code")} disabled={!tree}><CodeIcon /> Code</button>
-              <button className={view === "edit" ? "on" : ""} onClick={() => changeView("edit")} disabled={!tree || readOnly} title={readOnly ? "You have view-only access to this project" : "Click to select and edit properties, drag to reorder"}><EditIcon /> Edit</button>
-              <button
-                className={view === "report" ? "on" : ""}
-                onClick={() => changeView("report")}
-                disabled={!tree}
-                title="Check for elements outside the design system"
-              >
-                <ShieldIcon /> Report
-                {auditIssues.length > 0 && <span className="bld-report-badge">{auditIssues.length}</span>}
-              </button>
-            </div>
-            <div className="bld-toolbar-right">
-              {readOnly && <span className="bld-view-only" title="The project owner gave you view-only access">View only</span>}
-              {isLoggedIn && tree && (view === "edit" || view === "preview") && (() => {
+          {/* Floating canvas toolbar, bottom centre like Framer's. Everything
+              that used to sit in the top toolbar lives here so the canvas
+              gets the full height: view switch (Edit / Preview / Code /
+              Report), undo/redo while editing, viewport sizes in preview,
+              canvas light/dark, then Share and Export. Icon-only buttons
+              show their label on hover (data-tip), as in Vzy. */}
+          {tree && (
+            <div className="bld-float-toolbar" role="toolbar" aria-label="Canvas tools">
+              <div className="bld-float-group" role="group" aria-label="View">
+                <button
+                  className={view === "edit" ? "on" : ""}
+                  onClick={() => changeView("edit")}
+                  disabled={readOnly}
+                  data-tip={readOnly ? "View only: the owner gave you view access" : "Edit"}
+                  aria-label="Edit" aria-pressed={view === "edit"}
+                ><EditIcon /></button>
+                <button
+                  className={view === "preview" ? "on" : ""}
+                  onClick={() => changeView("preview")}
+                  data-tip="Preview" aria-label="Preview" aria-pressed={view === "preview"}
+                ><EyeIcon /></button>
+                <button
+                  className={view === "code" ? "on" : ""}
+                  onClick={() => changeView("code")}
+                  data-tip="Code" aria-label="Code" aria-pressed={view === "code"}
+                ><CodeIcon /></button>
+                <button
+                  className={view === "report" ? "on" : ""}
+                  onClick={() => changeView("report")}
+                  data-tip={auditIssues.length ? `Design system report (${auditIssues.length} to fix)` : "Design system report"}
+                  aria-label="Design system report" aria-pressed={view === "report"}
+                >
+                  <ShieldIcon />
+                  {auditIssues.length > 0 && <span className="bld-float-badge">{auditIssues.length}</span>}
+                </button>
+              </div>
+
+              {view === "edit" && (
+                <>
+                  <span className="bld-float-toolbar-sep" aria-hidden="true" />
+                  <button onClick={undoEdit} disabled={livePage.live ? !livePage.canUndo : editHistory.length === 0} data-tip="Undo" aria-label="Undo"><UndoIcon /></button>
+                  <button onClick={redoEdit} disabled={livePage.live ? !livePage.canRedo : editRedoStack.length === 0} data-tip="Redo" aria-label="Redo"><RedoIcon /></button>
+                </>
+              )}
+              {view === "preview" && (
+                <>
+                  <span className="bld-float-toolbar-sep" aria-hidden="true" />
+                  {(["mobile","tablet","desktop"] as const).map(v => (
+                    <button
+                      key={v}
+                      className={viewport === v ? "on" : ""}
+                      onClick={() => setViewport(v)}
+                      data-tip={v === "mobile" ? "Mobile (375px)" : v === "tablet" ? "Tablet (768px)" : "Desktop (full width)"}
+                      aria-label={v} aria-pressed={viewport === v}
+                    >
+                      {v === "mobile" ? <MobileIcon /> : v === "tablet" ? <TabletIcon /> : <DesktopIcon />}
+                    </button>
+                  ))}
+                </>
+              )}
+              {view === "code" && (
+                <>
+                  <span className="bld-float-toolbar-sep" aria-hidden="true" />
+                  <button className="bld-float-text" onClick={() => navigator.clipboard.writeText(code)} data-tip="Copy code to clipboard">Copy</button>
+                </>
+              )}
+              {(view === "preview" || view === "edit") && (
+                <button
+                  onClick={() => {
+                    const next = canvasTheme === "light" ? "dark" : "light";
+                    setCanvasTheme(next);
+                    try { localStorage.setItem(CANVAS_THEME_STORAGE, next); } catch {}
+                  }}
+                  data-tip={canvasTheme === "light" ? "Dark canvas" : "Light canvas"}
+                  aria-label={canvasTheme === "light" ? "Switch canvas to dark" : "Switch canvas to light"}
+                >
+                  {canvasTheme === "light" ? <SunIcon /> : <MoonIcon />}
+                </button>
+              )}
+
+              <span className="bld-float-toolbar-sep" aria-hidden="true" />
+              <button onClick={exportZip} data-tip="Export ZIP" aria-label="Export ZIP"><DownloadIcon /></button>
+              {livePage.live && (
+                <div
+                  className="bld-presence"
+                  onClick={() => activePageProjectId && setShareProjectId(activePageProjectId)}
+                  data-tip={livePage.status === "live" ? "Live: changes sync as you make them" : livePage.status === "error" ? "Live editing isn't connected" : "Connecting…"}
+                >
+                  <span className={`bld-presence-dot bld-presence-dot--${livePage.status}`} />
+                  {livePage.others.slice(0, 4).map(o => (
+                    o.avatar
+                      ? <img key={o.connectionId} src={o.avatar} alt={o.name} className="bld-presence-avatar" style={{ borderColor: o.color }} />
+                      : <span key={o.connectionId} className="bld-presence-avatar bld-presence-avatar--initial" style={{ background: o.color }}>{o.name.slice(0, 1).toUpperCase()}</span>
+                  ))}
+                  {livePage.others.length > 4 && <span className="bld-presence-more">+{livePage.others.length - 4}</span>}
+                </div>
+              )}
+              {isLoggedIn && (() => {
                 // Invite people straight from the page (Vzy's Collaboration
                 // panel). A page outside a project gets one on first share.
                 const pid = activePageProjectId;
@@ -2439,78 +2519,12 @@ export default function BuilderPage() {
                     className="bld-share-page-btn"
                     disabled={(!pid && !dbSessionId) || sharingPage}
                     onClick={shareCurrentPage}
-                    title={!pid && !dbSessionId ? "Send a first prompt to save this page, then share it" : owner ? "Invite people to edit this page" : "See who has access"}
+                    data-tip={!pid && !dbSessionId ? "Send a first prompt to save this page, then share it" : owner ? "Invite people to edit this page" : "See who has access"}
                   >
                     <ShareIcon /> {owner ? "Share" : "People"}
                   </button>
                 );
               })()}
-              {livePage.live && (
-                <div className="bld-presence" onClick={() => activePageProjectId && setShareProjectId(activePageProjectId)} title={livePage.status === "live" ? "Live: changes sync as you make them" : livePage.status === "error" ? "Live editing isn't connected" : "Connecting…"}>
-                  <span className={`bld-presence-dot bld-presence-dot--${livePage.status}`} />
-                  {livePage.others.slice(0, 4).map(o => (
-                    o.avatar
-                      ? <img key={o.connectionId} src={o.avatar} alt={o.name} title={o.name} className="bld-presence-avatar" style={{ borderColor: o.color }} />
-                      : <span key={o.connectionId} title={o.name} className="bld-presence-avatar bld-presence-avatar--initial" style={{ background: o.color }}>{o.name.slice(0, 1).toUpperCase()}</span>
-                  ))}
-                  {livePage.others.length > 4 && <span className="bld-presence-more">+{livePage.others.length - 4}</span>}
-                </div>
-              )}
-              {view === "preview" && (
-                <div className="bld-viewport">
-                  {(["mobile","tablet","desktop"] as const).map(v => (
-                    <button key={v} className={viewport === v ? "on" : ""} onClick={() => setViewport(v)} title={v==="mobile"?"375px":v==="tablet"?"768px":"Full width"}>
-                      {v === "mobile" ? <MobileIcon /> : v === "tablet" ? <TabletIcon /> : <DesktopIcon />}
-                    </button>
-                  ))}
-                </div>
-              )}
-              {tree && view === "code" && (
-                <button className="bld-copy" onClick={() => navigator.clipboard.writeText(code)}>Copy</button>
-              )}
-              {tree && (
-                <button className="bld-export-btn" onClick={exportZip} title="Download component as ZIP">
-                  <DownloadIcon /> Export ZIP
-                </button>
-              )}
-            </div>
-          </div>
-
-          {/* Floating canvas toolbar, bottom centre like Framer's: preview
-              toggle, undo/redo while editing, and the canvas's own light/dark
-              switch. Labels show on hover (data-tip), as in Vzy. */}
-          {tree && (view === "preview" || view === "edit") && (
-            <div className="bld-float-toolbar" role="toolbar" aria-label="Canvas tools">
-              {!readOnly && (
-                <>
-                  <button
-                    className={view === "preview" ? "on" : ""}
-                    onClick={() => changeView(view === "preview" ? "edit" : "preview")}
-                    data-tip={view === "preview" ? "Back to editing" : "Preview"}
-                    aria-label={view === "preview" ? "Back to editing" : "Preview"}
-                    aria-pressed={view === "preview"}
-                  ><EyeIcon /></button>
-                  <span className="bld-float-toolbar-sep" aria-hidden="true" />
-                </>
-              )}
-              {view === "edit" && (
-                <>
-                  <button onClick={undoEdit} disabled={livePage.live ? !livePage.canUndo : editHistory.length === 0} data-tip="Undo" aria-label="Undo"><UndoIcon /></button>
-                  <button onClick={redoEdit} disabled={livePage.live ? !livePage.canRedo : editRedoStack.length === 0} data-tip="Redo" aria-label="Redo"><RedoIcon /></button>
-                  <span className="bld-float-toolbar-sep" aria-hidden="true" />
-                </>
-              )}
-              <button
-                onClick={() => {
-                  const next = canvasTheme === "light" ? "dark" : "light";
-                  setCanvasTheme(next);
-                  try { localStorage.setItem(CANVAS_THEME_STORAGE, next); } catch {}
-                }}
-                data-tip={canvasTheme === "light" ? "Dark canvas" : "Light canvas"}
-                aria-label={canvasTheme === "light" ? "Switch canvas to dark" : "Switch canvas to light"}
-              >
-                {canvasTheme === "light" ? <SunIcon /> : <MoonIcon />}
-              </button>
             </div>
           )}
           <div className="bld-canvas">
