@@ -1,5 +1,5 @@
 "use client";
-// Barrel export for the Sandhata Design System primitives.
+// Barrel export for Spectra's primitives.
 // Marked "use client" so every re-exported component is treated as a
 // client component (they rely on hooks and DOM event handlers).
 

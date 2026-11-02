@@ -197,6 +197,46 @@ export function moveNode(tree: UINode, nodeId: string, targetId: string, positio
 }
 
 /* Pretty-print the tree as copyable JSX using the same component names. */
+// ── Design-system audit ──────────────────────────────────────────────────
+// The single source of truth for "what counts as a governed element" — kept
+// here (not in Renderer.tsx) so this file's own no-React/no-@sandhata/spectra
+// constraint (see header) still lets a server route reuse it, and so there's
+// exactly one list to update when a component is added. Renderer.tsx imports
+// LAYOUT_TYPES/DS_COMPONENT_TYPES rather than redeclaring them, and asserts
+// in dev that its own DS component map agrees — see the comment there.
+export const LAYOUT_TYPES = ["Stack", "Row", "Grid", "Text", "Heading", "Spacer", "Divider", "Box"] as const;
+export const DS_COMPONENT_TYPES = [
+  "Button", "Badge", "Alert", "Spinner", "Avatar", "Tag", "StatCard", "Card",
+  "Input", "Textarea", "Select", "Switch", "Checkbox", "Radio", "Tabs", "Tooltip", "IconButton",
+] as const;
+export const KNOWN_TYPES: ReadonlySet<string> = new Set<string>([...LAYOUT_TYPES, ...DS_COMPONENT_TYPES]);
+
+export type AuditIssue = {
+  nodeId: string | null;
+  type: string;
+  /** Breadcrumb of ancestor types down to and including this node, e.g. "Stack > Row > WeirdWidget". */
+  path: string;
+};
+
+/** Walks a generated/edited tree and reports every node whose `type` isn't
+ * a governed Spectra component or layout primitive — i.e. something outside
+ * the design system. This is the same check Renderer.tsx's "Unknown: {type}"
+ * fallback makes per-node at render time, surfaced instead as a standalone
+ * report a human (or CI) can act on. Order is depth-first, matching render
+ * order, so the report reads top-to-bottom the way the canvas does. */
+export function auditTree(node: UINode | null, ancestry: string[] = []): AuditIssue[] {
+  if (!node || typeof node !== "object" || !node.type) return [];
+  const here = [...ancestry, node.type];
+  const issues: AuditIssue[] = [];
+  if (!KNOWN_TYPES.has(node.type)) {
+    issues.push({ nodeId: node.id ?? null, type: node.type, path: here.join(" > ") });
+  }
+  if (Array.isArray(node.children)) {
+    for (const child of node.children) issues.push(...auditTree(child, here));
+  }
+  return issues;
+}
+
 export function treeToJSX(node: UINode | null, depth = 0): string {
   if (!node) return "";
   const pad = "  ".repeat(depth);

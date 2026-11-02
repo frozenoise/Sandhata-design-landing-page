@@ -16,4 +16,4 @@ export interface TabsProps {
   value: string;
   onChange?: (value: string) => void;
 }
-export function Tabs(props: TabsProps): JSX.Element;
+export function Tabs(props: TabsProps): React.JSX.Element;

@@ -8,4 +8,4 @@ export interface AlertProps {
   onClose?: () => void;
   children?: React.ReactNode;
 }
-export function Alert(props: AlertProps): JSX.Element;
+export function Alert(props: AlertProps): React.JSX.Element;

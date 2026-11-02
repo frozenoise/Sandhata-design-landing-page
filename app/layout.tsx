@@ -4,7 +4,7 @@ import { Providers } from "./providers";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "Sandhata Design System",
+  title: "Spectra",
   description:
     "Everything your team needs to ship consistent, accessible interfaces — components, tokens, and guidelines in one place.",
 };
@@ -15,7 +15,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en">
+    <html lang="en" suppressHydrationWarning>
       <head>
         {/* Anti-flash: resolve theme (including auto→system-pref) before first paint */}
         <script dangerouslySetInnerHTML={{ __html: `try{var t=localStorage.getItem('sd-theme')||'auto';if(t==='dark'){document.documentElement.setAttribute('data-theme','dark');}else if(t==='light'){document.documentElement.setAttribute('data-theme','light');}else{document.documentElement.setAttribute('data-theme',window.matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light');}}catch(e){}` }} />

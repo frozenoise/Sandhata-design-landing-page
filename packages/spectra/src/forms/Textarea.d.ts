@@ -9,4 +9,4 @@ export interface TextareaProps extends React.TextareaHTMLAttributes<HTMLTextArea
   rows?: number;
   disabled?: boolean;
 }
-export function Textarea(props: TextareaProps): JSX.Element;
+export function Textarea(props: TextareaProps): React.JSX.Element;

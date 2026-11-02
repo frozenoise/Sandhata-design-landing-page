@@ -9,11 +9,12 @@ export function Tabs({ tabs = [], value, onChange, style = {} }) {
     <div role="tablist" style={{
       display: "flex", gap: 4, borderBottom: "1px solid var(--border-subtle)", ...style,
     }}>
-      {tabs.map((t) => {
+      {tabs.map((raw, i) => {
+        const t = typeof raw === "string" ? { value: raw, label: raw } : raw;
         const active = t.value === value;
         return (
           <button
-            key={t.value}
+            key={t.value ?? i}
             role="tab"
             aria-selected={active}
             onClick={() => onChange && onChange(t.value)}

@@ -36,3 +36,4 @@ _ds_bundle.js.map
 
 # workspace package build output (generated, not source)
 packages/*/dist
+.liveblocks/

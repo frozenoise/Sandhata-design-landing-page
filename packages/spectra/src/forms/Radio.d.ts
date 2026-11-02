@@ -9,4 +9,4 @@ export interface RadioProps {
   value?: string;
   onChange?: React.ChangeEventHandler<HTMLInputElement>;
 }
-export function Radio(props: RadioProps): JSX.Element;
+export function Radio(props: RadioProps): React.JSX.Element;

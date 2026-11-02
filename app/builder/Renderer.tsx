@@ -9,17 +9,34 @@ import {
 // e.g. app/api/github/push — can reuse the exact same JSX pretty-printer
 // without pulling a "use client" component module into a route handler.
 // Re-exported here so existing imports of these from "./Renderer" keep working.
-import { treeToJSX, type UINode } from "./uiTree";
+import { treeToJSX, DS_COMPONENT_TYPES, LAYOUT_TYPES, type UINode } from "./uiTree";
 export { treeToJSX, type UINode };
 
-/* Design-system components the model may use. */
+/* Design-system components the model may use. Keys must match
+   DS_COMPONENT_TYPES in uiTree.ts exactly — that list (not this object) is
+   what the report tab / auditTree() treats as "governed", so a component
+   added only here would render fine but silently never get flagged as
+   missing from the design system either. The dev-only check below catches
+   that drift immediately instead of letting the two lists quietly diverge. */
 const DS: Record<string, any> = {
   Button, Badge, Alert, Spinner, Avatar, Tag, StatCard, Card,
   Input, Textarea, Select, Switch, Checkbox, Radio, Tabs, Tooltip, IconButton,
 };
+if (process.env.NODE_ENV !== "production") {
+  const declared = new Set<string>(DS_COMPONENT_TYPES);
+  const actual = new Set(Object.keys(DS));
+  const missing = [...declared].filter((t) => !actual.has(t));
+  const extra = [...actual].filter((t) => !declared.has(t));
+  if (missing.length || extra.length) {
+    console.error(
+      "[builder] DS_COMPONENT_TYPES (uiTree.ts) and Renderer.tsx's DS map have drifted.",
+      { missingFromRenderer: missing, missingFromUiTree: extra }
+    );
+  }
+}
 
 /* Layout primitives rendered as plain styled elements. */
-const LAYOUT = new Set(["Stack", "Row", "Grid", "Text", "Heading", "Spacer", "Divider", "Box"]);
+const LAYOUT = new Set<string>(LAYOUT_TYPES);
 
 function layoutStyle(type: string, props: Record<string, any> = {}): React.CSSProperties {
   const gap = props.gap ?? 12;
@@ -84,7 +101,14 @@ export function RenderNode({ node, editable = false }: { node: UINode; editable?
     return <div key={key} {...nodeAttrs} style={{ padding: 8, border: "1px dashed #d1d5db", borderRadius: 6, font: "12px var(--font-mono)", color: "#9aa0ac" }}>Unknown: {type}</div>;
   }
   const { style, ...rest } = props;
-  const comp = <Comp style={style} {...rest} {...nodeAttrs}>{kids}</Comp>;
+  // Checkbox/Switch/Radio are always-controlled (checked always lands on
+  // the native input, no defaultChecked escape hatch — see their source in
+  // packages/spectra/src/forms/*.jsx). This Renderer is a preview surface
+  // with no interactivity by design (see comment block above), so whenever
+  // AI-generated props include `checked` with no onChange, supply a no-op
+  // one rather than let React treat it as a broken controlled input.
+  const controlledProps = "checked" in rest && rest.onChange === undefined ? { onChange: () => {} } : undefined;
+  const comp = <Comp style={style} {...rest} {...controlledProps} {...nodeAttrs}>{kids}</Comp>;
   // Not every DS component forwards unrecognized props onto a clickable
   // element: some (Alert, Avatar, Tag, StatCard, Spinner, Tooltip) don't
   // spread `...rest` at all, and Switch/Checkbox/Radio spread it onto a

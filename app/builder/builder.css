@@ -186,6 +186,11 @@
 .bld-instance-tab:hover { background: rgba(20,22,24,0.05); }
 .bld-instance-tab.active { background: rgba(20,22,24,0.08); color: var(--text-title); }
 .bld-instance-tab-name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.bld-instance-tab-rename {
+  width: 100px; border: none; outline: none; padding: 0; margin: 0;
+  background: var(--doc-surface); color: var(--text-title);
+  font: 600 12px/1 var(--font-normal);
+}
 .bld-instance-tab-close {
   width: 16px; height: 16px; border: none; background: none; padding: 0;
   color: inherit; opacity: 0.5; cursor: pointer; border-radius: 3px;
@@ -208,12 +213,34 @@
 }
 .bld-tabs { display: flex; gap: 4px; }
 .bld-tabs button {
+  display: inline-flex; align-items: center; gap: 6px;
   height: 32px; padding: 0 14px; border: none; background: none; border-radius: var(--radius-sm);
   font: 700 13px/1 var(--font-bold); color: var(--text-caption); cursor: pointer;
 }
+.bld-tabs button svg { flex-shrink: 0; opacity: 0.7; }
+.bld-tabs button.on svg { opacity: 1; }
 .bld-tabs button.on { background: rgba(20,22,24,0.08); color: var(--text-title); }
 .bld-tabs button:disabled { opacity: 0.35; cursor: not-allowed; }
 .bld-toolbar-right { display: flex; align-items: center; gap: 10px; }
+/* Common workspace: who else is on this page, and live connection state. */
+.bld-presence { display: flex; align-items: center; gap: 4px; }
+.bld-presence-dot { width: 8px; height: 8px; border-radius: 50%; margin-right: 4px; background: var(--colour-neutral-400, #98a3ad); }
+.bld-presence-dot--live { background: var(--colour-success-500, #16a34a); }
+.bld-presence-dot--error { background: var(--colour-error-500, #e5484d); }
+.bld-presence-avatar {
+  width: 24px; height: 24px; border-radius: 50%; border: 2px solid; object-fit: cover; margin-left: -6px;
+  box-sizing: border-box;
+}
+.bld-presence-avatar:first-of-type { margin-left: 0; }
+.bld-presence-avatar--initial {
+  display: flex; align-items: center; justify-content: center; border-color: transparent;
+  color: #fff; font: 11px var(--font-normal);
+}
+.bld-presence-more { font: 11px var(--font-normal); color: var(--text-caption); margin-left: 4px; }
+.bld-view-only {
+  font: 12px/22px var(--font-normal); padding: 0 8px; border-radius: 999px;
+  color: var(--text-caption); border: 1px solid var(--doc-line);
+}
 .bld-copy {
   height: 32px; padding: 0 14px; border: 1px solid var(--doc-line); border-radius: var(--radius-sm);
   background: var(--doc-surface); font: 700 12px/1 var(--font-bold); color: var(--text-body); cursor: pointer;
@@ -251,12 +278,59 @@
   margin: 0; width: 100%; align-self: stretch;
   background: #0d1117; color: #e6edf3; border-radius: var(--radius-lg);
   padding: 22px; font: 12.5px/1.7 var(--font-mono); overflow: auto; white-space: pre;
+  /* Cursor's dark-theme token colours (app/_docs/highlight.ts's sdHighlight
+     classes, values sourced in the docs-code-block work — see docs.css) —
+     redeclared locally rather than inherited from the page's own --c-* vars,
+     since this surface is always dark regardless of the site's light/dark
+     theme toggle, but --c-* itself DOES flip with that toggle. */
+  --c-kw: #82AAFF; --c-str: #9ECE6A; --c-tag: #E0C285; --c-prop: #7FDBCA;
+  --c-func: #DCC48E; --c-var: #B4BEC9; --c-com: #6B7280;
 }
+.bld-code .c-kw   { color: var(--c-kw); }
+.bld-code .c-str  { color: var(--c-str); }
+.bld-code .c-tag  { color: var(--c-tag); }
+.bld-code .c-prop { color: var(--c-prop); }
+.bld-code .c-func { color: var(--c-func); }
+.bld-code .c-var  { color: var(--c-var); }
+.bld-code .c-com  { color: var(--c-com); }
 
 .bld-state {
   margin: auto; display: flex; flex-direction: column; align-items: center; gap: 12px;
   color: var(--text-caption); font: 14px/1.5 var(--font-normal); text-align: center;
 }
+
+/* ── Report tab: elements outside the design system ──────────────────── */
+.bld-report-badge {
+  display: inline-flex; align-items: center; justify-content: center;
+  min-width: 16px; height: 16px; padding: 0 4px; margin-left: 2px;
+  border-radius: 999px; background: var(--colour-error-600, #dc2626);
+  color: #fff; font: 700 10px/1 var(--font-bold);
+}
+.bld-report { margin: auto; width: 100%; max-width: 640px; display: flex; flex-direction: column; gap: 16px; }
+.bld-report-clean {
+  margin: auto; display: flex; flex-direction: column; align-items: center; gap: 12px;
+  color: var(--colour-success-600, #1a7f4b); font: 14px/1.5 var(--font-normal); text-align: center;
+  max-width: 360px;
+}
+.bld-report-summary { font: 700 13px/1.4 var(--font-bold); color: var(--colour-error-600, #dc2626); margin: 0; }
+.bld-report-list { display: flex; flex-direction: column; gap: 1px; border: 1px solid var(--doc-line); border-radius: var(--radius-md); overflow: hidden; }
+.bld-report-row {
+  display: flex; align-items: center; justify-content: space-between; gap: 12px;
+  padding: 10px 14px; background: var(--doc-surface);
+}
+.bld-report-row + .bld-report-row { border-top: 1px solid var(--doc-line); }
+.bld-report-row-main { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.bld-report-type { font: 700 13px/1.3 var(--font-bold); color: var(--text-title); }
+.bld-report-path {
+  font: 12px/1.3 var(--font-mono, var(--font-normal)); color: var(--text-caption);
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.bld-report-jump {
+  flex-shrink: 0; height: 28px; padding: 0 12px; border: 1px solid var(--doc-line); border-radius: var(--radius-sm);
+  background: var(--doc-bg); color: var(--text-body); font: 700 12px/1 var(--font-bold); cursor: pointer;
+}
+.bld-report-jump:hover:not(:disabled) { border-color: var(--colour-primaryblue-300); color: var(--colour-primaryblue-500); }
+.bld-report-jump:disabled { opacity: 0.35; cursor: not-allowed; }
 
 /* ── Visual editor (Edit view) ─────────────────────────────────────────── */
 .bld-edit-undo-redo { display: flex; gap: 4px; }
@@ -310,6 +384,11 @@
   background: var(--colour-primaryblue-50, #eef2ff); border-color: var(--colour-primaryblue-200);
   color: var(--colour-primaryblue-600, var(--colour-primaryblue-500));
 }
+/* :hover above and --active here have equal specificity (one class each) —
+   without this, hovering an already-active tab lets :hover's color win by
+   source order, silently swapping the active tab's text to near-invisible
+   caption-grey against its own light lavender background. */
+.bld-inspector-tab--active:hover { color: var(--colour-primaryblue-600, var(--colour-primaryblue-500)); }
 .bld-palette { display: flex; flex-direction: column; gap: 16px; }
 .bld-palette > .bld-prop-empty { margin-bottom: -4px; }
 .bld-palette-cat { display: flex; flex-direction: column; gap: 6px; }
@@ -325,6 +404,31 @@
 }
 .bld-palette-chip:active { cursor: grabbing; }
 .bld-palette-chip:hover { border-color: var(--colour-primaryblue-300); color: var(--colour-primaryblue-500); }
+
+/* ── Layers tab: collapsible tree of the whole document ──────────────── */
+.bld-layers { display: flex; flex-direction: column; gap: 1px; margin: 0 -8px; }
+.bld-layer-row {
+  display: flex; align-items: center; gap: 6px; padding: 5px 8px; border-radius: var(--radius-sm);
+  cursor: pointer; user-select: none;
+}
+.bld-layer-row:hover { background: var(--doc-bg); }
+.bld-layer-row--hovered { background: var(--doc-bg); }
+.bld-layer-row--selected, .bld-layer-row--selected:hover {
+  background: var(--colour-primaryblue-50, #eef2ff); color: var(--colour-primaryblue-600, var(--colour-primaryblue-500));
+}
+.bld-layer-toggle {
+  display: flex; align-items: center; justify-content: center; width: 14px; height: 14px; flex-shrink: 0;
+  border: none; background: transparent; padding: 0; color: var(--text-caption); cursor: pointer;
+}
+.bld-layer-toggle svg { transition: transform 0.12s ease; transform: rotate(90deg); }
+.bld-layer-toggle--collapsed svg { transform: rotate(0deg); }
+.bld-layer-toggle-spacer { width: 14px; flex-shrink: 0; }
+.bld-layer-type { font: 700 12px/1.3 var(--font-bold); color: var(--text-body); flex-shrink: 0; }
+.bld-layer-row--selected .bld-layer-type { color: inherit; }
+.bld-layer-text {
+  font: 12px/1.3 var(--font-normal); color: var(--text-caption); overflow: hidden;
+  text-overflow: ellipsis; white-space: nowrap; min-width: 0;
+}
 
 .bld-empty { color: var(--text-caption); }
 .bld-spinner {
@@ -681,6 +785,104 @@
 .bld-project-github-btn.connected:hover { background: var(--colour-success-100, #dcfce7); }
 .bld-project-github-btn.error { color: var(--colour-error-600); opacity: 1; }
 .bld-project-github-btn.error:hover { background: var(--colour-error-100, #fee2e2); }
+
+/* project-head Azure DevOps trigger — same footprint/behaviour as the GitHub
+   button above; "connected" only lights up for the currently active project
+   since that's the only one whose ADO status is loaded client-side. */
+.bld-project-ado-btn {
+  width: 20px; height: 20px; border: none; background: none; padding: 0;
+  color: var(--text-caption); cursor: pointer; border-radius: 4px;
+  display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+  opacity: 0.55; transition: opacity .1s, color .1s, background .1s;
+}
+.bld-project-ado-btn svg { width: 12px; height: 12px; }
+.bld-project-ado-btn:hover { opacity: 1; background: var(--colour-primaryblue-50); color: var(--colour-primaryblue-500); }
+.bld-project-ado-btn.connected { opacity: 1; color: var(--colour-success-600, #1a7f4b); }
+.bld-project-ado-btn.connected:hover { background: var(--colour-success-100, #dcfce7); }
+
+/* ── Common workspace: share button, shared badge, share dialog ───────── */
+.bld-project-share-btn {
+  width: 20px; height: 20px; border: none; background: none; padding: 0;
+  color: var(--text-caption); cursor: pointer; border-radius: 4px;
+  display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+  opacity: 0.55; transition: opacity .1s, color .1s, background .1s;
+}
+.bld-project-share-btn svg { width: 12px; height: 12px; }
+.bld-project-share-btn:hover { opacity: 1; background: var(--colour-primaryblue-50); color: var(--colour-primaryblue-500); }
+.bld-project-share-btn.shared { opacity: 1; color: var(--colour-primaryblue-500); }
+.bld-project-shared {
+  font: 10px/16px var(--font-normal); padding: 0 6px; border-radius: 999px; flex-shrink: 0;
+  color: var(--colour-primaryblue-600); background: var(--colour-primaryblue-50);
+}
+.bld-modal--share { max-width: 460px; align-items: stretch; text-align: left; }
+.bld-modal--share .bld-modal-title, .bld-modal--share .bld-modal-body { text-align: left; }
+.bld-share-add { display: flex; gap: 8px; width: 100%; }
+.bld-share-add .bld-key-input { flex: 1; min-width: 0; }
+.bld-share-role {
+  height: 34px; padding: 0 8px; border: 1px solid var(--doc-line); border-radius: var(--radius-sm);
+  background: var(--surface-raised, transparent); color: var(--text-body); font: 13px var(--font-normal);
+}
+.bld-share-add-btn {
+  height: 34px; padding: 0 14px; border: none; border-radius: var(--radius-sm); cursor: pointer;
+  background: var(--colour-primaryblue-500); color: #fff; font: 13px var(--font-normal);
+}
+.bld-share-add-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+.bld-share-msg { margin-top: 8px; }
+.bld-share-notice, .bld-share-loading { margin: 8px 0 0; font: 12px/1.5 var(--font-normal); color: var(--text-caption); }
+.bld-share-list { list-style: none; margin: 14px 0 0; padding: 0; width: 100%; display: flex; flex-direction: column; gap: 4px; }
+.bld-share-row { display: flex; align-items: center; gap: 10px; padding: 6px 0; }
+.bld-share-row--pending { opacity: 0.75; }
+.bld-share-avatar { width: 28px; height: 28px; border-radius: 50%; flex-shrink: 0; object-fit: cover; }
+.bld-share-avatar--initial {
+  display: flex; align-items: center; justify-content: center;
+  background: var(--colour-primaryblue-100, #dbe4ff); color: var(--colour-primaryblue-600); font: 12px var(--font-normal);
+}
+.bld-share-who { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+.bld-share-name { font: 13px/1.4 var(--font-normal); color: var(--text-body); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.bld-share-email { font: 11px/1.4 var(--font-normal); color: var(--text-caption); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.bld-share-badge { font: 12px var(--font-normal); color: var(--text-caption); }
+.bld-share-remove {
+  border: none; background: none; cursor: pointer; padding: 4px 6px; border-radius: 4px;
+  font: 12px var(--font-normal); color: var(--colour-error-600, #aa1400);
+}
+.bld-share-remove:hover { background: var(--colour-error-50, #fdecea); }
+
+/* ── "Getting started" checklist (Sign in / GitHub / Azure DevOps) ──────
+   Sits above the plain Azure DevOps status strip, near the project context
+   line. Self-hides once all 3 steps are done via the component's own
+   doneCount >= 3 check — this is an onboarding nudge, not a status panel. */
+.bld-gs-card {
+  display: flex; flex-direction: column; gap: 10px;
+  margin-top: 10px; padding: 14px;
+  border: 1px solid var(--doc-line); border-radius: var(--radius-lg);
+  background: var(--doc-bg);
+}
+.bld-gs-header { display: flex; align-items: center; justify-content: space-between; }
+.bld-gs-title { font: 700 13px/1 var(--font-bold); color: var(--text-body); }
+.bld-gs-progress { display: flex; align-items: center; gap: 6px; }
+.bld-gs-count { font: 700 11px/1 var(--font-bold); color: var(--text-caption); }
+.bld-gs-ring { flex-shrink: 0; transform: rotate(-90deg); }
+.bld-gs-ring-track, .bld-gs-ring-fill { fill: none; stroke-width: 2; }
+.bld-gs-ring-track { stroke: var(--doc-line); }
+.bld-gs-ring-fill {
+  stroke: var(--colour-success-600, #1a7f4b); stroke-linecap: round;
+  transition: stroke-dashoffset .2s ease;
+}
+.bld-gs-list { display: flex; flex-direction: column; gap: 6px; }
+.bld-gs-row { display: flex; align-items: center; gap: 8px; height: 28px; }
+.bld-gs-row--done { color: var(--colour-success-600, #1a7f4b); }
+.bld-gs-row--done span { font: 400 12px/1 var(--font-normal); color: var(--text-caption); }
+/* Deliberately dark regardless of theme (like GitHub's own brand buttons) —
+   not a token-driven surface, a fixed "connect" accent for this checklist. */
+.bld-gs-action {
+  display: flex; align-items: center; justify-content: center; gap: 8px;
+  width: 100%; height: 36px; padding: 0 12px;
+  border: none; border-radius: var(--radius-lg);
+  background: #1c1f24; color: #fff;
+  font: 700 12px/1 var(--font-bold); cursor: pointer;
+  transition: background .12s;
+}
+.bld-gs-action:hover { background: #2a2f37; }
 
 /* modal contents */
 .bld-modal--github { max-width: 420px; }

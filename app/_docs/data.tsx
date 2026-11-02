@@ -37,7 +37,7 @@ type DocSection = {
   bullets?: string[][];
   table?: { head: string[]; rows: string[][]; codeCol?: number };
   note?: string;
-  demo?: () => JSX.Element;
+  demo?: () => React.JSX.Element;
   code?: string;
   // Design tokens this component's own styling actually resolves to — pulled
   // from the component's source/CSS, not the Figma variable layer (a
@@ -45,8 +45,8 @@ type DocSection = {
   // Tokens collection).
   tokens?: { name: string; role: string }[];
   doDont?: {
-    do?: { text?: string; demo?: () => JSX.Element };
-    dont?: { text?: string; demo?: () => JSX.Element };
+    do?: { text?: string; demo?: () => React.JSX.Element };
+    dont?: { text?: string; demo?: () => React.JSX.Element };
   };
 };
 

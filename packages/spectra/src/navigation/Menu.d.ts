@@ -16,4 +16,4 @@ export interface MenuProps {
   onSelect?: (option: string) => void;
   style?: React.CSSProperties;
 }
-export function Menu(props: MenuProps): JSX.Element;
+export function Menu(props: MenuProps): React.JSX.Element;

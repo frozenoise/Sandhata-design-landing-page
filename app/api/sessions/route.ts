@@ -1,18 +1,23 @@
 import { NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { accessibleProjectIds, projectRole, canEdit } from "@/lib/access";
 
-// GET /api/sessions — list user's builder sessions (most recent first).
-// Includes projectId so the sidebar can group ungrouped-vs-in-project
-// without a second request per session.
+// GET /api/sessions — list the user's builder sessions plus every page in a
+// project shared with them (most recent first). Includes projectId so the
+// sidebar can group ungrouped-vs-in-project without a second request.
 export async function GET() {
   const session = await auth();
   if (!session?.user?.id) return NextResponse.json({ error: "unauthenticated" }, { status: 401 });
 
+  const projectIds = await accessibleProjectIds(session.user.id);
   const sessions = await prisma.builderSession.findMany({
-    where: { userId: session.user.id },
+    // Own ungrouped pages, plus every page in a project the user can access.
+    // (Not "every page I created": a page in a project I was removed from
+    // belongs to that project now.)
+    where: { OR: [{ userId: session.user.id, projectId: null }, { projectId: { in: projectIds } }] },
     orderBy: { updatedAt: "desc" },
-    take: 50,
+    take: 100,
     select: { id: true, name: true, createdAt: true, updatedAt: true, projectId: true },
   });
 
@@ -20,9 +25,9 @@ export async function GET() {
 }
 
 // POST /api/sessions — create a new builder session, optionally inside a
-// project (folder). projectId is verified to belong to the caller, same
-// pattern as every other ownership check in this file — a session can't be
-// silently created inside someone else's project via a guessed id.
+// project (folder). projectId is verified against the caller's role (owner or
+// editor) — a session can't be created inside a project they can't edit via a
+// guessed id.
 export async function POST(req: Request) {
   const session = await auth();
   if (!session?.user?.id) return NextResponse.json({ error: "unauthenticated" }, { status: 401 });
@@ -32,11 +37,10 @@ export async function POST(req: Request) {
   if (!name || !messages) return NextResponse.json({ error: "bad_request" }, { status: 400 });
 
   if (projectId) {
-    const project = await prisma.project.findFirst({
-      where: { id: projectId, userId: session.user.id },
-      select: { id: true },
-    });
-    if (!project) return NextResponse.json({ error: "project_not_found" }, { status: 404 });
+    // Owners and editors can add pages to a project; viewers can't.
+    const role = await projectRole(session.user.id, projectId);
+    if (!role) return NextResponse.json({ error: "project_not_found" }, { status: 404 });
+    if (!canEdit(role)) return NextResponse.json({ error: "forbidden" }, { status: 403 });
   }
 
   const created = await prisma.builderSession.create({

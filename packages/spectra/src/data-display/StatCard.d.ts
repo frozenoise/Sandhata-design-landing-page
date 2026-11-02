@@ -1,3 +1,5 @@
+import * as React from "react";
+
 /** KPI tile with label, value and optional trend indicator. */
 export interface StatCardProps {
   label: string;
@@ -6,4 +8,4 @@ export interface StatCardProps {
   trend?: string;
   trendDirection?: "up" | "down";
 }
-export function StatCard(props: StatCardProps): JSX.Element;
+export function StatCard(props: StatCardProps): React.JSX.Element;

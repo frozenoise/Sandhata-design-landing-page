@@ -24,4 +24,4 @@ export interface SidebarProps {
   width?: number;
   style?: React.CSSProperties;
 }
-export function Sidebar(props: SidebarProps): JSX.Element;
+export function Sidebar(props: SidebarProps): React.JSX.Element;

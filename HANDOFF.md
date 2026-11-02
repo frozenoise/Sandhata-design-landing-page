@@ -1,6 +1,6 @@
-# Sandhata Design System — Developer Handoff
+# Spectra — Sandhata Design System Developer Handoff
 
-A handoff guide for picking up the **Sandhata Design System** website. This is the
+A handoff guide for picking up the **Spectra** (Sandhata Design System) website. This is the
 practical "how do I run it and where is everything" doc. (The older `readme.md`
 describes the original pre-Next.js compiler architecture and is now out of date —
 use **this** file to get started.)
@@ -12,7 +12,7 @@ Live: deployed on Vercel.
 
 ## 1. What this is
 
-A marketing + documentation site for the Sandhata Design System, built as a
+A marketing + documentation site for Spectra, Sandhata's design system, built as a
 **Next.js 14 (App Router) + TypeScript** app. It ships the design system's React
 primitives, design tokens, full landing page, docs, an AI "prompt → UI" builder,
 and an interactive component showcase.
@@ -212,6 +212,29 @@ components — if you change a chart, keep both in sync (or factor them out).
   project "New" will file into. **v1 scope is organize + quick-switch only**
   — no simultaneous multi-pane/tabbed editing (that was the explicitly
   descoped option; revisit if real usage wants it).
+
+- **Common workspace** — shipped on `feature/common-workspace` (2026-10-22):
+  share a project with other people and edit its pages together live.
+  - *Sharing:* `ProjectMember` / `ProjectInvite` tables (migration
+    `20261022093513_add_project_members`, additive only). Owner shares from the
+    person icon on a project row: Editor (edit pages, add pages) or Viewer
+    (read-only). An email with no account becomes a pending invite, claimed
+    the first time that person signs in with it (no email is sent). Every
+    project/page route decides access through `lib/access.ts`; GitHub, Azure
+    DevOps, rename, delete and sharing stay owner-only.
+  - *Live editing:* each page in a shared project is a Liveblocks room
+    (`spectra:page:<sessionId>`, token from `/api/liveblocks-auth`). The tree
+    is stored flat, one entry per node (`app/builder/realtimeTree.ts`), and
+    every edit is sent as the smallest per-node change, so two people editing
+    different elements merge cleanly. Presence avatars in the toolbar, other
+    people's selections outlined in their colour in Edit view, and undo only
+    reverts your own changes. A new room is seeded from the page as saved in
+    the database, never from browser state.
+  - *To go live:* run the migration against production (`npx prisma migrate
+    deploy`), add `LIVEBLOCKS_SECRET_KEY` to Vercel. Without the key, sharing
+    works but pages don't sync live.
+  - *Local testing:* `npm run dev:live` (needs Bun) runs Liveblocks' local dev
+    server alongside `next dev`; point `DATABASE_URL` at a local database first.
 
 Questions on intent or design decisions: check the Figma referenced in `readme.md`,
 or ping the repo owner.

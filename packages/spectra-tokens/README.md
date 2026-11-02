@@ -1,6 +1,6 @@
 # @sandhata/spectra-tokens
 
-Design tokens for the [Sandhata Design System](https://sandhata-design-landing-page.vercel.app) — colour, typography, and spacing as CSS custom properties. `@sandhata/spectra`'s components read these variables (`var(--colour-primaryblue-500)`, `var(--radius-md)`, `var(--text-title)`, etc.) instead of hardcoding values, so **this package must be loaded once at your app root** or the components render unstyled.
+Design tokens for [Spectra](https://sandhata-design-landing-page.vercel.app), Sandhata's design system — colour, typography, and spacing as CSS custom properties. `@sandhata/spectra`'s components read these variables (`var(--colour-primaryblue-500)`, `var(--radius-md)`, `var(--text-title)`, etc.) instead of hardcoding values, so **this package must be loaded once at your app root** or the components render unstyled.
 
 ## Install
 

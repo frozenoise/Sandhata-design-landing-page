@@ -1,4 +1,4 @@
-# Sandhata Design System
+# Spectra — Sandhata Design System
 
 A comprehensive, enterprise-grade UI design system for **Sandhata** — presented
 shadcn-style as **Sandhata UI**: "a set of beautifully designed components that

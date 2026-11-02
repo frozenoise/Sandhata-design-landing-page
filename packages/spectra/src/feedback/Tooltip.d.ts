@@ -6,4 +6,4 @@ export interface TooltipProps {
   side?: "top" | "bottom" | "left" | "right";
   children: React.ReactNode;
 }
-export function Tooltip(props: TooltipProps): JSX.Element;
+export function Tooltip(props: TooltipProps): React.JSX.Element;

@@ -1,18 +1,24 @@
 import { NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { projectRole } from "@/lib/access";
 
-type Params = { params: { id: string } };
+type Params = { params: Promise<{ id: string }> };
 
 // GET /api/projects/:id — project + its sessions (id/name/updatedAt only,
 // same shape as /api/sessions' list — the sidebar loads full session content
 // lazily via /api/sessions/:id, same as it does today for ungrouped ones)
-export async function GET(_req: Request, { params }: Params) {
+export async function GET(_req: Request, props: Params) {
+  const params = await props.params;
   const session = await auth();
   if (!session?.user?.id) return NextResponse.json({ error: "unauthenticated" }, { status: 401 });
 
+  // Any member can open the project; rename and delete below stay owner-only.
+  const role = await projectRole(session.user.id, params.id);
+  if (!role) return NextResponse.json({ error: "not_found" }, { status: 404 });
+
   const project = await prisma.project.findFirst({
-    where: { id: params.id, userId: session.user.id },
+    where: { id: params.id },
     include: {
       sessions: {
         orderBy: { updatedAt: "desc" },
@@ -22,11 +28,12 @@ export async function GET(_req: Request, { params }: Params) {
   });
   if (!project) return NextResponse.json({ error: "not_found" }, { status: 404 });
 
-  return NextResponse.json({ project });
+  return NextResponse.json({ project: { ...project, role } });
 }
 
 // PATCH /api/projects/:id — rename a project
-export async function PATCH(req: Request, { params }: Params) {
+export async function PATCH(req: Request, props: Params) {
+  const params = await props.params;
   const session = await auth();
   if (!session?.user?.id) return NextResponse.json({ error: "unauthenticated" }, { status: 401 });
 
@@ -51,7 +58,8 @@ export async function PATCH(req: Request, { params }: Params) {
 
 // DELETE /api/projects/:id — delete a project AND the sessions inside it
 // (folder semantics — see the cascade comment on the Prisma relation).
-export async function DELETE(_req: Request, { params }: Params) {
+export async function DELETE(_req: Request, props: Params) {
+  const params = await props.params;
   const session = await auth();
   if (!session?.user?.id) return NextResponse.json({ error: "unauthenticated" }, { status: 401 });
 
