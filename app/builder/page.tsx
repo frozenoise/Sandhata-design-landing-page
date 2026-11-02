@@ -2514,7 +2514,7 @@ export default function BuilderPage() {
               canvas light/dark, then Share and Export. Icon-only buttons
               show their label on hover (data-tip), as in Vzy. */}
           {tree && (
-            <div className={`bld-float-toolbar${view === "edit" && viewingVersion === null ? " bld-float--docked" : ""}`} role="toolbar" aria-label="Canvas tools">
+            <div className="bld-float-toolbar" role="toolbar" aria-label="Canvas tools">
               <div className="bld-float-group" role="group" aria-label="View">
                 <button
                   className={view === "edit" ? "on" : ""}
@@ -2630,7 +2630,7 @@ export default function BuilderPage() {
             </div>
           )}
           {tree && showVersions && (
-            <div className={`bld-versions${view === "edit" && viewingVersion === null ? " bld-float--docked" : ""}`} role="dialog" aria-label="Version history">
+            <div className="bld-versions" role="dialog" aria-label="Version history">
               <div className="bld-versions-head">
                 <span>Version history</span>
                 <button onClick={() => { setShowVersions(false); setViewingVersion(null); }} aria-label="Close version history"><XIcon /></button>
@@ -2901,179 +2901,185 @@ export default function BuilderPage() {
                 </div>
                 </div>
 
-                {/* Docked full height on the right, like the chat on the
-                    left (Framer/Vzy), rather than floating over the canvas. */}
-                <div className="bld-prop-panel">
-                  {/* Insert, Properties, and Layers share this one panel
-                      rather than adding extra layout columns - selecting an
-                      element (from canvas or from the Layers tree) auto-flips
-                      here to Properties (effect above), but the user can flip
-                      back to Insert manually to drop a sibling near whatever's
-                      currently selected, or to Layers to keep browsing. */}
-                  {selectedNode ? (() => {
-                    // Element editor: Content is what it says (text and
-                    // text-valued props), Style is how it looks (everything
-                    // else). Tabs only appear when both have something.
-                    const fields = PROP_SCHEMA[selectedNode.type] ?? [];
-                    const contentFields = fields.filter(f => f.kind === "text");
-                    const styleFields = fields.filter(f => f.kind !== "text");
-                    const hasText = typeof selectedNode.children === "string";
-                    const hasContent = hasText || contentFields.length > 0;
-                    const hasStyle = styleFields.length > 0;
-                    const tab = hasContent && hasStyle ? propTab : hasContent ? "content" : "style";
-                    const parent = tree ? findParent(tree, selectedNode.id ?? "") : null;
-                    return (
-                      <>
-                        <div className="bld-prop-panel-head">
-                          <button className="bld-prop-back" onClick={selectParent} title={parent && parent.id !== tree.id ? `Back to ${parent.type}` : "Back"} aria-label="Back"><BackIcon /></button>
-                          <span className="bld-prop-type-icon"><ComponentIcon type={selectedNode.type} /></span>
-                          <span className="bld-prop-title">
-                            <span className="bld-prop-type">{selectedNode.type}</span>
-                            {parent && <span className="bld-prop-parent">in {parent.type}</span>}
-                          </span>
-                          {!readOnly && (
-                            <button className="bld-prop-delete" onClick={deleteSelectedNode} title="Delete element" aria-label="Delete element">
-                              <TrashIcon />
-                            </button>
-                          )}
-                        </div>
-                        {hasContent && hasStyle && (
-                          <div className="bld-prop-tabs" role="tablist">
-                            {(["content", "style"] as const).map(t => (
-                              <button key={t} role="tab" aria-selected={tab === t} className={tab === t ? "on" : ""} onClick={() => setPropTab(t)}>
-                                {t === "content" ? "Content" : "Style"}
-                              </button>
-                            ))}
-                          </div>
-                        )}
-                        {!hasContent && !hasStyle && (
-                          <p className="bld-prop-empty bld-prop-section">No editable properties for this element yet.</p>
-                        )}
-                        {tab === "content" && hasContent && (
-                          <div className="bld-prop-section">
-                            {hasText && (
-                              <div className="bld-prop-row bld-prop-row--stacked">
-                                <textarea
-                                  key={`${selectedNode.id}:__text`} className="bld-prop-input bld-prop-textarea"
-                                  defaultValue={selectedNode.children as string}
-                                  rows={2}
-                                  aria-label="Text"
-                                  onBlur={e => updateSelectedText(e.target.value)}
-                                  onKeyDown={e => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); (e.target as HTMLTextAreaElement).blur(); } }}
-                                />
-                              </div>
-                            )}
-                            {contentFields.map(field => renderPropField(field, selectedNode))}
-                          </div>
-                        )}
-                        {tab === "style" && hasStyle && (
-                          <div className="bld-prop-section">
-                            {styleFields.map(field => renderPropField(field, selectedNode))}
-                          </div>
-                        )}
-                      </>
-                    );
-                  })() : (
-                    <>
-                      <div className="bld-inspector-tabs" role="tablist">
-                        {(["insert", "layers"] as const).map(t => (
-                          <button
-                            key={t}
-                            role="tab"
-                            aria-selected={inspectorTab === t}
-                            className={`bld-inspector-tab${inspectorTab === t ? " bld-inspector-tab--active" : ""}`}
-                            onClick={() => setInspectorTab(t)}
-                          >
-                            {t === "insert" ? "Insert" : "Layers"}
-                          </button>
-                        ))}
-                      </div>
-
-                      {inspectorTab === "layers" ? (
-                        <div className="bld-layers">
-                          {renderLayerRow(tree, 0)}
-                        </div>
-                      ) : (
-                        <div className="bld-palette">
-                          {insertTarget && (
-                            <div className="bld-insert-target">
-                              <span>Adding above <b>{findNodeById(tree, insertTarget.id)?.type ?? "section"}</b></span>
-                              <button onClick={() => setInsertTarget(null)}>Cancel</button>
-                            </div>
-                          )}
-                          <label className="bld-palette-search">
-                            <SearchIcon />
-                            <input
-                              type="search"
-                              placeholder="Search sections and components"
-                              value={paletteQuery}
-                              onChange={e => setPaletteQuery(e.target.value)}
-                            />
-                          </label>
-                          {(() => {
-                            const q = paletteQuery.trim().toLowerCase();
-                            const secs = SECTION_TEMPLATES.filter(t => !q || t.name.toLowerCase().includes(q) || t.hint.toLowerCase().includes(q));
-                            if (secs.length === 0) return null;
-                            return (
-                              <div className="bld-palette-cat">
-                                <span className="bld-panel-section-label">Sections</span>
-                                <div className="bld-section-list">
-                                  {secs.map(t => (
-                                    <button key={t.key} className="bld-section-item" onClick={() => insertSection(t.key)} title={`Add a ${t.name.toLowerCase()} section`}>
-                                      <span className="bld-section-item-name">{t.name}</span>
-                                      <span className="bld-section-item-hint">{t.hint}</span>
-                                    </button>
-                                  ))}
-                                </div>
-                              </div>
-                            );
-                          })()}
-                          {(() => {
-                            const q = paletteQuery.trim().toLowerCase();
-                            const cats = PALETTE_CATEGORIES
-                              .map(cat => ({ ...cat, types: q ? cat.types.filter(t => t.toLowerCase().includes(q)) : cat.types }))
-                              .filter(cat => cat.types.length > 0);
-                            if (cats.length === 0) return <p className="bld-prop-empty">No components match &ldquo;{paletteQuery}&rdquo;.</p>;
-                            return cats.map(cat => (
-                              <div key={cat.label} className="bld-palette-cat">
-                                <span className="bld-panel-section-label">{cat.label}</span>
-                                <div className="bld-palette-grid">
-                                  {cat.types.map(type => (
-                                    <div
-                                      key={type}
-                                      className="bld-palette-item"
-                                      role="button"
-                                      tabIndex={0}
-                                      draggable
-                                      title={`Add ${type} (click, or drag onto the canvas)`}
-                                      onClick={() => insertFromPalette(type)}
-                                      onKeyDown={e => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); insertFromPalette(type); } }}
-                                      onDragStart={(e) => {
-                                        setDraggingPaletteType(type);
-                                        setDraggingNodeId(null); // mutually exclusive with reordering an existing node
-                                        e.dataTransfer.effectAllowed = "copy";
-                                        e.dataTransfer.setData("text/plain", `palette:${type}`);
-                                      }}
-                                      onDragEnd={() => { setDraggingPaletteType(null); setDropTarget(null); }}
-                                    >
-                                      <span className="bld-palette-item-icon"><ComponentIcon type={type} /></span>
-                                      <span className="bld-palette-item-label">{type}</span>
-                                    </div>
-                                  ))}
-                                </div>
-                              </div>
-                            ));
-                          })()}
-                          <p className="bld-panel-hint">Click to add, or drag onto the canvas.</p>
-                        </div>
-                      )}
-                    </>
-                  )}
-                </div>
               </div>
             )}
           </div>
         </main>
+
+        {tree && viewingVersion === null && view === "edit" && (
+          <>
+        {/* Docked full height on the right, like the chat on the
+            left (Framer/Vzy): a sibling of <main>, so the page tabs only
+            span the canvas between the two sidebars. */}
+        <div className="bld-prop-panel">
+          {/* Insert, Properties, and Layers share this one panel
+              rather than adding extra layout columns - selecting an
+              element (from canvas or from the Layers tree) auto-flips
+              here to Properties (effect above), but the user can flip
+              back to Insert manually to drop a sibling near whatever's
+              currently selected, or to Layers to keep browsing. */}
+          {selectedNode ? (() => {
+            // Element editor: Content is what it says (text and
+            // text-valued props), Style is how it looks (everything
+            // else). Tabs only appear when both have something.
+            const fields = PROP_SCHEMA[selectedNode.type] ?? [];
+            const contentFields = fields.filter(f => f.kind === "text");
+            const styleFields = fields.filter(f => f.kind !== "text");
+            const hasText = typeof selectedNode.children === "string";
+            const hasContent = hasText || contentFields.length > 0;
+            const hasStyle = styleFields.length > 0;
+            const tab = hasContent && hasStyle ? propTab : hasContent ? "content" : "style";
+            const parent = tree ? findParent(tree, selectedNode.id ?? "") : null;
+            return (
+              <>
+                <div className="bld-prop-panel-head">
+                  <button className="bld-prop-back" onClick={selectParent} title={parent && parent.id !== tree.id ? `Back to ${parent.type}` : "Back"} aria-label="Back"><BackIcon /></button>
+                  <span className="bld-prop-type-icon"><ComponentIcon type={selectedNode.type} /></span>
+                  <span className="bld-prop-title">
+                    <span className="bld-prop-type">{selectedNode.type}</span>
+                    {parent && <span className="bld-prop-parent">in {parent.type}</span>}
+                  </span>
+                  {!readOnly && (
+                    <button className="bld-prop-delete" onClick={deleteSelectedNode} title="Delete element" aria-label="Delete element">
+                      <TrashIcon />
+                    </button>
+                  )}
+                </div>
+                {hasContent && hasStyle && (
+                  <div className="bld-prop-tabs" role="tablist">
+                    {(["content", "style"] as const).map(t => (
+                      <button key={t} role="tab" aria-selected={tab === t} className={tab === t ? "on" : ""} onClick={() => setPropTab(t)}>
+                        {t === "content" ? "Content" : "Style"}
+                      </button>
+                    ))}
+                  </div>
+                )}
+                {!hasContent && !hasStyle && (
+                  <p className="bld-prop-empty bld-prop-section">No editable properties for this element yet.</p>
+                )}
+                {tab === "content" && hasContent && (
+                  <div className="bld-prop-section">
+                    {hasText && (
+                      <div className="bld-prop-row bld-prop-row--stacked">
+                        <textarea
+                          key={`${selectedNode.id}:__text`} className="bld-prop-input bld-prop-textarea"
+                          defaultValue={selectedNode.children as string}
+                          rows={2}
+                          aria-label="Text"
+                          onBlur={e => updateSelectedText(e.target.value)}
+                          onKeyDown={e => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); (e.target as HTMLTextAreaElement).blur(); } }}
+                        />
+                      </div>
+                    )}
+                    {contentFields.map(field => renderPropField(field, selectedNode))}
+                  </div>
+                )}
+                {tab === "style" && hasStyle && (
+                  <div className="bld-prop-section">
+                    {styleFields.map(field => renderPropField(field, selectedNode))}
+                  </div>
+                )}
+              </>
+            );
+          })() : (
+            <>
+              <div className="bld-inspector-tabs" role="tablist">
+                {(["insert", "layers"] as const).map(t => (
+                  <button
+                    key={t}
+                    role="tab"
+                    aria-selected={inspectorTab === t}
+                    className={`bld-inspector-tab${inspectorTab === t ? " bld-inspector-tab--active" : ""}`}
+                    onClick={() => setInspectorTab(t)}
+                  >
+                    {t === "insert" ? "Insert" : "Layers"}
+                  </button>
+                ))}
+              </div>
+
+              {inspectorTab === "layers" ? (
+                <div className="bld-layers">
+                  {renderLayerRow(tree, 0)}
+                </div>
+              ) : (
+                <div className="bld-palette">
+                  {insertTarget && (
+                    <div className="bld-insert-target">
+                      <span>Adding above <b>{findNodeById(tree, insertTarget.id)?.type ?? "section"}</b></span>
+                      <button onClick={() => setInsertTarget(null)}>Cancel</button>
+                    </div>
+                  )}
+                  <label className="bld-palette-search">
+                    <SearchIcon />
+                    <input
+                      type="search"
+                      placeholder="Search sections and components"
+                      value={paletteQuery}
+                      onChange={e => setPaletteQuery(e.target.value)}
+                    />
+                  </label>
+                  {(() => {
+                    const q = paletteQuery.trim().toLowerCase();
+                    const secs = SECTION_TEMPLATES.filter(t => !q || t.name.toLowerCase().includes(q) || t.hint.toLowerCase().includes(q));
+                    if (secs.length === 0) return null;
+                    return (
+                      <div className="bld-palette-cat">
+                        <span className="bld-panel-section-label">Sections</span>
+                        <div className="bld-section-list">
+                          {secs.map(t => (
+                            <button key={t.key} className="bld-section-item" onClick={() => insertSection(t.key)} title={`Add a ${t.name.toLowerCase()} section`}>
+                              <span className="bld-section-item-name">{t.name}</span>
+                              <span className="bld-section-item-hint">{t.hint}</span>
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                    );
+                  })()}
+                  {(() => {
+                    const q = paletteQuery.trim().toLowerCase();
+                    const cats = PALETTE_CATEGORIES
+                      .map(cat => ({ ...cat, types: q ? cat.types.filter(t => t.toLowerCase().includes(q)) : cat.types }))
+                      .filter(cat => cat.types.length > 0);
+                    if (cats.length === 0) return <p className="bld-prop-empty">No components match &ldquo;{paletteQuery}&rdquo;.</p>;
+                    return cats.map(cat => (
+                      <div key={cat.label} className="bld-palette-cat">
+                        <span className="bld-panel-section-label">{cat.label}</span>
+                        <div className="bld-palette-grid">
+                          {cat.types.map(type => (
+                            <div
+                              key={type}
+                              className="bld-palette-item"
+                              role="button"
+                              tabIndex={0}
+                              draggable
+                              title={`Add ${type} (click, or drag onto the canvas)`}
+                              onClick={() => insertFromPalette(type)}
+                              onKeyDown={e => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); insertFromPalette(type); } }}
+                              onDragStart={(e) => {
+                                setDraggingPaletteType(type);
+                                setDraggingNodeId(null); // mutually exclusive with reordering an existing node
+                                e.dataTransfer.effectAllowed = "copy";
+                                e.dataTransfer.setData("text/plain", `palette:${type}`);
+                              }}
+                              onDragEnd={() => { setDraggingPaletteType(null); setDropTarget(null); }}
+                            >
+                              <span className="bld-palette-item-icon"><ComponentIcon type={type} /></span>
+                              <span className="bld-palette-item-label">{type}</span>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    ));
+                  })()}
+                  <p className="bld-panel-hint">Click to add, or drag onto the canvas.</p>
+                </div>
+              )}
+            </>
+          )}
+        </div>
+          </>
+        )}
 
       </div>
     </div>

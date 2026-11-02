@@ -473,19 +473,18 @@
    Modelled on Framer's and Figma's inspectors: quiet hairline sections,
    small caption headers, label-left / control-right rows, compact 28px
    controls. Sticky so it stays in view while the canvas scrolls. */
-/* Edit view: the canvas scrolls on its own and the inspector is docked to
-   the right edge at full height, mirroring the chat sidebar on the left. */
+/* Edit view: the canvas scrolls on its own; the inspector is a sibling of
+   .bld-main, docked full height on the right like the chat on the left. */
 .bld-canvas--edit { padding: 0; overflow: hidden; }
 .bld-canvas--edit .bld-edit-layout { gap: 0; align-items: stretch; height: 100%; }
 .bld-edit-scroll { flex: 1; min-width: 0; overflow: auto; padding: 36px 36px 84px; display: flex; }
 .bld-prop-panel {
-  width: 300px; flex-shrink: 0; height: 100%;
+  width: 300px; flex-shrink: 0;
   display: flex; flex-direction: column;
   background: var(--doc-surface); border-left: 1px solid var(--doc-line);
   overflow: hidden;
 }
-/* Centre the floating toolbar over the canvas, not over canvas + panel. */
-.bld-float-toolbar.bld-float--docked, .bld-versions.bld-float--docked { left: calc((100% - 300px) / 2); }
+
 .bld-prop-panel > :not(.bld-inspector-tabs) { padding-left: 12px; padding-right: 12px; }
 .bld-prop-panel > .bld-palette, .bld-prop-panel > .bld-layers { overflow-y: auto; }
 
