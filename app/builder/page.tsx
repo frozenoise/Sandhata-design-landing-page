@@ -2585,7 +2585,7 @@ export default function BuilderPage() {
                   <button onClick={redoEdit} disabled={livePage.live ? !livePage.canRedo : editRedoStack.length === 0} data-tip="Redo" aria-label="Redo"><RedoIcon /></button>
                 </>
               )}
-              {view === "preview" && (
+              {(view === "preview" || view === "edit") && (
                 <>
                   <span className="bld-float-toolbar-sep" aria-hidden="true" />
                   {(["mobile","tablet","desktop"] as const).map(v => (
