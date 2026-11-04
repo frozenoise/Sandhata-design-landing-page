@@ -888,7 +888,9 @@ export default function BuilderPage() {
 
   // ── GitHub: check App configuration + load saved installations ──────────
   React.useEffect(() => {
-    if (isLoggedIn) { loadGithubConfig(); loadGithubInstallations(); }
+    // Installations only exist once the GitHub App is registered; asking
+    // before that just gets a 501 (and a console error) on every load.
+    if (isLoggedIn) { loadGithubConfig().then(configured => { if (configured) loadGithubInstallations(); }); }
     else { setGithubConfigured(null); setGithubInstallations([]); }
   }, [isLoggedIn]);
 
@@ -1546,12 +1548,15 @@ export default function BuilderPage() {
     }
   }
 
-  async function loadGithubConfig() {
+  async function loadGithubConfig(): Promise<boolean> {
     try {
       const res = await fetch("/api/github/config");
-      setGithubConfigured(res.ok ? !!(await res.json()).configured : false);
+      const configured = res.ok ? !!(await res.json()).configured : false;
+      setGithubConfigured(configured);
+      return configured;
     } catch {
       setGithubConfigured(false);
+      return false;
     }
   }
 
