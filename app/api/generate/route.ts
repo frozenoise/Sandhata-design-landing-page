@@ -66,6 +66,13 @@ RULES:
 - Keep the tree concise: avoid excessive nesting, merge sibling Text nodes, and don't repeat boilerplate. Aim for under 200 nodes total.
 - Output ONLY the JSON object.`;
 
+// GET /api/generate - whether this deployment has its own Anthropic key, so
+// the builder can tell people up front that they need one (it's deliberately
+// unset on Vercel). Only a yes/no; the key itself never leaves the server.
+export async function GET() {
+  return NextResponse.json({ serverKey: !!process.env.ANTHROPIC_API_KEY });
+}
+
 export async function POST(req: Request) {
   let messages: { role: string; content: string }[] = [];
   let clientKey = "";

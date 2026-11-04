@@ -389,6 +389,11 @@ export default function BuilderPage() {
   const [showAuthModal, setShowAuthModal] = React.useState(false);
   const [showProfile,   setShowProfile]   = React.useState(false);
   const [hasAccountKey, setHasAccountKey] = React.useState(false);
+  // Whether this deployment has its own Anthropic key (it doesn't on Vercel)
+  const [serverKey, setServerKey] = React.useState<boolean | null>(null);
+  React.useEffect(() => {
+    fetch("/api/generate").then(r => (r.ok ? r.json() : null)).then(d => setServerKey(d ? !!d.serverKey : null)).catch(() => {});
+  }, []);
   const [keySaved,      setKeySaved]      = React.useState(false);
 
   // ── Azure DevOps (Phase 1: manual PAT connect, per-project) ────────────
@@ -1125,6 +1130,13 @@ export default function BuilderPage() {
   }
 
   // ── Start page ↔ editor ──────────────────────────────────────────────────
+  // If the sign-in check never answers (network trouble), don't leave people
+  // on a spinner: open the editor as if signed out.
+  React.useEffect(() => {
+    if (screen !== "boot") return;
+    const t = setTimeout(() => { if (!screenInitRef.current) { screenInitRef.current = true; setScreen("editor"); } }, 8000);
+    return () => clearTimeout(t);
+  }, [screen]);
   React.useEffect(() => {
     if (authLoading || screenInitRef.current) return;
     screenInitRef.current = true;
@@ -1196,6 +1208,12 @@ export default function BuilderPage() {
     setPanelOpen(true);
     window.history.pushState({}, "", `/builder?project=${d.project.id}`);
     newTab(d.project.id);
+  }
+
+  /** Opens the profile menu with the cursor in the API key field. */
+  function openKeyField() {
+    setShowProfile(true);
+    requestAnimationFrame(() => (document.querySelector(".bld-profile-menu .bld-key-input") as HTMLInputElement | null)?.focus());
   }
 
   /** Start page: describe an idea; a project named after it opens and the
@@ -2400,13 +2418,14 @@ export default function BuilderPage() {
           {/* Profile menu - sign in/out + API key live here, off the main chat */}
           <div className="bld-profile" ref={profileRef}>
             <button
-              className={`bld-profile-btn${showProfile ? " active" : ""}`}
+              className={`bld-profile-btn${showProfile ? " active" : ""}${!isLoggedIn && !authLoading ? " bld-profile-btn--signin" : ""}`}
               onClick={() => setShowProfile(v => !v)}
-              title={isLoggedIn ? `${session?.user?.name || session?.user?.email || "Account"}${gsOutstanding ? " (setup steps left)" : ""}` : "Sign in / API key"}
+              title={isLoggedIn ? `${session?.user?.name || session?.user?.email || "Account"}${gsOutstanding ? " (setup steps left)" : ""}` : "Sign in or add an API key"}
+              aria-label={isLoggedIn ? "Account" : "Sign in or add an API key"}
             >
               {isLoggedIn && session?.user?.image
                 ? <img src={session.user.image} alt="" className="bld-profile-avatar" />
-                : <UserIcon />}
+                : isLoggedIn ? <UserIcon /> : <SignInIcon />}
             </button>
             {/* Blue dot: Getting started steps left (GitHub / Azure DevOps) */}
             {gsOutstanding && <span className="bld-profile-dot" aria-hidden="true" />}
@@ -2454,6 +2473,7 @@ export default function BuilderPage() {
                         className="bld-key-input"
                         type="password"
                         placeholder="sk-ant-…"
+                        autoComplete="off"
                         value={keyDraft}
                         onChange={e => onKeyDraftChange(e.target.value)}
                         onBlur={() => saveKey(keyDraft)}
@@ -2774,9 +2794,6 @@ export default function BuilderPage() {
               <button className={`bld-rail-btn${panelOpen && rail === "settings" && !editingSelection ? " on" : ""}`} onClick={() => showRail("settings")} data-tip="Project settings" aria-label="Project settings"><GearIcon /></button>
             )}
             <span className="bld-rail-spacer" />
-            {!isLoggedIn && !authLoading && (
-              <button className="bld-rail-btn bld-rail-signin" onClick={() => setShowProfile(true)} data-tip="Sign in to save your work" aria-label="Sign in to save your work"><SignInIcon /></button>
-            )}
             {renderAccount("rail")}
           </nav>
 
@@ -3124,6 +3141,20 @@ export default function BuilderPage() {
                   </div>
                 )}
               </div>
+            ) : !isLoggedIn && !tree ? (
+              <div className="bld-pane bld-welcome">
+                <div className="bld-pane-head"><span className="bld-pane-title">Welcome to Spectra</span></div>
+                <p>Describe a page in the chat and it&apos;s built from Sandhata&apos;s design system components, ready to edit here.</p>
+                <p className="bld-welcome-strong">Sign in to save your pages, group them into projects and share them with your team.</p>
+                <div className="bld-welcome-actions">
+                  <button className="bld-signin-btn" onClick={() => signIn("google")}><GoogleIcon /> Continue with Google</button>
+                  <button className="bld-signin-btn" onClick={() => signIn("github")}><GithubIcon /> Continue with GitHub</button>
+                </div>
+                <p className="bld-welcome-note">
+                  Just trying it? You need your own Anthropic API key to generate. It stays in this browser.{" "}
+                  <button className="bld-setting-link" onClick={openKeyField}>Add an API key</button>
+                </p>
+              </div>
             ) : (
               <p className="bld-side-hint">{tree ? "Switch to Edit view (toolbar at the bottom) to add sections and see layers." : "Describe an interface in the chat at the bottom of the canvas to get started."}</p>
             )}
@@ -3259,7 +3290,7 @@ export default function BuilderPage() {
                   <div key={i} className="bld-msg bld-msg-error">
                     <span>{m.errorText}</span>
                     {!needsKey && /key/i.test(m.errorText ?? "") && (
-                      <button className="bld-go-sm bld-msg-fix" onClick={() => setShowProfile(true)}>Update API key</button>
+                      <button className="bld-go-sm bld-msg-fix" onClick={openKeyField}>Update API key</button>
                     )}
                     {needsKey && (
                       <div className="bld-key-inline">
@@ -3267,6 +3298,7 @@ export default function BuilderPage() {
                           className="bld-key-input"
                           type="password"
                           placeholder="sk-ant-…"
+                        autoComplete="off"
                           value={keyDraft}
                           onChange={e => setKeyDraft(e.target.value)}
                           onKeyDown={e => { if (e.key === "Enter") { saveKey(keyDraft); send(); } }}
@@ -3301,6 +3333,21 @@ export default function BuilderPage() {
                 <button onClick={() => setSelectedNodeId(null)} aria-label="Stop scoping to this element" title="Change the whole page instead"><XIcon /></button>
               </div>
             )}
+            {/* No key anywhere: say so before the first prompt fails */}
+            {serverKey === false && !apiKey && !(isLoggedIn && hasAccountKey) && !authLoading && (
+              <div className="bld-key-notice">
+                <span>
+                  {isLoggedIn
+                    ? "Generating needs an Anthropic API key. Add yours once and it's linked to your account."
+                    : "Generating needs an Anthropic API key. Add yours (it stays in this browser), or sign in to link it to an account."}
+                </span>
+                <span className="bld-key-notice-actions">
+                  <button onClick={openKeyField}>Add API key</button>
+                  {!isLoggedIn && <button onClick={() => setShowAuthModal(true)}>Sign in</button>}
+                </span>
+              </div>
+            )}
+
             {/* Input */}
             <div className="bld-input-area">
               <div className="bld-input-wrap">

@@ -1831,7 +1831,7 @@ select.bld-prop-input { padding-right: 4px; cursor: pointer; }
 }
 
 /* Cookie banner on the builder: clear of the rail, same surface as the chrome */
-body:has(.bld-rail) .cookie-banner { left: 64px; }
+body:has(.bld-rail) .cookie-banner { left: auto; right: 16px; }
 body:has(.bld-rail) .cookie-banner, body:has(.home) .cookie-banner { background: var(--doc-surface, var(--surface-raised)); border-color: var(--doc-line, var(--border-subtle)); }
 
 /* ── Dark theme: tints instead of light blocks, readable accents ── */
@@ -1864,3 +1864,27 @@ body:has(.bld-rail) .cookie-banner, body:has(.home) .cookie-banner { background:
   .home-inner { padding: 24px 16px 64px; }
   .home-bar { gap: 8px; }
 }
+
+/* ── Signed-out visitors ───────────────────────────────────────── */
+/* Before a design exists the chat holds the examples, so it gets room */
+.bld-dock--start .bld-chat { max-height: 45vh; }
+.bld-profile-btn--signin { color: var(--colour-primaryblue-500); border-color: var(--colour-primaryblue-300); }
+[data-theme="dark"] .bld-profile-btn--signin { color: var(--colour-primaryblue-300); }
+.bld-welcome { gap: 12px; }
+.bld-welcome p { margin: 0; font: 13px/1.55 var(--font-normal); color: var(--text-body); }
+.bld-welcome .bld-welcome-strong { font-family: var(--font-bold); font-weight: 700; color: var(--text-title); }
+.bld-welcome-actions { display: flex; flex-direction: column; gap: 8px; }
+.bld-welcome .bld-welcome-note { font-size: 12px; color: var(--text-caption); }
+.bld-key-notice {
+  display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin: 0 10px 6px; padding: 8px 10px;
+  border-radius: var(--radius-md); background: var(--surface-warning, #fff8e6); border: 1px solid var(--colour-alert-200, #f5d58a);
+  font: 12px/1.45 var(--font-normal); color: var(--colour-alert-700, #6b4a00);
+}
+.bld-key-notice > span:first-child { flex: 1 1 220px; }
+.bld-key-notice-actions { display: flex; gap: 6px; }
+.bld-key-notice button {
+  height: 26px; padding: 0 10px; border-radius: var(--radius-sm); cursor: pointer; font: 700 12px/1 var(--font-bold);
+  border: 1px solid currentColor; background: none; color: inherit;
+}
+.bld-key-notice button:first-child { background: var(--colour-primaryblue-500); border-color: var(--colour-primaryblue-500); color: #fff; }
+[data-theme="dark"] .bld-key-notice { background: rgba(245, 180, 0, 0.1); border-color: rgba(245, 180, 0, 0.3); color: #f5d58a; }
