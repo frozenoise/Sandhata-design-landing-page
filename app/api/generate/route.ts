@@ -51,7 +51,7 @@ DESIGN-SYSTEM COMPONENTS (use real product UI, not lorem):
 - "Checkbox" props: { label?:string, checked?:boolean }
 - "Radio"    props: { label?:string, name?:string }
 - "Tag"      children: label
-- "Avatar"   props: { name:string, tone?:"blue"|"purple"|"neutral" }
+- "Avatar"   props: { name:string, tone?:"action"|"purple"|"neutral" }
 - "StatCard" props: { label:string, value:string, trend?:string }
 - "Spinner"  props: { size?:number }
 - "Tabs"     props: { value:string, tabs?:{value:string,label:string}[] }
@@ -64,6 +64,7 @@ RULES:
 - Keep it focused: 1 cohesive screen/section, not a whole site.
 - When the user asks to modify or refine a previous design, your prior JSON is in the conversation history as your last assistant message. Modify it and return the COMPLETE updated JSON: never a partial diff.
 - Keep the tree concise: avoid excessive nesting, merge sibling Text nodes, and don't repeat boilerplate. Aim for under 200 nodes total.
+- Use only the props listed above, never inline colours or fonts: styling comes from the components and tokens. Every Input, Textarea and Select gets a label.
 - Output ONLY the JSON object.`;
 
 // GET /api/generate - whether this deployment has its own Anthropic key, so

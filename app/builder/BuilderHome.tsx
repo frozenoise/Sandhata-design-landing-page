@@ -5,6 +5,7 @@
 // with you, and the Trash (deleted items, kept 30 days - see lib/trash.ts).
 import * as React from "react";
 import { RenderTree, type UINode } from "./Renderer";
+import { summarise } from "./governance";
 
 export type HomeProject = {
   id: string;
@@ -174,6 +175,11 @@ export function BuilderHome({
             {p.ownerName ? `${p.ownerName} · ` : ""}{p.sessionCount} page{p.sessionCount === 1 ? "" : "s"} · Edited {ago(p.updatedAt)}
           </span>
         </div>
+        {p.preview && (() => {
+          const g = summarise(p.preview);
+          const blocking = g.errors + g.warnings;
+          return <span className={`home-gov${blocking ? " home-gov--issues" : ""}`} title={blocking ? `${blocking} design system issue${blocking === 1 ? "" : "s"} on the latest page` : "Latest page is fully on the design system"}>{g.score}%</span>;
+        })()}
         {p.shared && <span className="home-badge">{p.role && p.role !== "owner" ? (p.role === "viewer" ? "View only" : "Can edit") : "Shared"}</span>}
         <div className="home-card-menu-wrap" onClick={e => e.stopPropagation()}>
           <button className="home-card-more" aria-label={`More actions for ${p.name}`} onClick={e => { e.stopPropagation(); setMenuId(m => (m === p.id ? null : p.id)); }}><MoreIcon /></button>

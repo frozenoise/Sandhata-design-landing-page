@@ -1912,3 +1912,53 @@ body:has(.bld-rail) .cookie-banner, body:has(.home) .cookie-banner { background:
 .bld-signin-card b { color: var(--text-title); }
 .bld-signin-card-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
 .bld-signin-card-actions .bld-signin-btn { height: 30px; font-size: 12px; justify-content: center; }
+
+/* ── Design system report (governance) ────────────────────────── */
+.bld-report { max-width: 720px; gap: 20px; }
+.bld-report-head { display: flex; align-items: center; gap: 16px; padding: 16px; border: 1px solid var(--doc-line); border-radius: var(--radius-lg); background: var(--doc-surface); }
+.bld-report-head-text { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 6px; }
+.bld-report-title { margin: 0; font: 700 16px/1.3 var(--font-bold); color: var(--text-title); }
+.bld-report-sub { margin: 0; font: 13px/1.5 var(--font-normal); color: var(--text-caption); }
+.bld-report-score { flex-shrink: 0; transform: rotate(-90deg); }
+.bld-report-score text { transform: rotate(90deg); transform-origin: 36px 36px; font: 700 15px/1 var(--font-bold); fill: var(--text-title); }
+.bld-report-score-track, .bld-report-score-fill { fill: none; stroke-width: 6; }
+.bld-report-score-track { stroke: var(--doc-line); }
+.bld-report-score-fill { stroke-linecap: round; transition: stroke-dashoffset .3s ease; }
+.bld-report-score--ok .bld-report-score-fill { stroke: var(--colour-success-600, #1a7f4b); }
+.bld-report-score--warning .bld-report-score-fill { stroke: var(--colour-alert-500, #d99a00); }
+.bld-report-score--error .bld-report-score-fill { stroke: var(--colour-error-600, #c0362c); }
+.bld-report-counts { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 2px; }
+.bld-report-count {
+  height: 26px; padding: 0 10px; border: 1px solid var(--doc-line); border-radius: 999px; background: var(--doc-bg);
+  font: 12px/1 var(--font-normal); color: var(--text-body); cursor: pointer;
+}
+.bld-report-count b { margin-left: 4px; }
+.bld-report-count.on { border-color: var(--colour-primaryblue-400); color: var(--colour-primaryblue-500); }
+.bld-report-count:disabled { opacity: 0.4; cursor: not-allowed; }
+.bld-report-fixall {
+  flex-shrink: 0; align-self: flex-start; height: 32px; padding: 0 12px; border: none; border-radius: var(--radius-sm);
+  background: var(--colour-primaryblue-500); color: #fff; font: 700 12px/1 var(--font-bold); cursor: pointer;
+}
+.bld-report-fixall:hover { background: var(--colour-primaryblue-700); }
+.bld-report-group { display: flex; flex-direction: column; gap: 6px; }
+.bld-report-group-head { display: flex; align-items: center; gap: 8px; }
+.bld-report-group-head h3 { flex: 1; margin: 0; font: 700 14px/1.3 var(--font-bold); color: var(--text-title); }
+.bld-report-group-head h3 span { margin-left: 4px; font-weight: 400; color: var(--text-caption); }
+.bld-report-sev { padding: 3px 7px; border-radius: 999px; font: 700 10px/1 var(--font-bold); letter-spacing: 0.3px; }
+.bld-report-sev--error { background: var(--colour-error-50, #fdecea); color: var(--colour-error-600, #c0362c); }
+.bld-report-sev--warning { background: var(--colour-alert-50, #fff8e6); color: var(--colour-alert-700, #6b4a00); }
+.bld-report-sev--info { background: var(--doc-bg); color: var(--text-caption); border: 1px solid var(--doc-line); }
+[data-theme="dark"] .bld-report-sev--error { background: rgba(255, 138, 122, 0.14); color: #ff8a7a; }
+[data-theme="dark"] .bld-report-sev--warning { background: rgba(245, 180, 0, 0.14); color: #f5d58a; }
+.bld-report-why { margin: 0 0 2px; font: 12px/1.5 var(--font-normal); color: var(--text-caption); }
+.bld-report-row-actions { display: flex; gap: 6px; flex-shrink: 0; }
+.bld-report-row .bld-report-type { font: 13px/1.4 var(--font-normal); }
+
+/* Governance score on start page cards */
+.home-gov {
+  flex-shrink: 0; padding: 3px 7px; border-radius: 999px; font: 700 10px/1 var(--font-bold);
+  background: var(--colour-success-50, #e9f7ee); color: var(--colour-success-700, #146c3c);
+}
+.home-gov--issues { background: var(--colour-alert-50, #fff8e6); color: var(--colour-alert-700, #6b4a00); }
+[data-theme="dark"] .home-gov { background: rgba(76, 195, 106, 0.14); color: #4cc36a; }
+[data-theme="dark"] .home-gov--issues { background: rgba(245, 180, 0, 0.14); color: #f5d58a; }
