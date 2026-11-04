@@ -340,6 +340,10 @@ export default function BuilderPage() {
   // Start page prompt or template, run once the new project's page is open
   const pendingStartRef = React.useRef<{ prompt?: string; template?: string } | null>(null);
   const [projectNameDraft, setProjectNameDraft] = React.useState("");
+  // Insert panel: live preview card beside the panel on hover/focus
+  // (CanvasUI-style), so section and component names aren't a guess.
+  const [insertPreview, setInsertPreview] = React.useState<{ kind: "section" | "component"; key: string; top: number; left: number } | null>(null);
+  const previewTimerRef = React.useRef<ReturnType<typeof setTimeout> | null>(null);
   // Section bar: the top-level block under the cursor, its open "more" menu,
   // and where a click in the Insert grid should land (set by the bar's +).
   const [sectionHoverId, setSectionHoverId] = React.useState<string | null>(null);
@@ -836,6 +840,20 @@ export default function BuilderPage() {
   /** Click-to-insert from the Insert grid (dragging still works too): at the
    * section bar's spot if one is set, else after the selection, else at the
    * end of the page. */
+  function showInsertPreview(kind: "section" | "component", key: string, el: HTMLElement) {
+    if (previewTimerRef.current) clearTimeout(previewTimerRef.current);
+    const r = el.getBoundingClientRect();
+    const panel = el.closest(".bld-side")?.getBoundingClientRect();
+    const left = (panel?.right ?? r.right) + 12;
+    const height = kind === "section" ? 260 : 180;
+    const top = Math.max(12, Math.min(r.top - 12, window.innerHeight - height - 12));
+    previewTimerRef.current = setTimeout(() => setInsertPreview({ kind, key, top, left }), 120);
+  }
+  function hideInsertPreview() {
+    if (previewTimerRef.current) clearTimeout(previewTimerRef.current);
+    setInsertPreview(null);
+  }
+
   // ── Building by hand (no prompt, no API key) ─────────────────────────────
   /** An empty page to build on by hand. */
   function blankTree(): UINode {
@@ -3156,7 +3174,16 @@ export default function BuilderPage() {
                           {catHeader("Sections", secs.length)}
                           {(q || !collapsedCats.has("Sections")) && <div className="bld-section-list">
                             {secs.map(t => (
-                              <button key={t.key} className="bld-section-item" onClick={() => insertSection(t.key)} title={`Add a ${t.name.toLowerCase()} section`}>
+                              <button
+                                key={t.key}
+                                className="bld-section-item"
+                                onClick={() => { hideInsertPreview(); insertSection(t.key); }}
+                                aria-label={`Add a ${t.name.toLowerCase()} section: ${t.hint}`}
+                                onMouseEnter={e => showInsertPreview("section", t.key, e.currentTarget)}
+                                onFocus={e => showInsertPreview("section", t.key, e.currentTarget)}
+                                onMouseLeave={hideInsertPreview}
+                                onBlur={hideInsertPreview}
+                              >
                                 <span className="bld-section-item-name">{t.name}</span>
                                 <span className="bld-section-item-hint">{t.hint}</span>
                               </button>
@@ -3182,10 +3209,15 @@ export default function BuilderPage() {
                                 role="button"
                                 tabIndex={0}
                                 draggable
-                                title={`Add ${type} (click, or drag onto the canvas)`}
-                                onClick={() => insertFromPalette(type)}
+                                aria-label={`Add ${type} (click, or drag onto the canvas)`}
+                                onMouseEnter={e => showInsertPreview("component", type, e.currentTarget)}
+                                onFocus={e => showInsertPreview("component", type, e.currentTarget)}
+                                onMouseLeave={hideInsertPreview}
+                                onBlur={hideInsertPreview}
+                                onClick={() => { hideInsertPreview(); insertFromPalette(type); }}
                                 onKeyDown={e => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); insertFromPalette(type); } }}
                                 onDragStart={(e) => {
+                                  hideInsertPreview();
                                   setDraggingPaletteType(type);
                                   setDraggingNodeId(null); // mutually exclusive with reordering an existing node
                                   e.dataTransfer.effectAllowed = "copy";
@@ -3210,6 +3242,28 @@ export default function BuilderPage() {
             )}
           </div>
           )}
+          {insertPreview && panelOpen && (() => {
+            const sec = insertPreview.kind === "section" ? SECTION_TEMPLATES.find(t => t.key === insertPreview.key) : null;
+            let previewTree: UINode | null = null;
+            if (insertPreview.kind === "section") previewTree = buildSection(insertPreview.key);
+            else { const d = paletteDefaults(insertPreview.key); previewTree = createNode(insertPreview.key, d.props, d.children); }
+            if (!previewTree) return null;
+            return (
+              <div className={`bld-insert-preview bld-insert-preview--${insertPreview.kind}`} style={{ top: insertPreview.top, left: insertPreview.left }} role="tooltip">
+                <div className="bld-insert-preview-head">
+                  <span className="bld-insert-preview-name">{sec ? sec.name : insertPreview.key}</span>
+                  <span className="bld-insert-preview-hint">{sec ? sec.hint : "Click to add, or drag onto the canvas"}</span>
+                </div>
+                <div className="bld-insert-preview-frame" aria-hidden="true">
+                  <div className="bld-insert-preview-scale">
+                    <div className={`bld-surface bld-surface--desktop ${canvasTheme}`}>
+                      <RenderTree tree={previewTree} />
+                    </div>
+                  </div>
+                </div>
+              </div>
+            );
+          })()}
         </aside>
 
         {/* ── Middle: chat dock + canvas ───────────────────────────── */}

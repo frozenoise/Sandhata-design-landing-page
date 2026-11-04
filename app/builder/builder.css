@@ -1962,3 +1962,33 @@ body:has(.bld-rail) .cookie-banner, body:has(.home) .cookie-banner { background:
 .home-gov--issues { background: var(--colour-alert-50, #fff8e6); color: var(--colour-alert-700, #6b4a00); }
 [data-theme="dark"] .home-gov { background: rgba(76, 195, 106, 0.14); color: #4cc36a; }
 [data-theme="dark"] .home-gov--issues { background: rgba(245, 180, 0, 0.14); color: #f5d58a; }
+
+/* ── Insert panel: hover preview (live render, CanvasUI style) ──── */
+.bld-insert-preview {
+  position: fixed; z-index: 60; width: 380px; pointer-events: none;
+  background: var(--doc-surface); border: 1px solid var(--doc-line); border-radius: var(--radius-lg);
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.18); overflow: hidden;
+  animation: bld-preview-in .12s ease;
+}
+.bld-insert-preview--component { width: 300px; }
+@keyframes bld-preview-in { from { opacity: 0; transform: translateX(-4px); } to { opacity: 1; transform: none; } }
+@media (prefers-reduced-motion: reduce) { .bld-insert-preview { animation: none; } }
+.bld-insert-preview-head { display: flex; flex-direction: column; gap: 3px; padding: 10px 12px; border-bottom: 1px solid var(--doc-line); }
+.bld-insert-preview-name { font: 700 13px/1.3 var(--font-bold); color: var(--text-title); }
+.bld-insert-preview-hint { font: 12px/1.4 var(--font-normal); color: var(--text-caption); }
+.bld-insert-preview-frame { position: relative; overflow: hidden; background: var(--doc-bg); }
+/* Sections render at a desktop width and scale down to fit the card */
+.bld-insert-preview--section .bld-insert-preview-frame { max-height: 280px; }
+/* zoom (not transform) so the card's height follows the scaled content */
+.bld-insert-preview--section .bld-insert-preview-scale { width: 1000px; zoom: 0.38; }
+.bld-insert-preview--section .bld-surface { border: none; border-radius: 0; box-shadow: none; padding: 40px; }
+/* Components render at real size, centred */
+.bld-insert-preview--component .bld-insert-preview-frame { display: flex; align-items: center; justify-content: center; min-height: 120px; padding: 16px; }
+.bld-insert-preview--component .bld-insert-preview-scale { width: 100%; }
+.bld-insert-preview--component .bld-surface { border: none; box-shadow: none; padding: 16px; display: flex; justify-content: center; }
+.bld-insert-preview--component .bld-surface > * { max-width: 100%; }
+[data-theme="dark"] :is(.bld-section-item:hover, .bld-section-item:focus-visible, .bld-palette-item:hover, .bld-palette-item:focus-visible) {
+  background: rgba(122, 133, 255, 0.14); border-color: rgba(122, 133, 255, 0.4);
+}
+[data-theme="dark"] :is(.bld-section-item:hover, .bld-section-item:focus-visible) .bld-section-item-name { color: #fff; }
+[data-theme="dark"] :is(.bld-section-item:hover, .bld-section-item:focus-visible) .bld-section-item-hint { color: #c9cdff; }
