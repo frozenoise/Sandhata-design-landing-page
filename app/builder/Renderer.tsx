@@ -35,6 +35,11 @@ if (process.env.NODE_ENV !== "production") {
   }
 }
 
+/* Stand-in node the visual editor puts where the next insert will land (the
+   section bar's +), so you can see the spot before choosing what to add, as
+   in Elementor. Only ever in the edit canvas's render copy, never saved. */
+export const INSERT_PLACEHOLDER = "__InsertPlaceholder";
+
 /* Layout primitives rendered as plain styled elements. */
 const LAYOUT = new Set<string>(LAYOUT_TYPES);
 
@@ -81,6 +86,18 @@ export function RenderNode({ node, editable = false }: { node: UINode; editable?
     : Array.isArray(children)
       ? children.map((c, i) => <RenderNode key={i} node={c} editable={editable} />)
       : null;
+
+  if (type === INSERT_PLACEHOLDER) {
+    return (
+      <div key={key} className="bld-insert-placeholder" role="status">
+        <span className="bld-insert-placeholder-plus" aria-hidden="true">+</span>
+        <span className="bld-insert-placeholder-text">
+          <b>New section goes here</b>
+          <span>Pick a section or component from Insert</span>
+        </span>
+      </div>
+    );
+  }
 
   // Layout primitives
   if (LAYOUT.has(type)) {

@@ -18,12 +18,14 @@ export function canEdit(role: ProjectRole | null): boolean {
   return role === "owner" || role === "editor";
 }
 
+/** A project in the Trash counts as not found for everyone, so every route
+ * that checks access hides it without its own deletedAt check. */
 export async function projectRole(userId: string, projectId: string): Promise<ProjectRole | null> {
   const project = await prisma.project.findUnique({
     where: { id: projectId },
-    select: { userId: true, members: { where: { userId }, select: { role: true } } },
+    select: { userId: true, deletedAt: true, members: { where: { userId }, select: { role: true } } },
   });
-  if (!project) return null;
+  if (!project || project.deletedAt) return null;
   if (project.userId === userId) return "owner";
   const role = project.members[0]?.role;
   return role === "editor" || role === "viewer" ? role : null;
@@ -34,9 +36,9 @@ export async function projectRole(userId: string, projectId: string): Promise<Pr
 export async function sessionRole(userId: string, sessionId: string): Promise<{ role: ProjectRole | null; projectId: string | null; ownerId: string | null }> {
   const s = await prisma.builderSession.findUnique({
     where: { id: sessionId },
-    select: { userId: true, projectId: true },
+    select: { userId: true, projectId: true, deletedAt: true },
   });
-  if (!s) return { role: null, projectId: null, ownerId: null };
+  if (!s || s.deletedAt) return { role: null, projectId: null, ownerId: null };
   if (s.projectId) {
     const role = await projectRole(userId, s.projectId);
     // A page in a project belongs to the project: someone removed from it
@@ -51,8 +53,8 @@ export async function sessionRole(userId: string, sessionId: string): Promise<{ 
 /** Ids of every project the user owns or is a member of. */
 export async function accessibleProjectIds(userId: string): Promise<string[]> {
   const [owned, member] = await Promise.all([
-    prisma.project.findMany({ where: { userId }, select: { id: true } }),
-    prisma.projectMember.findMany({ where: { userId }, select: { projectId: true } }),
+    prisma.project.findMany({ where: { userId, deletedAt: null }, select: { id: true } }),
+    prisma.projectMember.findMany({ where: { userId, project: { deletedAt: null } }, select: { projectId: true } }),
   ]);
   return [...owned.map(p => p.id), ...member.map(m => m.projectId)];
 }
@@ -66,13 +68,16 @@ export async function claimInvites(userId: string, email: string | null | undefi
   for (const inv of invites) {
     const project = await prisma.project.findUnique({ where: { id: inv.projectId }, select: { userId: true } });
     if (project && project.userId !== userId) {
+      // The project list and the notifications bell both claim on load, so
+      // two requests can race here: a duplicate membership insert or an
+      // invite already deleted by the other request is fine to ignore.
       await prisma.projectMember.upsert({
         where: { projectId_userId: { projectId: inv.projectId, userId } },
         create: { projectId: inv.projectId, userId, role: inv.role, addedById: inv.invitedById },
         update: {},
-      });
+      }).catch(() => {});
     }
-    await prisma.projectInvite.delete({ where: { id: inv.id } });
+    await prisma.projectInvite.deleteMany({ where: { id: inv.id } });
   }
 }
 

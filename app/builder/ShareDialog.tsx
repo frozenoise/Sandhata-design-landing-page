@@ -108,6 +108,10 @@ export function ShareDialog({ projectId, projectName, currentUserId, onClose, on
   const [busy, setBusy] = React.useState(false);
   const [error, setError] = React.useState<string | null>(null);
   const [notice, setNotice] = React.useState<string | null>(null);
+  // The app sends no email, so after adding someone the owner gets a ready
+  // message (link straight to the project) to copy or open in their mail app.
+  const [letKnow, setLetKnow] = React.useState<{ email: string; role: string } | null>(null);
+  const [copied, setCopied] = React.useState(false);
 
   const load = React.useCallback(async () => {
     const res = await fetch(`/api/projects/${projectId}/members`);
@@ -121,7 +125,7 @@ export function ShareDialog({ projectId, projectName, currentUserId, onClose, on
 
   async function add() {
     if (!email.trim() || busy) return;
-    setBusy(true); setError(null); setNotice(null);
+    setBusy(true); setError(null); setNotice(null); setLetKnow(null); setCopied(false);
     const res = await fetch(`/api/projects/${projectId}/members`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -132,7 +136,8 @@ export function ShareDialog({ projectId, projectName, currentUserId, onClose, on
     if (!res.ok) { setError(ERRORS[d.error] ?? "Couldn't add them. Try again."); return; }
     setNotice(d.status === "invited"
       ? `Invite saved. ${email.trim()} gets access the first time they sign in with that address.`
-      : `${email.trim()} now has access.`);
+      : `${email.trim()} now has access. They'll see it in their notifications.`);
+    setLetKnow({ email: email.trim(), role });
     setEmail("");
     await load();
     onChanged();
@@ -156,6 +161,16 @@ export function ShareDialog({ projectId, projectName, currentUserId, onClose, on
     onChanged();
     if (isSelf) { onClose(); return; }
     await load();
+  }
+
+  const projectLink = typeof window !== "undefined" ? `${window.location.origin}/builder?project=${projectId}` : "";
+  const inviteMessage = (to: { email: string; role: string }) =>
+    `I've shared "${projectName}" with you in the Spectra builder, as ${to.role === "editor" ? "an editor" : "a viewer"}.\n\n` +
+    `Open it here: ${projectLink}\n\nSign in with ${to.email} (Google or GitHub) to get access.`;
+  async function copyMessage() {
+    if (!letKnow) return;
+    try { await navigator.clipboard.writeText(inviteMessage(letKnow)); setCopied(true); }
+    catch { setError("Couldn't copy. Select the link and copy it instead."); }
   }
 
   const avatar = (p: { name: string | null; email: string | null; image: string | null }) =>
@@ -192,6 +207,17 @@ export function ShareDialog({ projectId, projectName, currentUserId, onClose, on
         )}
         {error && <div className="bld-msg-error bld-share-msg"><span>{error}</span></div>}
         {notice && <p className="bld-share-notice">{notice}</p>}
+        {letKnow && (
+          <div className="bld-share-letknow">
+            <span className="bld-share-letknow-label">Let them know</span>
+            <div className="bld-share-letknow-actions">
+              <button type="button" onClick={copyMessage}>{copied ? <><CheckIcon /> Copied</> : "Copy invite message"}</button>
+              <a
+                href={`mailto:${encodeURIComponent(letKnow.email)}?subject=${encodeURIComponent(`You've been invited to "${projectName}" in Spectra`)}&body=${encodeURIComponent(inviteMessage(letKnow))}`}
+              >Email invite</a>
+            </div>
+          </div>
+        )}
 
         {!data ? (
           <p className="bld-share-loading">Loading…</p>

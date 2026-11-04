@@ -65,7 +65,8 @@ export async function PATCH(req: Request, props: Params) {
   return NextResponse.json({ session: updated });
 }
 
-// DELETE /api/sessions/:id - remove a session
+// DELETE /api/sessions/:id - move a page to the Trash (kept for 30 days,
+// restorable from /api/trash, then purged)
 export async function DELETE(_req: Request, props: Params) {
   const params = await props.params;
   const session = await auth();
@@ -76,6 +77,6 @@ export async function DELETE(_req: Request, props: Params) {
   if (!role) return NextResponse.json({ error: "not_found" }, { status: 404 });
   if (role !== "owner") return NextResponse.json({ error: "forbidden" }, { status: 403 });
 
-  await prisma.builderSession.delete({ where: { id: params.id } });
-  return NextResponse.json({ ok: true });
+  await prisma.builderSession.update({ where: { id: params.id }, data: { deletedAt: new Date() } });
+  return NextResponse.json({ ok: true, trashed: true });
 }

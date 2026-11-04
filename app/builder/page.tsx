@@ -7,7 +7,8 @@ import "../_docs/docs.css";
 import "./builder.css";
 import { SdTopNav } from "../_docs/shell";
 import { sdHighlightLines } from "../_docs/highlight";
-import { RenderTree, treeToJSX, type UINode } from "./Renderer";
+import { RenderTree, treeToJSX, INSERT_PLACEHOLDER, type UINode } from "./Renderer";
+import { BuilderHome } from "./BuilderHome";
 import { ensureIds, findNodeById, findParent, cloneWithNewIds, firstText, updateNodeProps, updateNodeText, removeNodeById, moveNode, insertNodeAt, createNode, CONTAINER_TYPES, auditTree, type AuditIssue } from "./uiTree";
 import { PROP_SCHEMA, type PropField } from "./propSchema";
 import { PALETTE_CATEGORIES, paletteDefaults } from "./paletteDefaults";
@@ -25,6 +26,16 @@ type ChatMsg = {
   at?: string;
   isError?: boolean;
   errorText?: string;
+};
+
+type InviteNote = {
+  id: string;            // ProjectMember id
+  projectId: string;
+  projectName: string;
+  role: string;          // "editor" | "viewer"
+  createdAt: string;
+  seen: boolean;
+  invitedBy: { name: string | null; email: string | null; image: string | null };
 };
 
 type HistoryItem = {
@@ -54,7 +65,12 @@ type ProjectItem = {
   syncStatus?: string | null;
   lastSyncedAt?: string | null;
   lastSyncError?: string | null;
+  // Latest page's design, for the start page's card thumbnail
+  preview?: UINode | null;
 };
+
+// Left icon rail in the editor (Vzy style): which panel is open beside it.
+type RailTab = "projects" | "pages" | "insert" | "layers";
 
 type GithubInstallationItem = {
   id: string;
@@ -122,6 +138,7 @@ const MSGS_STORAGE       = "sd-builder-msgs";
 const TREE_STORAGE       = "sd-builder-tree";
 const SESSION_ID_STORAGE = "sd-builder-session-id";
 const PROJECT_ID_STORAGE = "sd-builder-project-id";
+const GS_HIDDEN_STORAGE = "bld-getting-started-hidden";
 const OPEN_TABS_STORAGE  = "sd-builder-open-tabs";
 // The canvas keeps its own light/dark theme, independent of the site toggle,
 // so switching the docs chrome never changes the design being edited.
@@ -166,6 +183,14 @@ function formatWhen(iso: string): string {
 const HistoryIcon  = () => (<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>);
 const UserIcon     = () => (<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>);
 const KeyIcon      = () => (<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="7.5" cy="15.5" r="5.5"/><path d="M10.5 12.5L21 2"/><path d="M18 5l3 3M15 8l3 3"/></svg>);
+const HomeIcon     = () => (<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M3 10.5L12 3l9 7.5V20a1 1 0 01-1 1h-5v-6h-6v6H4a1 1 0 01-1-1z"/></svg>);
+const RailFolderIcon = () => (<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M3 7a2 2 0 012-2h4l2 2h8a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2V7z"/></svg>);
+const PagesIcon    = () => (<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M14 3H7a2 2 0 00-2 2v14a2 2 0 002 2h10a2 2 0 002-2V8z"/><polyline points="14 3 14 8 19 8"/><line x1="9" y1="13" x2="15" y2="13"/><line x1="9" y1="17" x2="13" y2="17"/></svg>);
+const InsertIcon   = () => (<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="18" height="18" rx="3"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg>);
+const LayersIcon   = () => (<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/></svg>);
+const BellIcon     = () => (<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 8a6 6 0 10-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 01-3.46 0"/></svg>);
+const ChevronUpIcon = () => (<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="18 15 12 9 6 15"/></svg>);
+const ChevronDownIcon = () => (<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="6 9 12 15 18 9"/></svg>);
 const XIcon        = () => (<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>);
 const DownloadIcon = () => (<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>);
 const GoogleIcon   = () => (<svg width="14" height="14" viewBox="0 0 24 24"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z"/><path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/></svg>);
@@ -194,6 +219,22 @@ export default function BuilderPage() {
   const { data: session, status } = useSession();
   const isLoggedIn  = status === "authenticated";
   const authLoading = status === "loading";
+  const userId      = (session?.user as { id?: string } | undefined)?.id ?? null;
+
+  // Notifications: projects other people have shared with you. Read state is
+  // stored on the membership (seenAt), so it follows the account.
+  const [notes,       setNotes]       = React.useState<InviteNote[]>([]);
+  const [showNotes,   setShowNotes]   = React.useState(false);
+  const [notesFresh,  setNotesFresh]  = React.useState<Set<string>>(new Set());
+  const [inviteBannerDismissed, setInviteBannerDismissed] = React.useState(false);
+  const notesRef      = React.useRef<HTMLDivElement>(null);
+  const pendingProjectRef = React.useRef<string | null>(null);
+  // Chat card at the bottom of the canvas: minimised shows just the input row.
+  const [chatMin, setChatMin] = React.useState(false);
+  // Getting started card minimised out of the sidebar (still in the profile
+  // menu). Remembered in this browser.
+  const [gsHidden, setGsHidden] = React.useState(false);
+  React.useEffect(() => { try { setGsHidden(localStorage.getItem(GS_HIDDEN_STORAGE) === "1"); } catch {} }, []);
 
   const [msgs,          setMsgs]          = React.useState<ChatMsg[]>([]);
   const [input,         setInput]         = React.useState("");
@@ -242,12 +283,17 @@ export default function BuilderPage() {
   // the other. Both share the same onDragOver/onDrop position math and
   // dropTarget state, branching only at the very end on which one is set.
   const [draggingPaletteType, setDraggingPaletteType] = React.useState<string | null>(null);
-  // The right-side inspector panel context-switches between "insert a new
-  // element", "edit the selected one", and "browse the tree" rather than
-  // adding a whole extra column - auto-follows selection (see the effect
-  // below) but the user can still switch to Insert manually to add a sibling
-  // near the current spot.
-  const [inspectorTab, setInspectorTab] = React.useState<"insert" | "layers">("insert");
+  // Insert and Layers share one tabbed panel in the left column while
+  // editing; the selected element's editor sits on the right.
+  const [rail, setRail] = React.useState<RailTab>("insert");
+  // The panel beside the rail; clicking the open tab's icon again folds it.
+  const [panelOpen, setPanelOpen] = React.useState(true);
+  // Signed-in users land on the start page (projects); the editor opens a
+  // project or page. Signed-out use goes straight to the editor.
+  // "boot" until sign-in status is known, so neither screen flashes first.
+  const [screen, setScreen] = React.useState<"boot" | "home" | "editor">("boot");
+  const initialSearchRef = React.useRef(typeof window !== "undefined" ? window.location.search : "");
+  const screenInitRef = React.useRef(false);
   // With an element selected the panel becomes that element's editor
   // (Vzy/Framer style), split into what it says (Content) and how it looks
   // (Style).
@@ -439,7 +485,8 @@ export default function BuilderPage() {
     setDraggingNodeId(null);
     setDraggingPaletteType(null);
     setDropTarget(null);
-    setInspectorTab("insert");
+    setRail("insert");
+    setPanelOpen(true);
     setEditsDirty(false);
     setViewingVersion(null);
     setShowVersions(false);
@@ -449,7 +496,7 @@ export default function BuilderPage() {
   // brings the inspector to Properties automatically - you shouldn't have to
   // manually flip the tab every time just to see what you clicked.
   React.useEffect(() => {
-    if (selectedNodeId) { setPropTab("content"); setInsertTarget(null); }
+    if (selectedNodeId) { setPropTab("content"); setInsertTarget(null); setPanelOpen(true); }
   }, [selectedNodeId]);
 
   const selectedNode = React.useMemo(
@@ -629,9 +676,28 @@ export default function BuilderPage() {
   /** The bar's +: the Insert grid's next click lands above this section. */
   function openInsertAt(id: string) {
     setSelectedNodeId(null);
-    setInspectorTab("insert");
+    setRail("insert");
+    setPanelOpen(true);
     setInsertTarget({ id, position: "before" });
   }
+
+  // The edit canvas renders a copy with a placeholder where the next insert
+  // will land, so the spot is visible before you pick what to add. The real
+  // tree (saved, exported, audited) never contains it.
+  const canvasTree = React.useMemo(() => {
+    if (!tree || !insertTarget || !findNodeById(tree, insertTarget.id)) return tree;
+    return insertNodeAt(tree, insertTarget.id, insertTarget.position, { type: INSERT_PLACEHOLDER });
+  }, [tree, insertTarget]);
+
+  React.useEffect(() => {
+    if (!insertTarget) return;
+    const raf = requestAnimationFrame(() => {
+      document.querySelector(".bld-insert-placeholder")?.scrollIntoView({ block: "nearest", behavior: "smooth" });
+    });
+    const onKey = (e: KeyboardEvent) => { if (e.key === "Escape") setInsertTarget(null); };
+    document.addEventListener("keydown", onKey);
+    return () => { cancelAnimationFrame(raf); document.removeEventListener("keydown", onKey); };
+  }, [insertTarget]);
 
   /** Click-to-insert from the Insert grid (dragging still works too): at the
    * section bar's spot if one is set, else after the selection, else at the
@@ -690,7 +756,7 @@ export default function BuilderPage() {
     setSelectedNodeId(node.id ?? null);
   }
 
-  /** Panel back arrow: up to the parent element, or out to Insert/Layers. */
+  /** Panel back arrow: up to the parent element, or clear the selection. */
   function selectParent() {
     if (!tree || !selectedNodeId) return;
     const parent = findParent(tree, selectedNodeId);
@@ -885,7 +951,163 @@ export default function BuilderPage() {
   // ── Scroll chat ─────────────────────────────────────────────────────────
   React.useEffect(() => {
     if (chatRef.current) chatRef.current.scrollTop = chatRef.current.scrollHeight;
-  }, [msgs, loading]);
+  }, [msgs, loading, chatMin]);
+
+  // ── Notifications: projects shared with you ─────────────────────────────
+  React.useEffect(() => {
+    if (!isLoggedIn) { setNotes([]); return; }
+    fetch("/api/notifications")
+      .then(r => r.ok ? r.json() : null)
+      .then(d => { if (d) setNotes(d.notifications ?? []); })
+      .catch(() => {});
+  }, [isLoggedIn, userId]);
+
+  /** Marks notifications read for this account (optimistic; the bell clears
+   * straight away and the server catches up). */
+  function markNotesSeen(ids: string[]) {
+    if (ids.length === 0) return;
+    setNotes(ns => ns.map(n => (ids.includes(n.id) ? { ...n, seen: true } : n)));
+    fetch("/api/notifications", {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ ids }),
+    }).catch(() => {});
+  }
+
+  const unreadNotes = notes.filter(n => !n.seen);
+  // Newest unseen invite, shown as a banner on sign-in so it can't be missed.
+  const inviteBanner = !inviteBannerDismissed ? unreadNotes[0] ?? null : null;
+
+  function toggleNotes() {
+    if (showNotes) { setShowNotes(false); return; }
+    // Keep this opening's unread items highlighted, then count them as seen.
+    setNotesFresh(new Set(unreadNotes.map(n => n.id)));
+    markNotesSeen(unreadNotes.map(n => n.id));
+    setShowNotes(true);
+  }
+
+  /** Opens a project someone shared with you in the Projects panel. */
+  function openSharedProject(projectId: string) {
+    setShowNotes(false);
+    loadProjects();
+    loadHistory();
+    openProject(projectId);
+  }
+
+  // ── Start page ↔ editor ──────────────────────────────────────────────────
+  React.useEffect(() => {
+    if (authLoading || screenInitRef.current) return;
+    screenInitRef.current = true;
+    const params = new URLSearchParams(initialSearchRef.current);
+    const deepLink = params.has("project") || params.has("page") || params.has("github") || params.has("github_error");
+    setScreen(isLoggedIn && !deepLink ? "home" : "editor");
+    setRail(isLoggedIn ? "pages" : "insert");
+  }, [authLoading, isLoggedIn]);
+
+  React.useEffect(() => {
+    const onPop = () => {
+      const id = new URLSearchParams(window.location.search).get("project");
+      if (!id) setScreen("home");
+      else if (id !== activeProjectId) openProject(id, false);
+      else setScreen("editor");
+    };
+    window.addEventListener("popstate", onPop);
+    return () => window.removeEventListener("popstate", onPop);
+  });
+
+  function goHome() {
+    saveVisualEdits();
+    setScreen("home");
+    window.history.pushState({}, "", "/builder");
+    loadProjects();
+    loadHistory();
+  }
+
+  /** Opens a project in the editor: its most recent page, or a fresh page if
+   * it has none. The URL (/builder?project=…) keeps you there on reload. */
+  async function openProject(id: string, push = true) {
+    saveVisualEdits();
+    setActiveProjectId(id);
+    setScreen("editor");
+    setSelectedNodeId(null);
+    setRail("pages");
+    setPanelOpen(true);
+    if (push) window.history.pushState({}, "", `/builder?project=${id}`);
+    const current = openTabs.find(t => t.id === activeTabId);
+    if (current && (current.projectId ?? null) === id) return;
+    const d = await fetch(`/api/projects/${id}`).then(r => (r.ok ? r.json() : null)).catch(() => null);
+    const pages: HistoryItem[] = (d?.project?.sessions ?? []).map((x: HistoryItem) => ({ ...x, projectId: id }));
+    if (pages[0]) openTab(pages[0]); else newTab(id);
+  }
+
+  /** A page that isn't in any project, from the start page. */
+  function openLoosePage(item: HistoryItem) {
+    setScreen("editor");
+    setRail("pages");
+    setPanelOpen(true);
+    window.history.pushState({}, "", "/builder?page=1");
+    openTab({ ...item, projectId: null });
+  }
+
+  async function createProjectAndOpen(name: string) {
+    const res = await fetch("/api/projects", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ name }),
+    });
+    if (!res.ok) return;
+    const d = await res.json();
+    setProjects(ps => [d.project, ...ps]);
+    saveVisualEdits();
+    setActiveProjectId(d.project.id);
+    setScreen("editor");
+    setRail("pages");
+    setPanelOpen(true);
+    window.history.pushState({}, "", `/builder?project=${d.project.id}`);
+    newTab(d.project.id);
+  }
+
+  /** Rail icon: opens its panel, or folds the panel if it's already showing. */
+  function showRail(t: RailTab) {
+    if (t === rail && panelOpen && !selectedNodeId) { setPanelOpen(false); return; }
+    setSelectedNodeId(null);
+    setRail(t);
+    setPanelOpen(true);
+  }
+
+  React.useEffect(() => {
+    if (!showNotes) return;
+    const onDown = (e: MouseEvent) => { if (notesRef.current && !notesRef.current.contains(e.target as Node)) setShowNotes(false); };
+    const onKey = (e: KeyboardEvent) => { if (e.key === "Escape") setShowNotes(false); };
+    document.addEventListener("mousedown", onDown);
+    document.addEventListener("keydown", onKey);
+    return () => { document.removeEventListener("mousedown", onDown); document.removeEventListener("keydown", onKey); };
+  }, [showNotes]);
+
+  // ── Invite link: /builder?project=<id> opens that project ────────────────
+  React.useEffect(() => {
+    const id = new URLSearchParams(window.location.search).get("project");
+    if (id) pendingProjectRef.current = id;
+  }, []);
+  React.useEffect(() => {
+    const id = pendingProjectRef.current;
+    if (!id || authLoading) return;
+    if (!isLoggedIn) {
+      setGithubNotice({ type: "success", text: "Sign in with the email address you were invited with to open the shared project." });
+      return;
+    }
+    if (projects.length === 0) return;   // wait for the list (claims invites first)
+    pendingProjectRef.current = null;
+    if (projects.some(p => p.id === id)) {
+      setGithubNotice(null);
+      openProject(id, false);
+    } else {
+      window.history.replaceState({}, "", "/builder");
+      setScreen("home");
+      setGithubNotice({ type: "error", text: "That project isn't shared with this account. Check you signed in with the address you were invited with." });
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isLoggedIn, authLoading, projects]);
 
   // ── History helpers ─────────────────────────────────────────────────────
   async function loadHistory() {
@@ -1000,10 +1222,11 @@ export default function BuilderPage() {
 
   // Opens a new blank draft tab. Distinct from reset() (which just clears the
   // canvas with no tab bookkeeping) - this is the user-facing "+" action.
-  function newTab() {
+  function newTab(projectId: string | null = activeProjectId) {
     saveVisualEdits();
     const draftId = `draft-${Date.now()}`;
-    const draft: HistoryItem = { id: draftId, name: "Untitled", createdAt: new Date().toISOString(), updatedAt: new Date().toISOString(), projectId: activeProjectId };
+    const draft: HistoryItem = { id: draftId, name: "Untitled", createdAt: new Date().toISOString(), updatedAt: new Date().toISOString(), projectId };
+    setActiveProjectId(projectId);
     setOpenTabs(tabs => [...tabs, draft]);
     reset();
     setActiveTabId(draftId);
@@ -1029,8 +1252,8 @@ export default function BuilderPage() {
     }
   }
 
-  async function deleteSession(id: string, e: React.MouseEvent) {
-    e.stopPropagation();
+  async function deleteSession(id: string, e?: React.MouseEvent) {
+    e?.stopPropagation();
     const deleted = history.find(s => s.id === id);
     await fetch(`/api/sessions/${id}`, { method: "DELETE" });
     setHistory(h => h.filter(s => s.id !== id));
@@ -1083,16 +1306,16 @@ export default function BuilderPage() {
     setShowNewProject(false);
   }
 
-  async function deleteProject(id: string, e: React.MouseEvent) {
-    e.stopPropagation();
+  async function deleteProject(id: string, e?: React.MouseEvent) {
+    e?.stopPropagation();
     const proj = projects.find(p => p.id === id);
-    if (!window.confirm(`Delete "${proj?.name ?? "this project"}" and all ${proj?.sessionCount ?? 0} page(s) inside it? This can't be undone.`)) return;
+    if (!window.confirm(`Move "${proj?.name ?? "this project"}" and its ${proj?.sessionCount ?? 0} page(s) to the Trash? You can restore it from the start page for 30 days.`)) return;
 
     const containedIds = history.filter(s => s.projectId === id).map(s => s.id);
     await fetch(`/api/projects/${id}`, { method: "DELETE" });
     setProjects(ps => ps.filter(p => p.id !== id));
     setHistory(h => h.filter(s => s.projectId !== id));
-    if (activeProjectId === id) setActiveProjectId(null);
+    if (activeProjectId === id) { setActiveProjectId(null); if (screen === "editor") goHome(); }
     containedIds.forEach(cid => delete tabCacheRef.current[cid]);
     const remainingTabs = openTabs.filter(t => !containedIds.includes(t.id));
     setOpenTabs(remainingTabs);
@@ -1667,6 +1890,76 @@ export default function BuilderPage() {
   }
 
   const isEmpty = msgs.length === 0 && !loading;
+  const promptCount = msgs.filter(m => m.role === "user").length;
+  // The panel shows the selected element's editor instead of the rail tab
+  const editingSelection = !!tree && viewingVersion === null && view === "edit" && !!selectedNode;
+
+  // ── Getting started (sign in, GitHub, Azure DevOps) ──────────────────────
+  const gsProject     = projects.find(pr => pr.id === activeProjectId);
+  const gsGithubDone  = !!gsProject?.repoOwner;
+  const gsAdoDone     = !!adoStatus?.connected;
+  const gsDoneCount   = 1 + (gsGithubDone ? 1 : 0) + (gsAdoDone ? 1 : 0);
+  const gsOutstanding = isLoggedIn && !!activeProjectId && gsDoneCount < 3;
+
+  function setGsHiddenPersist(hidden: boolean) {
+    setGsHidden(hidden);
+    try { hidden ? localStorage.setItem(GS_HIDDEN_STORAGE, "1") : localStorage.removeItem(GS_HIDDEN_STORAGE); } catch {}
+  }
+
+  /** The checklist card: in the sidebar ("card", minimisable) or inside the
+   * profile menu ("menu"). */
+  function renderGettingStarted(where: "card" | "menu") {
+    if (!activeProjectId) return null;
+    const r = 8;
+    const circumference = 2 * Math.PI * r;
+    const offset = circumference * (1 - gsDoneCount / 3);
+    return (
+      <div className={`bld-gs-card bld-gs-card--${where}`}>
+        <div className="bld-gs-header">
+          <span className="bld-gs-title">Getting started</span>
+          <span className="bld-gs-progress">
+            <span className="bld-gs-count">{gsDoneCount}/3</span>
+            <svg width="20" height="20" viewBox="0 0 20 20" className="bld-gs-ring">
+              <circle cx="10" cy="10" r={r} className="bld-gs-ring-track" />
+              <circle
+                cx="10" cy="10" r={r}
+                className="bld-gs-ring-fill"
+                strokeDasharray={circumference}
+                strokeDashoffset={offset}
+              />
+            </svg>
+          </span>
+        {where === "card" ? (
+          <button className="bld-gs-min" onClick={() => setGsHiddenPersist(true)} title="Minimise (still in your profile menu)" aria-label="Minimise Getting started"><ChevronUpIcon /></button>
+        ) : null}
+        </div>
+        <div className="bld-gs-list">
+          <div className="bld-gs-row bld-gs-row--done">
+            <CheckIcon /> <span>Signed in</span>
+          </div>
+          {gsGithubDone ? (
+            <div className="bld-gs-row bld-gs-row--done">
+              <CheckIcon /> <span>{gsProject?.repoOwner}/{gsProject?.repoName}</span>
+            </div>
+          ) : (
+            <button className="bld-gs-action" onClick={() => { setShowProfile(false); openGithubModal(activeProjectId); }}>
+              <GithubIcon /> Connect GitHub
+            </button>
+          )}
+          {gsAdoDone ? (
+            <div className="bld-gs-row bld-gs-row--done">
+              <CheckIcon /> <span>{adoStatus?.organization}/{adoStatus?.adoProject}</span>
+            </div>
+          ) : (
+            <button className="bld-gs-action" onClick={() => { setShowProfile(false); setAdoConnectErr(null); setAdoModalOpen(true); }}>
+              <AdoIcon /> Connect Azure DevOps
+            </button>
+          )}
+        </div>
+        {where === "menu" && gsHidden && <button className="bld-gs-pin" onClick={() => setGsHiddenPersist(false)}>Show in sidebar</button>}
+      </div>
+    );
+  }
   const ungroupedSessions = history.filter(s => !s.projectId);
 
   // The currently-open page only gets ADO "page" controls when it actually
@@ -1855,6 +2148,160 @@ export default function BuilderPage() {
           {textPreview && <span className="bld-layer-text">{textPreview}</span>}
         </div>
         {hasChildren && !collapsed && (node.children as UINode[]).map(child => renderLayerRow(child, depth + 1))}
+      </div>
+    );
+  }
+
+  /** Notifications bell and profile menu: in the editor's rail and on the
+   * start page. */
+  function renderAccount(where: "rail" | "home") {
+    return (
+      <div className={`bld-account bld-account--${where}`}>
+          {isLoggedIn && (
+            <div className="bld-notes" ref={notesRef}>
+              <button
+                className={`bld-icon-btn${showNotes ? " active" : ""}`}
+                onClick={toggleNotes}
+                title="Notifications"
+                aria-label={unreadNotes.length ? `Notifications, ${unreadNotes.length} new` : "Notifications"}
+                aria-expanded={showNotes}
+              >
+                <BellIcon />
+                {unreadNotes.length > 0 && <span className="bld-notes-badge">{unreadNotes.length}</span>}
+              </button>
+              {showNotes && (
+                <div className="bld-notes-menu" role="dialog" aria-label="Notifications">
+                  <div className="bld-notes-head">Notifications</div>
+                  {notes.length === 0 ? (
+                    <p className="bld-notes-empty">Nothing yet. When someone shares a project with you, it shows up here.</p>
+                  ) : (
+                    <ul className="bld-notes-list">
+                      {notes.map(n => {
+                        const who = n.invitedBy.name || n.invitedBy.email || "Someone";
+                        return (
+                          <li key={n.id} className={`bld-note${notesFresh.has(n.id) ? " bld-note--new" : ""}`}>
+                            {n.invitedBy.image
+                              ? <img src={n.invitedBy.image} alt="" className="bld-note-avatar" />
+                              : <span className="bld-note-avatar bld-note-avatar--initial">{who.slice(0, 1).toUpperCase()}</span>}
+                            <div className="bld-note-body">
+                              <span className="bld-note-text">
+                                <b>{who}</b> invited you to {n.role === "editor" ? "edit" : "view"} <b>{n.projectName}</b>
+                              </span>
+                              <span className="bld-note-time">{new Date(n.createdAt).toLocaleDateString(undefined, { day: "numeric", month: "short" })}</span>
+                            </div>
+                            <button className="bld-note-open" onClick={() => openSharedProject(n.projectId)}>Open</button>
+                          </li>
+                        );
+                      })}
+                    </ul>
+                  )}
+                </div>
+              )}
+            </div>
+          )}
+          {/* Profile menu - sign in/out + API key live here, off the main chat */}
+          <div className="bld-profile" ref={profileRef}>
+            <button
+              className={`bld-profile-btn${showProfile ? " active" : ""}`}
+              onClick={() => setShowProfile(v => !v)}
+              title={isLoggedIn ? `${session?.user?.name || session?.user?.email || "Account"}${gsOutstanding ? " (setup steps left)" : ""}` : "Sign in / API key"}
+            >
+              {isLoggedIn && session?.user?.image
+                ? <img src={session.user.image} alt="" className="bld-profile-avatar" />
+                : <UserIcon />}
+            </button>
+            {/* Blue dot: Getting started steps left (GitHub / Azure DevOps) */}
+            {gsOutstanding && <span className="bld-profile-dot" aria-hidden="true" />}
+
+            {showProfile && (
+              <div className="bld-profile-menu">
+                {isLoggedIn ? (
+                  <>
+                    <div className="bld-profile-user">
+                      {session?.user?.image && <img src={session.user.image} alt="" className="bld-profile-avatar bld-profile-avatar--lg" />}
+                      <div className="bld-profile-user-text">
+                        <span className="bld-profile-name">{session?.user?.name || "Signed in"}</span>
+                        {session?.user?.email && <span className="bld-profile-email">{session.user.email}</span>}
+                      </div>
+                    </div>
+                    <div className="bld-profile-divider" />
+                    {gsOutstanding && (
+                      <>
+                        {renderGettingStarted("menu")}
+                        <div className="bld-profile-divider" />
+                      </>
+                    )}
+                  </>
+                ) : (
+                  <>
+                    <p className="bld-profile-hint">Sign in to save your work and link your API key to your account.</p>
+                    <div className="bld-profile-signin">
+                      <button className="bld-signin-btn" onClick={() => signIn("google")}><GoogleIcon /> Continue with Google</button>
+                      <button className="bld-signin-btn" onClick={() => signIn("github")}><GithubIcon /> Continue with GitHub</button>
+                    </div>
+                    <div className="bld-profile-divider" />
+                  </>
+                )}
+
+                <div className="bld-profile-section">
+                  <div className="bld-profile-section-label"><KeyIcon /> Anthropic API key</div>
+                  {hasAccountKey && !keyDraft ? (
+                    <div className="bld-profile-key-linked">
+                      <span>•••• linked to your account</span>
+                      <button className="bld-key-clear" onClick={clearAccountKey}>Unlink</button>
+                    </div>
+                  ) : (
+                    <>
+                      <input
+                        className="bld-key-input"
+                        type="password"
+                        placeholder="sk-ant-…"
+                        value={keyDraft}
+                        onChange={e => onKeyDraftChange(e.target.value)}
+                        onBlur={() => saveKey(keyDraft)}
+                        onKeyDown={e => { if (e.key === "Enter") saveKey(keyDraft); }}
+                      />
+                      <div className="bld-profile-key-row">
+                        {apiKey
+                          ? <button className="bld-key-clear" onClick={() => { saveKey(""); if (isLoggedIn) clearAccountKey(); }}>Clear</button>
+                          : <a className="bld-key-link" href="https://console.anthropic.com/settings/keys" target="_blank" rel="noopener noreferrer">Get a key →</a>
+                        }
+                        {keySaved && <span className="bld-profile-key-saved">Linked ✓</span>}
+                      </div>
+                    </>
+                  )}
+                  <p className="bld-profile-key-note">
+                    {isLoggedIn
+                      ? "Signed in. Your key is linked to your account and follows you across devices."
+                      : "Not signed in. Your key is kept in this browser only."}
+                  </p>
+                </div>
+
+                <div className="bld-profile-divider" />
+
+                <div className="bld-profile-section">
+                  <div className="bld-profile-section-label">Model</div>
+                  <select
+                    className="bld-key-input"
+                    value={model}
+                    onChange={e => chooseModel(e.target.value)}
+                  >
+                    {AVAILABLE_MODELS.map(m => (
+                      <option key={m.id} value={m.id}>{m.label}</option>
+                    ))}
+                  </select>
+                  <p className="bld-profile-key-note">Saved in this browser, applies to every generation from here on.</p>
+                </div>
+
+                {isLoggedIn && (
+                  <>
+                    <div className="bld-profile-divider" />
+                    <button className="bld-profile-signout" onClick={() => signOut()}>Sign out</button>
+                  </>
+                )}
+              </div>
+            )}
+          </div>
       </div>
     );
   }
@@ -2085,424 +2532,359 @@ export default function BuilderPage() {
         );
       })()}
 
+      {screen === "boot" ? (
+        <div className="bld-boot" role="status" aria-label="Loading the builder"><div className="bld-spinner" /></div>
+      ) : screen === "home" && isLoggedIn ? (
+        <BuilderHome
+          firstName={session?.user?.name?.split(" ")[0] ?? null}
+          projects={projects}
+          pages={ungroupedSessions}
+          loading={projLoading || histLoading}
+          accountSlot={renderAccount("home")}
+          onOpenProject={id => openProject(id)}
+          onOpenPage={pg => { const item = history.find(h => h.id === pg.id); if (item) openLoosePage(item); }}
+          onCreateProject={name => createProjectAndOpen(name)}
+          onNewPage={() => { setScreen("editor"); setRail("pages"); setPanelOpen(true); window.history.pushState({}, "", "/builder?page=1"); newTab(null); }}
+          onShare={id => setShareProjectId(id)}
+          onDeleteProject={id => deleteProject(id)}
+          onDeletePage={id => deleteSession(id)}
+          onTrashChanged={() => { loadProjects(); loadHistory(); }}
+        />
+      ) : (
       <div className="bld">
 
-        {/* ── Left: chat + history panel ──────────────────────────── */}
-        <aside className="bld-side">
-
-          {/* Header row */}
-          <div className="bld-header">
-            <div className="bld-header-row">
-              <div>
-                <h1 className="bld-title">AI Builder</h1>
-                {/* Tells you where "New" will file the next page - otherwise
-                    silent context is easy to lose track of once you've been
-                    switching between several projects. */}
-                {isLoggedIn && activeProjectId && (
-                  <div className="bld-active-project">
-                    <FolderIcon /> <span>{projects.find(p => p.id === activeProjectId)?.name ?? "Project"}</span>
-                  </div>
-                )}
-              </div>
-              <div className="bld-header-actions">
-                {isLoggedIn && (
-                  <button
-                    className={`bld-icon-btn${showHistory ? " active" : ""}`}
-                    onClick={() => setShowHistory(v => !v)}
-                    title="History"
-                  >
-                    <HistoryIcon />
-                  </button>
-                )}
-                {msgs.length > 0 && (
-                  <button className="bld-new-btn" onClick={newTab}>New</button>
-                )}
-
-                {/* Profile menu - sign in/out + API key live here, off the main chat */}
-                <div className="bld-profile" ref={profileRef}>
-                  <button
-                    className={`bld-profile-btn${showProfile ? " active" : ""}`}
-                    onClick={() => setShowProfile(v => !v)}
-                    title={isLoggedIn ? session?.user?.name || session?.user?.email || "Account" : "Sign in / API key"}
-                  >
-                    {isLoggedIn && session?.user?.image
-                      ? <img src={session.user.image} alt="" className="bld-profile-avatar" />
-                      : <UserIcon />}
-                  </button>
-
-                  {showProfile && (
-                    <div className="bld-profile-menu">
-                      {isLoggedIn ? (
-                        <>
-                          <div className="bld-profile-user">
-                            {session?.user?.image && <img src={session.user.image} alt="" className="bld-profile-avatar bld-profile-avatar--lg" />}
-                            <div className="bld-profile-user-text">
-                              <span className="bld-profile-name">{session?.user?.name || "Signed in"}</span>
-                              {session?.user?.email && <span className="bld-profile-email">{session.user.email}</span>}
-                            </div>
-                          </div>
-                          <div className="bld-profile-divider" />
-                        </>
-                      ) : (
-                        <>
-                          <p className="bld-profile-hint">Sign in to save your work and link your API key to your account.</p>
-                          <div className="bld-profile-signin">
-                            <button className="bld-signin-btn" onClick={() => signIn("google")}><GoogleIcon /> Continue with Google</button>
-                            <button className="bld-signin-btn" onClick={() => signIn("github")}><GithubIcon /> Continue with GitHub</button>
-                          </div>
-                          <div className="bld-profile-divider" />
-                        </>
-                      )}
-
-                      <div className="bld-profile-section">
-                        <div className="bld-profile-section-label"><KeyIcon /> Anthropic API key</div>
-                        {hasAccountKey && !keyDraft ? (
-                          <div className="bld-profile-key-linked">
-                            <span>•••• linked to your account</span>
-                            <button className="bld-key-clear" onClick={clearAccountKey}>Unlink</button>
-                          </div>
-                        ) : (
-                          <>
-                            <input
-                              className="bld-key-input"
-                              type="password"
-                              placeholder="sk-ant-…"
-                              value={keyDraft}
-                              onChange={e => onKeyDraftChange(e.target.value)}
-                              onBlur={() => saveKey(keyDraft)}
-                              onKeyDown={e => { if (e.key === "Enter") saveKey(keyDraft); }}
-                            />
-                            <div className="bld-profile-key-row">
-                              {apiKey
-                                ? <button className="bld-key-clear" onClick={() => { saveKey(""); if (isLoggedIn) clearAccountKey(); }}>Clear</button>
-                                : <a className="bld-key-link" href="https://console.anthropic.com/settings/keys" target="_blank" rel="noopener noreferrer">Get a key →</a>
-                              }
-                              {keySaved && <span className="bld-profile-key-saved">Linked ✓</span>}
-                            </div>
-                          </>
-                        )}
-                        <p className="bld-profile-key-note">
-                          {isLoggedIn
-                            ? "Signed in. Your key is linked to your account and follows you across devices."
-                            : "Not signed in. Your key is kept in this browser only."}
-                        </p>
-                      </div>
-
-                      <div className="bld-profile-divider" />
-
-                      <div className="bld-profile-section">
-                        <div className="bld-profile-section-label">Model</div>
-                        <select
-                          className="bld-key-input"
-                          value={model}
-                          onChange={e => chooseModel(e.target.value)}
-                        >
-                          {AVAILABLE_MODELS.map(m => (
-                            <option key={m.id} value={m.id}>{m.label}</option>
-                          ))}
-                        </select>
-                        <p className="bld-profile-key-note">Saved in this browser, applies to every generation from here on.</p>
-                      </div>
-
-                      {isLoggedIn && (
-                        <>
-                          <div className="bld-profile-divider" />
-                          <button className="bld-profile-signout" onClick={() => signOut()}>Sign out</button>
-                        </>
-                      )}
-                    </div>
-                  )}
-                </div>
-              </div>
-            </div>
-
-            {/* "Getting started" checklist - Sign in / Connect GitHub / Connect
-                Azure DevOps for the active project. Sign-in always reads as
-                done here (this whole block is gated on isLoggedIn already).
-                Self-hides once all 3 are done - an onboarding nudge, not a
-                permanent status display (the strip below still shows that). */}
-            {isLoggedIn && activeProjectId && (() => {
-              const activeProject = projects.find(pr => pr.id === activeProjectId);
-              const githubDone = !!activeProject?.repoOwner;
-              const adoDone = !!adoStatus?.connected;
-              const doneCount = 1 + (githubDone ? 1 : 0) + (adoDone ? 1 : 0);
-              if (doneCount >= 3) return null;
-              const r = 8;
-              const circumference = 2 * Math.PI * r;
-              const offset = circumference * (1 - doneCount / 3);
-              return (
-                <div className="bld-gs-card">
-                  <div className="bld-gs-header">
-                    <span className="bld-gs-title">Getting started</span>
-                    <span className="bld-gs-progress">
-                      <span className="bld-gs-count">{doneCount}/3</span>
-                      <svg width="20" height="20" viewBox="0 0 20 20" className="bld-gs-ring">
-                        <circle cx="10" cy="10" r={r} className="bld-gs-ring-track" />
-                        <circle
-                          cx="10" cy="10" r={r}
-                          className="bld-gs-ring-fill"
-                          strokeDasharray={circumference}
-                          strokeDashoffset={offset}
-                        />
-                      </svg>
-                    </span>
-                  </div>
-                  <div className="bld-gs-list">
-                    <div className="bld-gs-row bld-gs-row--done">
-                      <CheckIcon /> <span>Signed in</span>
-                    </div>
-                    {githubDone ? (
-                      <div className="bld-gs-row bld-gs-row--done">
-                        <CheckIcon /> <span>{activeProject?.repoOwner}/{activeProject?.repoName}</span>
-                      </div>
-                    ) : (
-                      <button className="bld-gs-action" onClick={() => openGithubModal(activeProjectId)}>
-                        <GithubIcon /> Connect GitHub
-                      </button>
-                    )}
-                    {adoDone ? (
-                      <div className="bld-gs-row bld-gs-row--done">
-                        <CheckIcon /> <span>{adoStatus?.organization}/{adoStatus?.adoProject}</span>
-                      </div>
-                    ) : (
-                      <button className="bld-gs-action" onClick={() => { setAdoConnectErr(null); setAdoModalOpen(true); }}>
-                        <AdoIcon /> Connect Azure DevOps
-                      </button>
-                    )}
-                  </div>
-                </div>
-              );
-            })()}
-
-            {/* Azure DevOps - project-scoped connect + link/status controls.
-                Lives near the project context line above, not gated behind
-                the History panel, so it stays visible whatever the sidebar
-                is showing. Until it's connected, the Getting started card
-                above carries the Connect button, so the strip waits. */}
-            {isLoggedIn && activeProjectId && adoStatus?.connected && (
-              <div className="bld-ado-strip">
-                {adoLoading && !adoStatus ? (
-                  <span className="bld-ado-loading">Checking Azure DevOps…</span>
-                ) : adoStatus?.connected ? (
-                  <>
-                    <div className="bld-ado-conn">
-                      <span className="bld-ado-badge"><AdoIcon /> {adoStatus.organization}/{adoStatus.adoProject}</span>
-                      <button className="bld-key-clear" onClick={disconnectAdo}>Disconnect</button>
-                    </div>
-                    {renderAdoRow("project", adoProjectLink, "Project")}
-                    {currentPageInActiveProject && renderAdoRow("page", adoPageLink, "This page")}
-                  </>
-                ) : (
-                  <button className="bld-ado-connect-btn" onClick={() => { setAdoConnectErr(null); setAdoModalOpen(true); }}>
-                    <AdoIcon /> Connect Azure DevOps
-                  </button>
-                )}
-              </div>
+        {/* ── Left: projects, notifications, Insert / Layers ─────────── */}
+        <aside className={`bld-side${panelOpen ? "" : " bld-side--folded"}`}>
+          {/* Icon rail (Vzy style): Home, Projects and Pages when signed in,
+              then Insert and Layers for the canvas, account at the bottom.
+              Clicking the open panel's icon folds the panel away. */}
+          <nav className="bld-rail" aria-label="Builder panels">
+            {isLoggedIn && (
+              <>
+                <button className="bld-rail-btn" onClick={goHome} data-tip="All projects" aria-label="All projects"><HomeIcon /></button>
+                <button className={`bld-rail-btn${panelOpen && rail === "projects" && !editingSelection ? " on" : ""}`} onClick={() => showRail("projects")} data-tip="Projects" aria-label="Projects"><RailFolderIcon /></button>
+                <button className={`bld-rail-btn${panelOpen && rail === "pages" && !editingSelection ? " on" : ""}`} onClick={() => showRail("pages")} data-tip="Pages" aria-label="Pages"><PagesIcon /></button>
+                <span className="bld-rail-sep" />
+              </>
             )}
-          </div>
+            <button className={`bld-rail-btn${panelOpen && rail === "insert" && !editingSelection ? " on" : ""}`} onClick={() => showRail("insert")} data-tip="Insert" aria-label="Insert"><InsertIcon /></button>
+            <button className={`bld-rail-btn${panelOpen && rail === "layers" && !editingSelection ? " on" : ""}`} onClick={() => showRail("layers")} data-tip="Layers" aria-label="Layers"><LayersIcon /></button>
+            <span className="bld-rail-spacer" />
+            {renderAccount("rail")}
+          </nav>
 
-          {/* GitHub connect/push result banner - driven by the query params
-              /api/github/install/callback redirects back with, cleared on
-              read (see the mount effect above). */}
+          {panelOpen && (
+          <div className="bld-panel">
           {githubNotice && (
             <div className={`bld-github-notice bld-github-notice--${githubNotice.type}`}>
               <span>{githubNotice.text}</span>
               <button onClick={() => setGithubNotice(null)} title="Dismiss"><XIcon /></button>
             </div>
           )}
-
-          {/* Projects + history panel */}
-          {showHistory && isLoggedIn && (
-            <div className="bld-history">
-              <div className="bld-history-header">
-                <span className="bld-examples-label">Projects</span>
-                {(histLoading || projLoading) && <span className="bld-history-loading">Loading…</span>}
-              </div>
-
-              {showNewProject ? (
-                <div className="bld-project-new">
-                  <input
-                    className="bld-key-input"
-                    placeholder="Project name…"
-                    value={newProjectName}
-                    onChange={e => setNewProjectName(e.target.value)}
-                    onKeyDown={e => {
-                      if (e.key === "Enter") createProject();
-                      if (e.key === "Escape") { setShowNewProject(false); setNewProjectName(""); }
-                    }}
-                    autoFocus
-                  />
-                  <button className="bld-new-btn" onClick={createProject} disabled={!newProjectName.trim()}>Add</button>
-                  <button className="bld-icon-btn" onClick={() => { setShowNewProject(false); setNewProjectName(""); }} title="Cancel">
-                    <XIcon />
-                  </button>
-                </div>
-              ) : (
-                <button className="bld-chip bld-project-add" onClick={() => setShowNewProject(true)}>
-                  <PlusIcon /> New project
-                </button>
-              )}
-
-              {projects.length === 0 && history.length === 0 && !histLoading && !projLoading && (
-                <p className="bld-history-empty">No projects or saved sessions yet.</p>
-              )}
-
-              {projects.map(p => (
-                <div key={p.id} className="bld-project-group">
-                  <div
-                    className={`bld-project-head${activeProjectId === p.id ? " active" : ""}`}
-                    onClick={() => { setActiveProjectId(p.id); toggleProjectExpand(p.id); }}
-                  >
-                    <span className={`bld-project-chevron${expandedProjects.has(p.id) ? " open" : ""}`}><ChevronIcon /></span>
-                    <span className="bld-project-icon"><FolderIcon /></span>
-                    <span className="bld-project-name" title={p.ownerName ? `Shared by ${p.ownerName}` : undefined}>{p.name}</span>
-                    {p.role && p.role !== "owner" && <span className="bld-project-shared">{p.role === "viewer" ? "View" : "Shared"}</span>}
-                    <span className="bld-project-count">{p.sessionCount}</span>
-                    <button
-                      className={`bld-project-share-btn${p.shared ? " shared" : ""}`}
-                      onClick={(e) => { e.stopPropagation(); setShareProjectId(p.id); }}
-                      title={p.role === "owner" || !p.role ? (p.shared ? "Shared: manage who has access" : "Share this project") : "Who has access"}
-                    >
-                      <ShareIcon />
-                    </button>
-                    {(!p.role || p.role === "owner") && <>
-                    <button
-                      className={`bld-project-github-btn${p.repoOwner ? " connected" : ""}${p.syncStatus === "error" ? " error" : ""}`}
-                      onClick={(e) => { e.stopPropagation(); openGithubModal(p.id); }}
-                      title={p.repoOwner ? `${p.repoOwner}/${p.repoName}${p.syncStatus === "error" ? " (last push failed)" : ""}` : "Connect GitHub"}
-                    >
-                      <GithubIcon />
-                    </button>
-                    <button
-                      className={`bld-project-ado-btn${activeProjectId === p.id && adoStatus?.connected ? " connected" : ""}`}
-                      onClick={(e) => { e.stopPropagation(); openAdoConnect(p.id); }}
-                      title={activeProjectId === p.id && adoStatus?.connected ? `${adoStatus.organization}/${adoStatus.adoProject}` : "Connect Azure DevOps"}
-                    >
-                      <AdoIcon />
-                    </button>
-                    <button className="bld-history-del" onClick={(e) => deleteProject(p.id, e)} title="Delete project">
-                      <XIcon />
-                    </button>
-                    </>}
-                  </div>
-                  {expandedProjects.has(p.id) && (
-                    <div className="bld-project-sessions">
-                      {history.filter(s => s.projectId === p.id).map(renderSessionRow)}
-                      {history.filter(s => s.projectId === p.id).length === 0 && (
-                        <p className="bld-history-empty bld-project-empty">No pages yet. Start one below.</p>
-                      )}
-                    </div>
-                  )}
-                </div>
-              ))}
-
-              {ungroupedSessions.length > 0 && (
-                <div className="bld-project-group">
-                  <div
-                    className={`bld-project-head${activeProjectId === null ? " active" : ""}`}
-                    onClick={() => { selectProject(null); toggleProjectExpand("__ungrouped"); }}
-                  >
-                    <span className={`bld-project-chevron${expandedProjects.has("__ungrouped") ? " open" : ""}`}><ChevronIcon /></span>
-                    <span className="bld-project-name">Ungrouped</span>
-                    <span className="bld-project-count">{ungroupedSessions.length}</span>
-                  </div>
-                  {expandedProjects.has("__ungrouped") && (
-                    <div className="bld-project-sessions">
-                      {ungroupedSessions.map(renderSessionRow)}
-                    </div>
-                  )}
-                </div>
-              )}
+          {inviteBanner && (
+            <div className="bld-invite-banner">
+              <BellIcon />
+              <span>
+                <b>{inviteBanner.invitedBy.name || inviteBanner.invitedBy.email || "Someone"}</b> invited you to {inviteBanner.role === "editor" ? "edit" : "view"} <b>{inviteBanner.projectName}</b>
+              </span>
+              <button className="bld-invite-banner-open" onClick={() => { markNotesSeen([inviteBanner.id]); openSharedProject(inviteBanner.projectId); }}>Open</button>
+              <button className="bld-invite-banner-close" onClick={() => { markNotesSeen([inviteBanner.id]); setInviteBannerDismissed(true); }} title="Dismiss" aria-label="Dismiss"><XIcon /></button>
             </div>
           )}
 
-          {/* Chat */}
-          <div className="bld-chat" ref={chatRef}>
-            {isEmpty && (
-              <div className="bld-empty-state">
-                <p className="bld-sub">
-                  Describe an interface and it&apos;s built from Sandhata components.
-                  Refine it with follow-up messages. Context is preserved.
-                </p>
-                <div className="bld-examples-label">Start with an example</div>
-                {EXAMPLES.map(ex => (
-                  <button key={ex} className="bld-chip" onClick={() => send(ex)} disabled={loading}>{ex}</button>
-                ))}
-              </div>
-            )}
-
-            {msgs.map((m, i) =>
-              m.role === "user" ? (
-                <div key={i} className="bld-msg bld-msg-user">{m.content}</div>
-              ) : m.isError ? (
-                <div key={i} className="bld-msg bld-msg-error">
-                  <span>{m.errorText}</span>
-                  {needsKey && (
-                    <div className="bld-key-inline">
-                      <input
-                        className="bld-key-input"
-                        type="password"
-                        placeholder="sk-ant-…"
-                        value={keyDraft}
-                        onChange={e => setKeyDraft(e.target.value)}
-                        onKeyDown={e => { if (e.key === "Enter") { saveKey(keyDraft); send(); } }}
-                        autoFocus
-                      />
-                      <button className="bld-go-sm" onClick={() => { saveKey(keyDraft); send(); }} disabled={!keyDraft.trim()}>
-                        Save &amp; retry
-                      </button>
+            {tree && viewingVersion === null && view === "edit" && selectedNode ? (
+            <div className="bld-side-panel bld-side-panel--props">
+              {selectedNode ? (() => {
+                // Element editor: Content is what it says (text and
+                // text-valued props), Style is how it looks (everything
+                // else). Tabs only appear when both have something.
+                const fields = PROP_SCHEMA[selectedNode.type] ?? [];
+                const contentFields = fields.filter(f => f.kind === "text");
+                const styleFields = fields.filter(f => f.kind !== "text");
+                const hasText = typeof selectedNode.children === "string";
+                const hasContent = hasText || contentFields.length > 0;
+                const hasStyle = styleFields.length > 0;
+                const tab = hasContent && hasStyle ? propTab : hasContent ? "content" : "style";
+                const parent = tree ? findParent(tree, selectedNode.id ?? "") : null;
+                return (
+                  <>
+                    <div className="bld-prop-panel-head">
+                      <button className="bld-prop-back" onClick={selectParent} title={parent && parent.id !== tree.id ? `Back to ${parent.type}` : "Back"} aria-label="Back"><BackIcon /></button>
+                      <span className="bld-prop-type-icon"><ComponentIcon type={selectedNode.type} /></span>
+                      <span className="bld-prop-title">
+                        <span className="bld-prop-type">{selectedNode.type}</span>
+                        {parent && <span className="bld-prop-parent">in {parent.type}</span>}
+                      </span>
+                      {!readOnly && (
+                        <button className="bld-prop-delete" onClick={deleteSelectedNode} title="Delete element" aria-label="Delete element">
+                          <TrashIcon />
+                        </button>
+                      )}
+                    </div>
+                    {hasContent && hasStyle && (
+                      <div className="bld-prop-tabs" role="tablist">
+                        {(["content", "style"] as const).map(t => (
+                          <button key={t} role="tab" aria-selected={tab === t} className={tab === t ? "on" : ""} onClick={() => setPropTab(t)}>
+                            {t === "content" ? "Content" : "Style"}
+                          </button>
+                        ))}
+                      </div>
+                    )}
+                    {!hasContent && !hasStyle && (
+                      <p className="bld-prop-empty bld-prop-section">No editable properties for this element yet.</p>
+                    )}
+                    {tab === "content" && hasContent && (
+                      <div className="bld-prop-section">
+                        {hasText && (
+                          <div className="bld-prop-row bld-prop-row--stacked">
+                            <textarea
+                              key={`${selectedNode.id}:__text`} className="bld-prop-input bld-prop-textarea"
+                              defaultValue={selectedNode.children as string}
+                              rows={2}
+                              aria-label="Text"
+                              onBlur={e => updateSelectedText(e.target.value)}
+                              onKeyDown={e => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); (e.target as HTMLTextAreaElement).blur(); } }}
+                            />
+                          </div>
+                        )}
+                        {contentFields.map(field => renderPropField(field, selectedNode))}
+                      </div>
+                    )}
+                    {tab === "style" && hasStyle && (
+                      <div className="bld-prop-section">
+                        {styleFields.map(field => renderPropField(field, selectedNode))}
+                      </div>
+                    )}
+                  </>
+                );
+              })() : null}
+            </div>
+            ) : rail === "projects" && isLoggedIn ? (
+              <div className="bld-pane">
+                <div className="bld-pane-head">
+                  <span className="bld-pane-title">Projects</span>
+                  <button className="bld-pane-icon-btn" onClick={() => setShowNewProject(true)} title="New project" aria-label="New project"><PlusIcon /></button>
+                </div>
+                {showNewProject && (
+                  <div className="bld-project-new">
+                    <input
+                      className="bld-key-input"
+                      placeholder="Project name…"
+                      value={newProjectName}
+                      onChange={e => setNewProjectName(e.target.value)}
+                      onKeyDown={e => {
+                        if (e.key === "Enter" && newProjectName.trim()) { createProjectAndOpen(newProjectName.trim()); setNewProjectName(""); setShowNewProject(false); }
+                        if (e.key === "Escape") { setShowNewProject(false); setNewProjectName(""); }
+                      }}
+                      autoFocus
+                    />
+                    <button className="bld-new-btn" onClick={() => { createProjectAndOpen(newProjectName.trim()); setNewProjectName(""); setShowNewProject(false); }} disabled={!newProjectName.trim()}>Add</button>
+                  </div>
+                )}
+                <div className="bld-pane-list">
+                  {projects.map(p => (
+                    <div
+                      key={p.id}
+                      className={`bld-pane-row${activeProjectId === p.id ? " active" : ""}`}
+                      role="button" tabIndex={0}
+                      onClick={() => openProject(p.id)}
+                      onKeyDown={e => { if (e.key === "Enter") openProject(p.id); }}
+                      title={p.ownerName ? `Shared by ${p.ownerName}` : p.name}
+                    >
+                      <span className="bld-project-icon"><FolderIcon /></span>
+                      <span className="bld-pane-row-name">{p.name}</span>
+                      {p.role && p.role !== "owner" && <span className="bld-project-shared">{p.role === "viewer" ? "View" : "Shared"}</span>}
+                      <span className="bld-project-count">{p.sessionCount}</span>
+                    </div>
+                  ))}
+                  {ungroupedSessions.length > 0 && (
+                    <div
+                      className={`bld-pane-row${activeProjectId === null ? " active" : ""}`}
+                      role="button" tabIndex={0}
+                      onClick={() => { setActiveProjectId(null); setRail("pages"); }}
+                      onKeyDown={e => { if (e.key === "Enter") { setActiveProjectId(null); setRail("pages"); } }}
+                    >
+                      <span className="bld-project-icon"><PagesIcon /></span>
+                      <span className="bld-pane-row-name">Pages not in a project</span>
+                      <span className="bld-project-count">{ungroupedSessions.length}</span>
                     </div>
                   )}
+                  {projects.length === 0 && ungroupedSessions.length === 0 && !projLoading && (
+                    <p className="bld-history-empty">No projects yet. Use + to create one.</p>
+                  )}
                 </div>
-              ) : (
-                <div key={i} className="bld-msg bld-msg-bot">
-                  <span className="bld-msg-check"><CheckIcon /></span>
-                  <span>{m.label}</span>
-                </div>
-              )
-            )}
-
-            {loading && (
-              <div className="bld-msg bld-msg-bot">
-                <div className="bld-dot-pulse"><span /><span /><span /></div>
-                <span>Thinking…</span>
               </div>
+            ) : rail === "pages" && isLoggedIn ? (() => {
+              const proj = projects.find(p => p.id === activeProjectId) ?? null;
+              const isOwner = !!proj && (!proj.role || proj.role === "owner");
+              const pagesHere = history.filter(h => (h.projectId ?? null) === activeProjectId);
+              return (
+              <div className="bld-pane">
+                <div className="bld-pane-head">
+                  <span className="bld-pane-title" title={proj?.name}>{proj ? proj.name : "Pages not in a project"}</span>
+                  {proj && (
+                    <span className="bld-pane-head-actions">
+                      <button
+                        className={`bld-project-share-btn${proj.shared ? " shared" : ""}`}
+                        onClick={() => setShareProjectId(proj.id)}
+                        title={isOwner ? (proj.shared ? "Shared: manage who has access" : "Share this project") : "Who has access"}
+                      ><ShareIcon /></button>
+                      {isOwner && <>
+                        <button
+                          className={`bld-project-github-btn${proj.repoOwner ? " connected" : ""}${proj.syncStatus === "error" ? " error" : ""}`}
+                          onClick={() => openGithubModal(proj.id)}
+                          title={proj.repoOwner ? `${proj.repoOwner}/${proj.repoName}${proj.syncStatus === "error" ? " (last push failed)" : ""}` : "Connect GitHub"}
+                        ><GithubIcon /></button>
+                        <button
+                          className={`bld-project-ado-btn${adoStatus?.connected ? " connected" : ""}`}
+                          onClick={() => openAdoConnect(proj.id)}
+                          title={adoStatus?.connected ? `${adoStatus.organization}/${adoStatus.adoProject}` : "Connect Azure DevOps"}
+                        ><AdoIcon /></button>
+                      </>}
+                    </span>
+                  )}
+                </div>
+                {gsOutstanding && !gsHidden && renderGettingStarted("card")}
+                {isLoggedIn && activeProjectId && adoStatus?.connected && (
+                  <div className="bld-ado-strip">
+                    {adoLoading && !adoStatus ? (
+                      <span className="bld-ado-loading">Checking Azure DevOps…</span>
+                    ) : adoStatus?.connected ? (
+                      <>
+                        <div className="bld-ado-conn">
+                          <span className="bld-ado-badge"><AdoIcon /> {adoStatus.organization}/{adoStatus.adoProject}</span>
+                          <button className="bld-key-clear" onClick={disconnectAdo}>Disconnect</button>
+                        </div>
+                        {renderAdoRow("project", adoProjectLink, "Project")}
+                        {currentPageInActiveProject && renderAdoRow("page", adoPageLink, "This page")}
+                      </>
+                    ) : (
+                      <button className="bld-ado-connect-btn" onClick={() => { setAdoConnectErr(null); setAdoModalOpen(true); }}>
+                        <AdoIcon /> Connect Azure DevOps
+                      </button>
+                    )}
+                  </div>
+                )}
+
+                <button className="bld-pane-add" onClick={() => newTab(activeProjectId)} disabled={proj?.role === "viewer"}>
+                  <PlusIcon /> Add page
+                </button>
+                <div className="bld-pane-list">
+                  {pagesHere.map(renderSessionRow)}
+                  {pagesHere.length === 0 && <p className="bld-history-empty">No saved pages yet. Describe one in the chat, or add a page.</p>}
+                </div>
+                {isOwner && proj && (
+                  <button className="bld-pane-danger" onClick={() => deleteProject(proj.id)}>Move project to Trash</button>
+                )}
+              </div>
+              );
+            })() : tree && viewingVersion === null && view === "edit" ? (
+              <div className="bld-side-panel">
+                {rail === "layers" ? (
+                  <div className="bld-layers">
+                    {renderLayerRow(tree, 0)}
+                  </div>
+                ) : (
+                  <div className="bld-palette">
+                    {insertTarget && (
+                      <div className="bld-insert-target">
+                        <span>Adding above <b>{findNodeById(tree, insertTarget.id)?.type ?? "section"}</b></span>
+                        <button onClick={() => setInsertTarget(null)}>Cancel</button>
+                      </div>
+                    )}
+                    <label className="bld-palette-search">
+                      <SearchIcon />
+                      <input
+                        type="search"
+                        placeholder="Search sections and components"
+                        value={paletteQuery}
+                        onChange={e => setPaletteQuery(e.target.value)}
+                      />
+                    </label>
+                    {(() => {
+                      const q = paletteQuery.trim().toLowerCase();
+                      const secs = SECTION_TEMPLATES.filter(t => !q || t.name.toLowerCase().includes(q) || t.hint.toLowerCase().includes(q));
+                      if (secs.length === 0) return null;
+                      return (
+                        <div className="bld-palette-cat">
+                          {catHeader("Sections", secs.length)}
+                          {(q || !collapsedCats.has("Sections")) && <div className="bld-section-list">
+                            {secs.map(t => (
+                              <button key={t.key} className="bld-section-item" onClick={() => insertSection(t.key)} title={`Add a ${t.name.toLowerCase()} section`}>
+                                <span className="bld-section-item-name">{t.name}</span>
+                                <span className="bld-section-item-hint">{t.hint}</span>
+                              </button>
+                            ))}
+                          </div>}
+                        </div>
+                      );
+                    })()}
+                    {(() => {
+                      const q = paletteQuery.trim().toLowerCase();
+                      const cats = PALETTE_CATEGORIES
+                        .map(cat => ({ ...cat, types: q ? cat.types.filter(t => t.toLowerCase().includes(q)) : cat.types }))
+                        .filter(cat => cat.types.length > 0);
+                      if (cats.length === 0) return <p className="bld-prop-empty">No components match &ldquo;{paletteQuery}&rdquo;.</p>;
+                      return cats.map(cat => (
+                        <div key={cat.label} className="bld-palette-cat">
+                          {catHeader(cat.label, cat.types.length)}
+                          {(q || !collapsedCats.has(cat.label)) && <div className="bld-palette-grid">
+                            {cat.types.map(type => (
+                              <div
+                                key={type}
+                                className="bld-palette-item"
+                                role="button"
+                                tabIndex={0}
+                                draggable
+                                title={`Add ${type} (click, or drag onto the canvas)`}
+                                onClick={() => insertFromPalette(type)}
+                                onKeyDown={e => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); insertFromPalette(type); } }}
+                                onDragStart={(e) => {
+                                  setDraggingPaletteType(type);
+                                  setDraggingNodeId(null); // mutually exclusive with reordering an existing node
+                                  e.dataTransfer.effectAllowed = "copy";
+                                  e.dataTransfer.setData("text/plain", `palette:${type}`);
+                                }}
+                                onDragEnd={() => { setDraggingPaletteType(null); setDropTarget(null); }}
+                              >
+                                <span className="bld-palette-item-icon"><ComponentIcon type={type} /></span>
+                                <span className="bld-palette-item-label">{type}</span>
+                              </div>
+                            ))}
+                          </div>}
+                        </div>
+                      ));
+                    })()}
+                    <p className="bld-panel-hint">Click to add, or drag onto the canvas.</p>
+                  </div>
+                )}
+              </div>
+            ) : (
+              <p className="bld-side-hint">{tree ? "Switch to Edit view (toolbar at the bottom) to add sections and see layers." : "Describe an interface in the chat at the bottom of the canvas to get started."}</p>
             )}
           </div>
-
-          {/* Input */}
-          <div className="bld-input-area">
-            <div className="bld-input-wrap">
-              <textarea
-                ref={inputRef}
-                className="bld-input"
-                placeholder={readOnly ? "You have view-only access to this page" : msgs.length > 0 ? "Describe a change…" : "Describe an interface…"}
-                value={input}
-                onChange={e => setInput(e.target.value)}
-                onKeyDown={e => { if ((e.metaKey || e.ctrlKey) && e.key === "Enter") send(); }}
-                rows={3}
-                disabled={loading || readOnly}
-              />
-              <button className="bld-send-btn" onClick={() => send()} disabled={loading || readOnly || !input.trim()} title="Send (⌘ Enter)">
-                <SendIcon />
-              </button>
-            </div>
-            <div className="bld-input-hint">⌘ Enter to send</div>
-          </div>
-
+          )}
         </aside>
 
-        {/* ── Right: canvas ───────────────────────────────────────── */}
-        <main className="bld-main">
+        {/* ── Middle: chat dock + canvas ───────────────────────────── */}
+        <main className={`bld-main${chatMin ? "" : " bld-main--chat-open"}`}>
           {/* Instance tabs - replaces having to dig into History to switch
               between pages you're actively working on. Each tab caches its
               own msgs/tree (tabCacheRef) so re-focusing one already visited
               this session is instant, not a re-fetch. Not gated behind
               isLoggedIn: an unsent draft still gets a tab, matching how the
               canvas already worked pre-tabs for signed-out use. */}
-          {openTabs.length > 0 && (
+          {(isLoggedIn || openTabs.length > 0) && (
             <div className="bld-instance-tabs">
-              {openTabs.map(t => (
+              {/* Which project you're in; opens the project switcher */}
+              {isLoggedIn && (
+                <button className="bld-project-btn" onClick={() => showRail("projects")} title="Switch project">
+                  <FolderIcon />
+                  <span>{projects.find(p => p.id === activeProjectId)?.name ?? "No project"}</span>
+                  <ChevronDownIcon />
+                </button>
+              )}
+              {openTabs.filter(t => !isLoggedIn || (t.projectId ?? null) === activeProjectId).map(t => (
                 <div
                   key={t.id}
                   className={`bld-instance-tab${t.id === activeTabId ? " active" : ""}`}
@@ -2536,11 +2918,104 @@ export default function BuilderPage() {
                   </button>
                 </div>
               ))}
-              <button className="bld-instance-tab-add" onClick={newTab} title="New page">
+              <button className="bld-instance-tab-add" onClick={() => newTab()} title="New page in this project">
                 <PlusIcon />
               </button>
             </div>
           )}
+          {/* Chat: a floating card at the bottom of the canvas, just above
+              the toolbar, so talking to the design feels like a
+              conversation with it. Kept short so it covers little of the
+              canvas; minimise leaves only the input row. */}
+          <section className={`bld-dock${chatMin ? " bld-dock--min" : ""}${!tree ? " bld-dock--start" : ""}`} aria-label="Chat">
+            <div className="bld-dock-head">
+              <span className="bld-dock-title">Chat</span>
+              {promptCount > 0 && <span className="bld-dock-count">{promptCount} prompt{promptCount === 1 ? "" : "s"}</span>}
+              {chatMin && loading && <span className="bld-dock-status"><span className="bld-dot-pulse"><span /><span /><span /></span> Thinking…</span>}
+              <button
+                className="bld-dock-toggle"
+                onClick={() => setChatMin(v => !v)}
+                title={chatMin ? "Expand chat" : "Minimise chat"}
+                aria-label={chatMin ? "Expand chat" : "Minimise chat"}
+                aria-expanded={!chatMin}
+              >{chatMin ? <ChevronDownIcon /> : <ChevronUpIcon />}</button>
+            </div>
+            {/* Messages */}
+            {!chatMin && (
+            <div className="bld-chat" ref={chatRef}>
+              {isEmpty && (
+                <div className="bld-empty-state">
+                  <p className="bld-sub">
+                    Describe an interface and it&apos;s built from Sandhata components.
+                    Refine it with follow-up messages. Context is preserved.
+                  </p>
+                  <div className="bld-examples-label">Start with an example</div>
+                  {EXAMPLES.map(ex => (
+                    <button key={ex} className="bld-chip" onClick={() => send(ex)} disabled={loading}>{ex}</button>
+                  ))}
+                </div>
+              )}
+
+              {msgs.map((m, i) =>
+                m.role === "user" ? (
+                  <div key={i} className="bld-msg bld-msg-user">{m.content}</div>
+                ) : m.isError ? (
+                  <div key={i} className="bld-msg bld-msg-error">
+                    <span>{m.errorText}</span>
+                    {needsKey && (
+                      <div className="bld-key-inline">
+                        <input
+                          className="bld-key-input"
+                          type="password"
+                          placeholder="sk-ant-…"
+                          value={keyDraft}
+                          onChange={e => setKeyDraft(e.target.value)}
+                          onKeyDown={e => { if (e.key === "Enter") { saveKey(keyDraft); send(); } }}
+                          autoFocus
+                        />
+                        <button className="bld-go-sm" onClick={() => { saveKey(keyDraft); send(); }} disabled={!keyDraft.trim()}>
+                          Save &amp; retry
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                ) : (
+                  <div key={i} className="bld-msg bld-msg-bot">
+                    <span className="bld-msg-check"><CheckIcon /></span>
+                    <span>{m.label}</span>
+                  </div>
+                )
+              )}
+
+              {loading && (
+                <div className="bld-msg bld-msg-bot">
+                  <div className="bld-dot-pulse"><span /><span /><span /></div>
+                  <span>Thinking…</span>
+                </div>
+              )}
+            </div>
+            )}
+
+            {/* Input */}
+            <div className="bld-input-area">
+              <div className="bld-input-wrap">
+                <textarea
+                  ref={inputRef}
+                  className="bld-input"
+                  placeholder={readOnly ? "You have view-only access to this page" : msgs.length > 0 ? "Describe a change…" : "Describe an interface…"}
+                  value={input}
+                  onChange={e => setInput(e.target.value)}
+                  onKeyDown={e => { if ((e.metaKey || e.ctrlKey) && e.key === "Enter") send(); }}
+                  rows={chatMin ? 1 : 2}
+                  disabled={loading || readOnly}
+                />
+                <button className="bld-send-btn" onClick={() => send()} disabled={loading || readOnly || !input.trim()} title="Send (⌘ Enter)">
+                  <SendIcon />
+                </button>
+              </div>
+              {!chatMin && <div className="bld-input-hint">⌘ Enter to send</div>}
+            </div>
+          </section>
           {/* Floating canvas toolbar, bottom centre like Framer's. Everything
               that used to sit in the top toolbar lives here so the canvas
               gets the full height: view switch (Edit / Preview / Code /
@@ -2717,7 +3192,7 @@ export default function BuilderPage() {
             })()}
             {!tree && !loading && (
               <div className="bld-state bld-empty">
-                <span>Your generated interface will appear here.</span>
+                <span>Your generated interface will appear here. Describe it in the chat below.</span>
               </div>
             )}
             {!tree && loading && (
@@ -2794,6 +3269,9 @@ export default function BuilderPage() {
                     // The section bar sits inside this wrapper; its buttons
                     // handle their own clicks and must not change selection.
                     if ((e.target as HTMLElement).closest(".bld-section-bar")) return;
+                    // Clicking the insert placeholder keeps the spot (it isn't
+                    // a real element to select).
+                    if ((e.target as HTMLElement).closest(".bld-insert-placeholder")) { e.preventDefault(); e.stopPropagation(); return; }
                     // A real drag ends with a native `dragend`/`drop`, not a
                     // `click` - but some browsers still fire a trailing click
                     // right after, which would otherwise re-select whatever's
@@ -2901,7 +3379,7 @@ export default function BuilderPage() {
                       .map(o => `.bld-edit-canvas-wrap [data-node-id="${o.selectedNodeId}"] { outline: 2px solid ${/^#[0-9a-fA-F]{3,8}$/.test(o.color) ? o.color : "#3B68FF"} !important; outline-offset: 1px; }`),
                   ].filter(Boolean).join("\n")}</style>
                   <div className={`bld-surface bld-surface--${viewport} ${canvasTheme}`}>
-                    <RenderTree tree={tree} editable />
+                    <RenderTree tree={canvasTree} editable />
                   </div>
                   {barSectionId && sectionRect && (() => {
                     const idx = sectionIds.indexOf(barSectionId);
@@ -2940,182 +3418,9 @@ export default function BuilderPage() {
           </div>
         </main>
 
-        {tree && viewingVersion === null && view === "edit" && (
-          <>
-        {/* Docked full height on the right, like the chat on the
-            left (Framer/Vzy): a sibling of <main>, so the page tabs only
-            span the canvas between the two sidebars. */}
-        <div className="bld-prop-panel">
-          {/* Insert, Properties, and Layers share this one panel
-              rather than adding extra layout columns - selecting an
-              element (from canvas or from the Layers tree) auto-flips
-              here to Properties (effect above), but the user can flip
-              back to Insert manually to drop a sibling near whatever's
-              currently selected, or to Layers to keep browsing. */}
-          {selectedNode ? (() => {
-            // Element editor: Content is what it says (text and
-            // text-valued props), Style is how it looks (everything
-            // else). Tabs only appear when both have something.
-            const fields = PROP_SCHEMA[selectedNode.type] ?? [];
-            const contentFields = fields.filter(f => f.kind === "text");
-            const styleFields = fields.filter(f => f.kind !== "text");
-            const hasText = typeof selectedNode.children === "string";
-            const hasContent = hasText || contentFields.length > 0;
-            const hasStyle = styleFields.length > 0;
-            const tab = hasContent && hasStyle ? propTab : hasContent ? "content" : "style";
-            const parent = tree ? findParent(tree, selectedNode.id ?? "") : null;
-            return (
-              <>
-                <div className="bld-prop-panel-head">
-                  <button className="bld-prop-back" onClick={selectParent} title={parent && parent.id !== tree.id ? `Back to ${parent.type}` : "Back"} aria-label="Back"><BackIcon /></button>
-                  <span className="bld-prop-type-icon"><ComponentIcon type={selectedNode.type} /></span>
-                  <span className="bld-prop-title">
-                    <span className="bld-prop-type">{selectedNode.type}</span>
-                    {parent && <span className="bld-prop-parent">in {parent.type}</span>}
-                  </span>
-                  {!readOnly && (
-                    <button className="bld-prop-delete" onClick={deleteSelectedNode} title="Delete element" aria-label="Delete element">
-                      <TrashIcon />
-                    </button>
-                  )}
-                </div>
-                {hasContent && hasStyle && (
-                  <div className="bld-prop-tabs" role="tablist">
-                    {(["content", "style"] as const).map(t => (
-                      <button key={t} role="tab" aria-selected={tab === t} className={tab === t ? "on" : ""} onClick={() => setPropTab(t)}>
-                        {t === "content" ? "Content" : "Style"}
-                      </button>
-                    ))}
-                  </div>
-                )}
-                {!hasContent && !hasStyle && (
-                  <p className="bld-prop-empty bld-prop-section">No editable properties for this element yet.</p>
-                )}
-                {tab === "content" && hasContent && (
-                  <div className="bld-prop-section">
-                    {hasText && (
-                      <div className="bld-prop-row bld-prop-row--stacked">
-                        <textarea
-                          key={`${selectedNode.id}:__text`} className="bld-prop-input bld-prop-textarea"
-                          defaultValue={selectedNode.children as string}
-                          rows={2}
-                          aria-label="Text"
-                          onBlur={e => updateSelectedText(e.target.value)}
-                          onKeyDown={e => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); (e.target as HTMLTextAreaElement).blur(); } }}
-                        />
-                      </div>
-                    )}
-                    {contentFields.map(field => renderPropField(field, selectedNode))}
-                  </div>
-                )}
-                {tab === "style" && hasStyle && (
-                  <div className="bld-prop-section">
-                    {styleFields.map(field => renderPropField(field, selectedNode))}
-                  </div>
-                )}
-              </>
-            );
-          })() : (
-            <>
-              <div className="bld-inspector-tabs" role="tablist">
-                {(["insert", "layers"] as const).map(t => (
-                  <button
-                    key={t}
-                    role="tab"
-                    aria-selected={inspectorTab === t}
-                    className={`bld-inspector-tab${inspectorTab === t ? " bld-inspector-tab--active" : ""}`}
-                    onClick={() => setInspectorTab(t)}
-                  >
-                    {t === "insert" ? "Insert" : "Layers"}
-                  </button>
-                ))}
-              </div>
-
-              {inspectorTab === "layers" ? (
-                <div className="bld-layers">
-                  {renderLayerRow(tree, 0)}
-                </div>
-              ) : (
-                <div className="bld-palette">
-                  {insertTarget && (
-                    <div className="bld-insert-target">
-                      <span>Adding above <b>{findNodeById(tree, insertTarget.id)?.type ?? "section"}</b></span>
-                      <button onClick={() => setInsertTarget(null)}>Cancel</button>
-                    </div>
-                  )}
-                  <label className="bld-palette-search">
-                    <SearchIcon />
-                    <input
-                      type="search"
-                      placeholder="Search sections and components"
-                      value={paletteQuery}
-                      onChange={e => setPaletteQuery(e.target.value)}
-                    />
-                  </label>
-                  {(() => {
-                    const q = paletteQuery.trim().toLowerCase();
-                    const secs = SECTION_TEMPLATES.filter(t => !q || t.name.toLowerCase().includes(q) || t.hint.toLowerCase().includes(q));
-                    if (secs.length === 0) return null;
-                    return (
-                      <div className="bld-palette-cat">
-                        {catHeader("Sections", secs.length)}
-                        {(q || !collapsedCats.has("Sections")) && <div className="bld-section-list">
-                          {secs.map(t => (
-                            <button key={t.key} className="bld-section-item" onClick={() => insertSection(t.key)} title={`Add a ${t.name.toLowerCase()} section`}>
-                              <span className="bld-section-item-name">{t.name}</span>
-                              <span className="bld-section-item-hint">{t.hint}</span>
-                            </button>
-                          ))}
-                        </div>}
-                      </div>
-                    );
-                  })()}
-                  {(() => {
-                    const q = paletteQuery.trim().toLowerCase();
-                    const cats = PALETTE_CATEGORIES
-                      .map(cat => ({ ...cat, types: q ? cat.types.filter(t => t.toLowerCase().includes(q)) : cat.types }))
-                      .filter(cat => cat.types.length > 0);
-                    if (cats.length === 0) return <p className="bld-prop-empty">No components match &ldquo;{paletteQuery}&rdquo;.</p>;
-                    return cats.map(cat => (
-                      <div key={cat.label} className="bld-palette-cat">
-                        {catHeader(cat.label, cat.types.length)}
-                        {(q || !collapsedCats.has(cat.label)) && <div className="bld-palette-grid">
-                          {cat.types.map(type => (
-                            <div
-                              key={type}
-                              className="bld-palette-item"
-                              role="button"
-                              tabIndex={0}
-                              draggable
-                              title={`Add ${type} (click, or drag onto the canvas)`}
-                              onClick={() => insertFromPalette(type)}
-                              onKeyDown={e => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); insertFromPalette(type); } }}
-                              onDragStart={(e) => {
-                                setDraggingPaletteType(type);
-                                setDraggingNodeId(null); // mutually exclusive with reordering an existing node
-                                e.dataTransfer.effectAllowed = "copy";
-                                e.dataTransfer.setData("text/plain", `palette:${type}`);
-                              }}
-                              onDragEnd={() => { setDraggingPaletteType(null); setDropTarget(null); }}
-                            >
-                              <span className="bld-palette-item-icon"><ComponentIcon type={type} /></span>
-                              <span className="bld-palette-item-label">{type}</span>
-                            </div>
-                          ))}
-                        </div>}
-                      </div>
-                    ));
-                  })()}
-                  <p className="bld-panel-hint">Click to add, or drag onto the canvas.</p>
-                </div>
-              )}
-            </>
-          )}
-        </div>
-          </>
-        )}
 
       </div>
+      )}
     </div>
   );
 }

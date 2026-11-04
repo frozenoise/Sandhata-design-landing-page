@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
-import { Analytics } from "@vercel/analytics/react";
 import { Providers } from "./providers";
+import { CookieConsent } from "./_consent/CookieConsent";
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -28,7 +28,8 @@ export default function RootLayout({
       </head>
       <body>
         <Providers>{children}</Providers>
-        <Analytics />
+        {/* Also loads Vercel Analytics, only after the visitor accepts */}
+        <CookieConsent />
       </body>
     </html>
   );

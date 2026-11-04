@@ -21,6 +21,7 @@ export async function GET(_req: Request, props: Params) {
     where: { id: params.id },
     include: {
       sessions: {
+        where: { deletedAt: null },
         orderBy: { updatedAt: "desc" },
         select: { id: true, name: true, createdAt: true, updatedAt: true },
       },
@@ -42,7 +43,7 @@ export async function PATCH(req: Request, props: Params) {
   if (!name || !String(name).trim()) return NextResponse.json({ error: "bad_request" }, { status: 400 });
 
   const existing = await prisma.project.findFirst({
-    where: { id: params.id, userId: session.user.id },
+    where: { id: params.id, userId: session.user.id, deletedAt: null },
     select: { id: true },
   });
   if (!existing) return NextResponse.json({ error: "not_found" }, { status: 404 });
@@ -56,19 +57,19 @@ export async function PATCH(req: Request, props: Params) {
   return NextResponse.json({ project: updated });
 }
 
-// DELETE /api/projects/:id - delete a project AND the sessions inside it
-// (folder semantics - see the cascade comment on the Prisma relation).
+// DELETE /api/projects/:id - move a project (and so its pages) to the Trash.
+// Restorable for 30 days from /api/trash, then purged with its pages.
 export async function DELETE(_req: Request, props: Params) {
   const params = await props.params;
   const session = await auth();
   if (!session?.user?.id) return NextResponse.json({ error: "unauthenticated" }, { status: 401 });
 
   const existing = await prisma.project.findFirst({
-    where: { id: params.id, userId: session.user.id },
+    where: { id: params.id, userId: session.user.id, deletedAt: null },
     select: { id: true },
   });
   if (!existing) return NextResponse.json({ error: "not_found" }, { status: 404 });
 
-  await prisma.project.delete({ where: { id: params.id } });
-  return NextResponse.json({ ok: true });
+  await prisma.project.update({ where: { id: params.id }, data: { deletedAt: new Date() } });
+  return NextResponse.json({ ok: true, trashed: true });
 }

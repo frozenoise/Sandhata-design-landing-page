@@ -15,7 +15,7 @@ export async function GET() {
     // Own ungrouped pages, plus every page in a project the user can access.
     // (Not "every page I created": a page in a project I was removed from
     // belongs to that project now.)
-    where: { OR: [{ userId: session.user.id, projectId: null }, { projectId: { in: projectIds } }] },
+    where: { deletedAt: null, OR: [{ userId: session.user.id, projectId: null }, { projectId: { in: projectIds } }] },
     orderBy: { updatedAt: "desc" },
     take: 100,
     select: { id: true, name: true, createdAt: true, updatedAt: true, projectId: true },

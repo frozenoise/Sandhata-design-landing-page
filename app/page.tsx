@@ -5,6 +5,7 @@ import {
   Button, Badge, Alert, Spinner, Avatar, Tag, StatCard, Switch, Checkbox,
 } from "@sandhata/spectra";
 import HeroParticleHeading from "./_home/HeroParticleHeading";
+import { CookieSettingsLink } from "./_consent/CookieConsent";
 import { PixelCanvasBackground } from "./_fx/PixelCanvasBackground";
 import Grainient from "./_fx/Grainient";
 import { ThemeToggle } from "./_docs/ThemeToggle";
@@ -973,7 +974,7 @@ export default function App() {
             {[
               { h:"Product", links:[["Features","#"],["Pricing","/pricing"],["Showcase","/showcase"]] },
               { h:"Support", links:[["Documentation","/documentation"],["Contact Us","#"]] },
-              { h:"Legal",   links:[["Privacy Policy","#"],["Terms & Condition","#"]] },
+              { h:"Legal",   links:[["Privacy Policy","#"],["Terms & Condition","#"],["Cookie Policy","/cookies"]] },
             ].map(col => (
               <div key={col.h} className="footer-col">
                 <h5>{col.h}</h5>
@@ -981,8 +982,9 @@ export default function App() {
               </div>
             ))}
           </div>
-          <div className="footer-bottom" style={{justifyContent:"center"}}>
+          <div className="footer-bottom" style={{justifyContent:"center", gap:20}}>
             <span className="footer-copy">© 2025 voi. All rights reserved by sandhata.design.system</span>
+            <CookieSettingsLink className="footer-cookie-settings" />
           </div>
         </div>
       </footer>

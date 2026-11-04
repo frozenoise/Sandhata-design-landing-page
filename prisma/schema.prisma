@@ -78,6 +78,9 @@ model Project {
   adoConnection AdoConnection?
   members       ProjectMember[]
   invites       ProjectInvite[]
+  // Trash: set when deleted, permanently removed 30 days later (lib/trash.ts).
+  // Its pages are hidden with it and come back when it's restored.
+  deletedAt     DateTime?
 
   // ── GitHub push integration (Phase 1: push-only, single repo) ───────────
   // All optional - a project has no GitHub connection until /api/github/connect
@@ -102,6 +105,7 @@ model Project {
   lastSyncError         String?  @db.Text
 
   @@index([userId, updatedAt])
+  @@index([deletedAt])
   @@unique([repoOwner, repoName, userId])
 }
 
@@ -120,6 +124,9 @@ model ProjectMember {
   role      String   // "editor" | "viewer"
   addedById String
   createdAt DateTime @default(now())
+  // When the member opened (or dismissed) the "X invited you" notification.
+  // Null = still unread in the builder's notification bell.
+  seenAt    DateTime?
 
   @@unique([projectId, userId])
   @@index([userId])
@@ -169,8 +176,8 @@ model BuilderSession {
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   // Nullable: a session doesn't have to belong to a project (existing
   // pre-Projects sessions stay ungrouped rather than orphaned/migrated).
-  // Cascade: deleting a project's "folder" deletes the pages inside it,
-  // matching the folder metaphor - not a soft unlink.
+  // Cascade: permanently deleting a project (emptying it from Trash) deletes
+  // the pages inside it, matching the folder metaphor.
   projectId String?
   project   Project? @relation(fields: [projectId], references: [id], onDelete: Cascade)
   name      String   // First user message used as title
@@ -178,11 +185,14 @@ model BuilderSession {
   tree      Json?    // Latest UINode tree
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+  // Trash: set when the page is deleted, permanently removed 30 days later.
+  deletedAt DateTime?
 
   workItemLinks WorkItemLink[]
 
   @@index([userId, updatedAt])
   @@index([projectId, updatedAt])
+  @@index([deletedAt])
 }
 
 // ── Azure DevOps integration (Phase 1) ──────────────────────────────────────

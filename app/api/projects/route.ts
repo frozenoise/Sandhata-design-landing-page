@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { claimInvites } from "@/lib/access";
+import { purgeExpiredTrash } from "@/lib/trash";
 
 // GET /api/projects - list projects the user owns or has been added to
 // (common workspace), most recently updated first, each with its session
@@ -13,16 +14,19 @@ export async function GET() {
   const userId = session.user.id;
 
   await claimInvites(userId, session.user.email);
+  await purgeExpiredTrash();
 
   const projects = await prisma.project.findMany({
-    where: { OR: [{ userId }, { members: { some: { userId } } }] },
+    where: { deletedAt: null, OR: [{ userId }, { members: { some: { userId } } }] },
     orderBy: { updatedAt: "desc" },
     select: {
       id: true,
       name: true,
       createdAt: true,
       updatedAt: true,
-      _count: { select: { sessions: true, members: true, invites: true } },
+      _count: { select: { sessions: { where: { deletedAt: null } }, members: true, invites: true } },
+      // Latest page's design, for the card thumbnail on the builder's start page
+      sessions: { where: { deletedAt: null }, orderBy: { updatedAt: "desc" }, take: 1, select: { tree: true } },
       userId: true,
       user: { select: { name: true, email: true } },
       members: { where: { userId }, select: { role: true } },
@@ -49,6 +53,7 @@ export async function GET() {
       role: p.userId === userId ? "owner" : (p.members[0]?.role ?? "viewer"),
       ownerName: p.userId === userId ? null : (p.user.name || p.user.email || "Someone"),
       shared: p._count.members + p._count.invites > 0,
+      preview: p.sessions[0]?.tree ?? null,
       repoOwner: p.repoOwner,
       repoName: p.repoName,
       defaultBranch: p.defaultBranch,
