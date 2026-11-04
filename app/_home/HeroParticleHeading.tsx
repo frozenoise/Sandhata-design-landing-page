@@ -158,6 +158,16 @@ export default function HeroParticleHeading() {
      whole viewport. A regular canvas inside the h1 would clip them. */
   useEffect(() => {
     if (mode !== "particles") return;
+    /* Sample the glyphs only once the web font has loaded; sampling the
+       fallback font gives particle shapes that don't match the final text. */
+    let cancelled = false;
+    let cleanup = () => {};
+    document.fonts.ready.then(() => { if (!cancelled) cleanup = runEntrance() ?? cleanup; });
+    return () => { cancelled = true; cleanup(); };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [mode]);
+
+  const runEntrance = () => {
     const h1   = h1Ref.current;
     const wrap = wrapRef.current;
     if (!h1 || !wrap) return;
@@ -207,11 +217,12 @@ export default function HeroParticleHeading() {
       });
     });
 
-    /* h1's position in the viewport: used to offset sampled pixel coords
-       so origins land exactly on the rendered text in viewport space. */
-    const h1Rect = h1.getBoundingClientRect();
-    const offX   = h1Rect.left + (h1Rect.width - cssW) / 2;
-    const offY   = h1Rect.top;
+    /* The wrap's position in the viewport: the cursor canvas sits at its
+       top-left, so offsetting by it makes the entrance end exactly where
+       the cursor canvas takes over. */
+    const wrapRect = wrap.getBoundingClientRect();
+    const offX     = wrapRect.left;
+    const offY     = wrapRect.top;
 
     /* Sample glyphs → build particles with viewport-space origins */
     const step   = Math.max(1, Math.round((fs / 80) * 1.8 * dpr));
@@ -255,26 +266,24 @@ export default function HeroParticleHeading() {
     };
     animate();
 
-    /* After entrance: fade out the full-viewport canvas, start cursor-
-       repulsion on the regular (text-block) canvas. */
+    /* After entrance: start cursor-repulsion on the text-block canvas, then
+       drop the full-viewport canvas on the next frame. Both draw the same
+       pixels in the same place, so a hard swap is invisible; a crossfade
+       showed two slightly offset copies of the heading. */
+    let swapRaf = 0;
     const endEntrance = setTimeout(() => {
       entering = false;
-      /* Quick fade-out */
-      ec.style.transition = "opacity 0.3s ease";
-      ec.style.opacity    = "0";
-      setTimeout(() => { cancelAnimationFrame(raf); ec.remove(); }, 350);
-
-      /* Hand off to the cursor-repulsion canvas */
       startCursorCanvas();
+      swapRaf = requestAnimationFrame(() => { cancelAnimationFrame(raf); ec.remove(); });
     }, ENTRANCE_DURATION);
 
     return () => {
       clearTimeout(endEntrance);
       cancelAnimationFrame(raf);
+      cancelAnimationFrame(swapRaf);
       ec.remove();
     };
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [mode]);
+  };
 
   /* ── Cursor-repulsion canvas (text-block size, post-entrance) ────────── */
   const cursorRafRef      = useRef(0);
@@ -312,7 +321,6 @@ export default function HeroParticleHeading() {
       canvas.height = cssHeight * dpr;
       canvas.style.width  = `${cssWidth}px`;
       canvas.style.height = `${cssHeight}px`;
-      wrap.style.height   = `${cssHeight}px`;
       ctx.scale(dpr, dpr);
       ctx.font = `400 ${fs}px ${ff}`;
       ctx.textAlign = "left"; ctx.textBaseline = "middle";
@@ -354,6 +362,7 @@ export default function HeroParticleHeading() {
         const sz = fs * 0.62;
         sparkle.style.left = `${clarityEndX + 2}px`;
         sparkle.style.top  = `${clarityCY - sz * 0.75}px`;
+        sparkle.style.visibility = "visible";
       }
     };
 
@@ -403,6 +412,13 @@ export default function HeroParticleHeading() {
         </span>
       ) : (
         <div ref={wrapRef} aria-hidden="true" className="hero-particle-wrap">
+          {/* Invisible copy of the heading: holds the real text height from the
+              first paint, so nothing below moves when the canvases take over.
+              No sparkle here: the canvas layout ignores it (it's an overlay),
+              and its width would wrap "for clarity" onto a third line. */}
+          <span className="hero-particle-sizer">
+            The AI-ready design system built for&nbsp;<em>clarity</em>
+          </span>
           <canvas ref={canvasRef} className="hero-particle-canvas" />
           <span ref={sparkleRef} className="hero-particle-sparkle"><Sparkle/></span>
         </div>
