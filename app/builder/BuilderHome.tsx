@@ -26,6 +26,9 @@ type TrashData = {
 const PlusIcon = () => (<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>);
 const SearchIcon = () => (<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>);
 const PageIcon = () => (<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"><path d="M14 3H6a2 2 0 00-2 2v14a2 2 0 002 2h12a2 2 0 002-2V9z"/><polyline points="14 3 14 9 20 9"/></svg>);
+const SparkIcon = () => (<svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l1.9 5.8L20 10l-6.1 2.2L12 18l-1.9-5.8L4 10l6.1-2.2z"/></svg>);
+const GridIcon = () => (<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg>);
+const ListIcon = () => (<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><circle cx="4" cy="6" r="1"/><circle cx="4" cy="12" r="1"/><circle cx="4" cy="18" r="1"/></svg>);
 const MoreIcon = () => (<svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><circle cx="5" cy="12" r="1.8"/><circle cx="12" cy="12" r="1.8"/><circle cx="19" cy="12" r="1.8"/></svg>);
 
 function ago(iso: string) {
@@ -70,7 +73,7 @@ function Thumb({ tree }: { tree?: UINode | null }) {
 }
 
 export function BuilderHome({
-  firstName, projects, pages, loading, accountSlot,
+  firstName, projects, pages, loading, accountSlot, templates, onPrompt, onTemplate,
   onOpenProject, onOpenPage, onCreateProject, onNewPage, onShare, onDeleteProject, onDeletePage, onTrashChanged,
 }: {
   firstName: string | null;
@@ -80,6 +83,11 @@ export function BuilderHome({
   loading: boolean;
   /** Notifications bell and profile menu, rendered by the builder */
   accountSlot?: React.ReactNode;
+  /** Ready-made starting points (built from the Insert panel's sections) */
+  templates: { key: string; name: string; tree: UINode | null }[];
+  /** "Describe your idea": new project, first page generated from the prompt */
+  onPrompt: (prompt: string) => void;
+  onTemplate: (key: string) => void;
   onOpenProject: (id: string) => void;
   onOpenPage: (page: HomePage) => void;
   onCreateProject: (name: string) => void;
@@ -97,6 +105,20 @@ export function BuilderHome({
   const [menuId, setMenuId] = React.useState<string | null>(null);
   const [trash, setTrash] = React.useState<TrashData | null>(null);
   const [trashBusy, setTrashBusy] = React.useState(false);
+  const [idea, setIdea] = React.useState("");
+  // Sort and layout, remembered in this browser
+  const [sort, setSort] = React.useState<"edited" | "name">("edited");
+  const [layout, setLayout] = React.useState<"grid" | "list">("grid");
+  React.useEffect(() => {
+    try {
+      const v = JSON.parse(localStorage.getItem("sd-builder-home-view") || "{}");
+      if (v.sort === "name" || v.sort === "edited") setSort(v.sort);
+      if (v.layout === "grid" || v.layout === "list") setLayout(v.layout);
+    } catch {}
+  }, []);
+  React.useEffect(() => {
+    try { localStorage.setItem("sd-builder-home-view", JSON.stringify({ sort, layout })); } catch {}
+  }, [sort, layout]);
 
   const loadTrash = React.useCallback(async () => {
     const r = await fetch("/api/trash");
@@ -112,9 +134,12 @@ export function BuilderHome({
 
   const q = query.trim().toLowerCase();
   const match = (name: string) => !q || name.toLowerCase().includes(q);
-  const own = projects.filter(p => (!p.role || p.role === "owner") && match(p.name));
-  const shared = projects.filter(p => p.role && p.role !== "owner" && match(p.name));
-  const loose = pages.filter(p => match(p.name));
+  const order = <T extends { name: string; updatedAt: string }>(xs: T[]) =>
+    [...xs].sort((a, b) => (sort === "name" ? a.name.localeCompare(b.name) : b.updatedAt.localeCompare(a.updatedAt)));
+  const own = order(projects.filter(p => (!p.role || p.role === "owner") && match(p.name)));
+  const shared = order(projects.filter(p => p.role && p.role !== "owner" && match(p.name)));
+  const loose = order(pages.filter(p => match(p.name)));
+  const gridClass = `home-grid${layout === "list" ? " home-grid--list" : ""}`;
 
   async function restore(kind: "project" | "page", id: string) {
     setTrashBusy(true);
@@ -191,32 +216,74 @@ export function BuilderHome({
           </div>
         </div>
 
+        {/* Describe your idea (Figma's home): the fastest way to start */}
+        <form className="home-idea" onSubmit={e => { e.preventDefault(); if (idea.trim()) { onPrompt(idea.trim()); setIdea(""); } }}>
+          <SparkIcon />
+          <input
+            value={idea}
+            onChange={e => setIdea(e.target.value)}
+            placeholder="Describe a page and Spectra builds it from the design system…"
+            aria-label="Describe a page to build"
+          />
+          <button type="submit" className="home-btn home-btn--primary" disabled={!idea.trim()}>Build</button>
+        </form>
+
         <div className="home-bar">
           <label className="home-search">
             <SearchIcon />
             <input type="search" placeholder="Search projects and pages" value={query} onChange={e => setQuery(e.target.value)} />
           </label>
+          <div className="home-view" hidden={tab === "trash"}>
+            <select aria-label="Sort" value={sort} onChange={e => setSort(e.target.value as "edited" | "name")}>
+              <option value="edited">Last edited</option>
+              <option value="name">Name A–Z</option>
+            </select>
+            <button className={layout === "grid" ? "on" : ""} onClick={() => setLayout("grid")} aria-label="Grid view" aria-pressed={layout === "grid"}><GridIcon /></button>
+            <button className={layout === "list" ? "on" : ""} onClick={() => setLayout("list")} aria-label="List view" aria-pressed={layout === "list"}><ListIcon /></button>
+          </div>
           <div className="home-tabs" role="tablist">
             {([["recent", "Recent"], ["shared", `Shared with you${projects.some(p => p.role && p.role !== "owner") ? ` (${projects.filter(p => p.role && p.role !== "owner").length})` : ""}`], ["trash", "Trash"]] as const).map(([k, label]) => (
-              <button key={k} role="tab" aria-selected={tab === k} className={tab === k ? "on" : ""} onClick={() => setTab(k)}>{label}</button>
+              <button key={k} role="tab" aria-selected={tab === k} className={tab === k ? "on" : ""} data-label={label} onClick={() => setTab(k)}>{label}</button>
             ))}
           </div>
         </div>
 
-        {loading && projects.length === 0 && pages.length === 0 && <p className="home-empty">Loading your projects…</p>}
+        {tab === "recent" && !q && templates.length > 0 && (
+          <>
+            <h2 className="home-section">Start from a template</h2>
+            <div className="home-grid">
+              <div className="home-card" role="button" tabIndex={0}
+                onClick={onNewPage} onKeyDown={e => { if (e.key === "Enter") onNewPage(); }}>
+                <div className="home-thumb home-thumb--blank" aria-hidden="true"><PlusIcon /></div>
+                <div className="home-card-meta"><div className="home-card-text"><span className="home-card-name">Blank page</span><span className="home-card-sub">Start from nothing</span></div></div>
+              </div>
+              {templates.map(t => (
+                <div key={t.key} className="home-card" role="button" tabIndex={0}
+                  onClick={() => onTemplate(t.key)} onKeyDown={e => { if (e.key === "Enter") onTemplate(t.key); }}>
+                  <Thumb tree={t.tree} />
+                  <div className="home-card-meta"><div className="home-card-text"><span className="home-card-name">{t.name}</span><span className="home-card-sub">Built from Spectra sections</span></div></div>
+                </div>
+              ))}
+            </div>
+          </>
+        )}
 
         {tab === "recent" && (
           <>
             <h2 className="home-section">Projects</h2>
             {own.length === 0 ? (
-              loading ? null : <p className="home-empty">{q ? "No projects match." : "No projects yet. Create one to group related pages."}</p>
+              loading ? (
+                <div className="home-grid" aria-label="Loading your projects">
+                  {[0, 1, 2].map(i => <div key={i} className="home-card home-card--skeleton"><div className="home-thumb" /><div className="home-skel-line" /></div>)}
+                </div>
+              ) : <p className="home-empty">{q ? "No projects match." : "No projects yet. Create one, or start from a template above."}</p>
             ) : (
-              <div className="home-grid">{own.map(projectCard)}</div>
+              <div className={gridClass}>{own.map(projectCard)}</div>
             )}
             {loose.length > 0 && (
               <>
                 <h2 className="home-section">Pages not in a project</h2>
-                <div className="home-grid">
+                <div className={gridClass}>
                   {loose.map(pg => (
                     <div key={pg.id} className="home-card" role="button" tabIndex={0}
                       onClick={() => onOpenPage(pg)} onKeyDown={e => { if (e.key === "Enter") onOpenPage(pg); }}>
@@ -246,15 +313,15 @@ export function BuilderHome({
 
         {tab === "shared" && (
           shared.length === 0
-            ? <p className="home-empty">{q ? "Nothing shared matches." : "Projects other people share with you show up here."}</p>
-            : <div className="home-grid">{shared.map(projectCard)}</div>
+            ? <div className="home-empty-state"><span className="home-empty-icon" aria-hidden="true"><PageIcon /></span><p>{q ? "Nothing shared matches." : "Projects other people share with you show up here."}</p></div>
+            : <div className={gridClass}>{shared.map(projectCard)}</div>
         )}
 
         {tab === "trash" && (
           <div className="home-trash">
             <p className="home-trash-note">Deleted projects and pages stay here for 30 days, then they&apos;re removed for good.</p>
             {!trash ? <p className="home-empty">Loading…</p> : trash.projects.length + trash.pages.length === 0 ? (
-              <p className="home-empty">Trash is empty.</p>
+              <div className="home-empty-state"><span className="home-empty-icon" aria-hidden="true"><PageIcon /></span><p>Trash is empty. Deleted projects and pages wait here for 30 days.</p></div>
             ) : (
               <ul className="home-trash-list">
                 {trash.projects.map(p => (

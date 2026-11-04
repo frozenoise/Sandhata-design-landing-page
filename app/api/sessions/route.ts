@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
-import { accessibleProjectIds, projectRole, canEdit } from "@/lib/access";
+import { accessibleProjectIds, projectRole, canEdit, defaultProjectId } from "@/lib/access";
 
 // GET /api/sessions - list the user's builder sessions plus every page in a
 // project shared with them (most recent first). Includes projectId so the
@@ -33,7 +33,9 @@ export async function POST(req: Request) {
   if (!session?.user?.id) return NextResponse.json({ error: "unauthenticated" }, { status: 401 });
 
   const body = await req.json();
-  const { name, messages, tree, projectId } = body;
+  const { name, messages, tree } = body;
+  // A page always belongs to a project: none given means "My pages".
+  const projectId: string = body.projectId || (await defaultProjectId(session.user.id));
   if (!name || !messages) return NextResponse.json({ error: "bad_request" }, { status: 400 });
 
   if (projectId) {
@@ -49,7 +51,7 @@ export async function POST(req: Request) {
       name: String(name).slice(0, 120),
       messages,
       tree: tree ?? null,
-      projectId: projectId ?? null,
+      projectId,
     },
     select: { id: true, name: true, createdAt: true, updatedAt: true, projectId: true },
   });

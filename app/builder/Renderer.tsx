@@ -125,7 +125,13 @@ export function RenderNode({ node, editable = false }: { node: UINode; editable?
   // AI-generated props include `checked` with no onChange, supply a no-op
   // one rather than let React treat it as a broken controlled input.
   const controlledProps = "checked" in rest && rest.onChange === undefined ? { onChange: () => {} } : undefined;
-  const comp = <Comp style={style} {...rest} {...controlledProps} {...nodeAttrs}>{kids}</Comp>;
+  // Text fields in a design are previews, not real forms: keep the browser's
+  // autofill (saved passwords, addresses) out of them, and out of the tab
+  // order while editing.
+  const fieldProps = type === "Input" || type === "Textarea"
+    ? { autoComplete: rest.type === "password" ? "new-password" : "off", ...(editable ? { readOnly: true, tabIndex: -1 } : {}) }
+    : undefined;
+  const comp = <Comp style={style} {...rest} {...controlledProps} {...fieldProps} {...nodeAttrs}>{kids}</Comp>;
   // Not every DS component forwards unrecognized props onto a clickable
   // element: some (Alert, Avatar, Tag, StatCard, Spinner, Tooltip) don't
   // spread `...rest` at all, and Switch/Checkbox/Radio spread it onto a

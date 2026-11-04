@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
-import { claimInvites } from "@/lib/access";
+import { claimInvites, adoptLoosePages } from "@/lib/access";
 import { purgeExpiredTrash } from "@/lib/trash";
 
 // GET /api/projects - list projects the user owns or has been added to
@@ -15,6 +15,7 @@ export async function GET() {
 
   await claimInvites(userId, session.user.email);
   await purgeExpiredTrash();
+  await adoptLoosePages(userId);
 
   const projects = await prisma.project.findMany({
     where: { deletedAt: null, OR: [{ userId }, { members: { some: { userId } } }] },

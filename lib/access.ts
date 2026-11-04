@@ -90,3 +90,23 @@ export async function isShared(projectId: string): Promise<boolean> {
   ]);
   return members + invites > 0;
 }
+
+/** Every page lives in a project. Pages without one (older pages, or a page
+ * started outside a project) go into the user's "My pages" project, created
+ * on first need. Returns its id. */
+export const DEFAULT_PROJECT_NAME = "My pages";
+
+export async function defaultProjectId(userId: string): Promise<string> {
+  const existing = await prisma.project.findFirst({ where: { userId, name: DEFAULT_PROJECT_NAME, deletedAt: null }, select: { id: true } });
+  if (existing) return existing.id;
+  const created = await prisma.project.create({ data: { userId, name: DEFAULT_PROJECT_NAME }, select: { id: true } });
+  return created.id;
+}
+
+/** Moves the user's loose pages (no project) into "My pages". */
+export async function adoptLoosePages(userId: string): Promise<void> {
+  const loose = await prisma.builderSession.count({ where: { userId, projectId: null, deletedAt: null } });
+  if (loose === 0) return;
+  const pid = await defaultProjectId(userId);
+  await prisma.builderSession.updateMany({ where: { userId, projectId: null, deletedAt: null }, data: { projectId: pid } });
+}

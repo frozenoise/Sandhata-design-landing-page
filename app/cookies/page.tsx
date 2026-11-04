@@ -2,7 +2,7 @@
 
 import React from "react";
 import "../globals.css";
-import { ThemeToggle } from "../_docs/ThemeToggle";
+import { SdTopNav } from "../_docs/shell";
 import { CookieSettingsLink } from "../_consent/CookieConsent";
 
 // Cookie policy. Keep this in step with what the code actually stores: the
@@ -28,21 +28,10 @@ const p: React.CSSProperties = { font: "16px/1.65 var(--font-normal)", color: "v
 
 export default function CookiePolicyPage() {
   return (
-    <div>
-      <header className="nav">
-        <a className="nav-logo" href="/">
-          <img src="/assets/logo/sandhata-logo.svg" alt="Sandhata" />
-        </a>
-        <nav className="nav-links">
-          <a className="nl" href="/components">Components</a>
-          <a className="nl" href="/documentation">Documentation</a>
-          <a className="nl" href="/builder">Builder</a>
-          <a className="nl" href="/showcase">Showcase</a>
-        </nav>
-        <ThemeToggle className="nav-theme-btn" />
-      </header>
+    <div className="doc-root">
+      <SdTopNav active="" />
 
-      <main style={{ background: "var(--page)", padding: "64px 24px 96px" }}>
+      <main style={{ background: "var(--doc-bg)", padding: "64px 24px 96px", flex: 1, overflowY: "auto" }}>
         <article style={{ maxWidth: 760, margin: "0 auto" }}>
           <h1 style={{ font: "700 44px/1.15 var(--font-bold)", color: "var(--text-title)", letterSpacing: "-1px", margin: "0 0 12px" }}>
             Cookie policy

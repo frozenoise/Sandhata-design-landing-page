@@ -22,7 +22,7 @@
   :root:not([data-theme="light"]) {
     --doc-bg: #0f1117;
     --doc-surface: #161b22;
-    --doc-line: #21262d;
+    --doc-line: #2d333b;
     --doc-active: rgba(0, 54, 221, 0.18);
     --doc-code-bg: #0d1117;
     --c-kw: #82AAFF; --c-str: #9ECE6A; --c-tag: #E0C285; --c-prop: #7FDBCA;
@@ -32,7 +32,7 @@
 [data-theme="dark"] {
   --doc-bg: #0f1117;
   --doc-surface: #161b22;
-  --doc-line: #21262d;
+  --doc-line: #2d333b;
   --doc-active: rgba(0, 54, 221, 0.18);
   --doc-code-bg: #0d1117;
   --c-kw: #82AAFF; --c-str: #9ECE6A; --c-tag: #E0C285; --c-prop: #7FDBCA;
@@ -280,3 +280,10 @@ code.doc-code-lines { display: block; counter-reset: sd-line; }
 .all-card:hover { box-shadow: var(--shadow-sm); border-color: var(--colour-primaryblue-200); }
 .all-card-name { font-family: var(--font-bold); font-weight: 700; font-size: 14px; color: var(--text-title); margin-bottom: 6px; }
 .all-card-variants { font-family: var(--font-normal); font-size: 12px; line-height: 1.5; color: var(--text-caption); }
+
+/* Narrow screens: the site nav shrinks instead of pushing the page sideways */
+@media (max-width: 860px) {
+  .doc-topbar { padding: 0 12px; gap: 8px; }
+  .doc-topnav { gap: 0; min-width: 0; overflow-x: auto; }
+  .doc-topnav a { padding: 0 10px; font-size: 14px; flex-shrink: 0; }
+}
