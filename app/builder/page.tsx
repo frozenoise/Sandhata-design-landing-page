@@ -835,16 +835,55 @@ export default function BuilderPage() {
   /** Click-to-insert from the Insert grid (dragging still works too): at the
    * section bar's spot if one is set, else after the selection, else at the
    * end of the page. */
+  // ── Building by hand (no prompt, no API key) ─────────────────────────────
+  /** An empty page to build on by hand. */
+  function blankTree(): UINode {
+    return ensureIds({ type: "Stack", props: { gap: 32 }, children: [] });
+  }
+
+  /** A page needs a tab before its first save (send() does the same). */
+  function ensureTab(): string {
+    if (activeTabId) return activeTabId;
+    const id = `draft-${Date.now()}`;
+    setActiveTabId(id);
+    setOpenTabs(tabs => [...tabs, { id, name: "Untitled", createdAt: new Date().toISOString(), updatedAt: new Date().toISOString(), projectId: activeProjectId }]);
+    return id;
+  }
+
+  /** A visual edit; on an empty page the first edit creates the page. */
+  function applyEdit(next: UINode) {
+    if (tree) { commitTreeEdit(next); return; }
+    ensureTab();
+    setTree(next);
+    setEditsDirty(true);
+    setView("edit");
+  }
+
+  /** One of the start page's templates, dropped onto the empty canvas. */
+  function startFromTemplateHere(key: string) {
+    if (readOnly) return;
+    const t = buildTemplate(key);
+    if (!t) return;
+    const tab = ensureTab();
+    const name = PAGE_TEMPLATES.find(x => x.key === key)?.name ?? "Template";
+    const m: ChatMsg[] = [...msgs, { role: "assistant", content: JSON.stringify(t), label: `Started from the ${name} template`, tree: t, at: new Date().toISOString() }];
+    setTree(t);
+    setMsgs(m);
+    setView("edit");
+    saveToDb(m, t, msgs.length === 0, tab);
+  }
+
   function insertFromPalette(type: string) {
-    if (!tree || readOnly) return;
+    if (readOnly) return;
+    const base = tree ?? blankTree();
     const d = paletteDefaults(type);
     const node = createNode(type, d.props, d.children);
-    let next: UINode = tree;
-    if (insertTarget && findNodeById(tree, insertTarget.id)) next = insertNodeAt(tree, insertTarget.id, insertTarget.position, node);
-    else if (selectedNodeId && selectedNodeId !== tree.id) next = insertNodeAt(tree, selectedNodeId, "after", node);
-    else if (tree.id && CONTAINER_TYPES.has(tree.type)) next = insertNodeAt(tree, tree.id, "inside", node);
-    if (next === tree) return;
-    commitTreeEdit(next);
+    let next: UINode = base;
+    if (insertTarget && findNodeById(base, insertTarget.id)) next = insertNodeAt(base, insertTarget.id, insertTarget.position, node);
+    else if (selectedNodeId && selectedNodeId !== base.id) next = insertNodeAt(base, selectedNodeId, "after", node);
+    else if (base.id && CONTAINER_TYPES.has(base.type)) next = insertNodeAt(base, base.id, "inside", node);
+    if (next === base) return;
+    applyEdit(next);
     setInsertTarget(null);
     setSelectedNodeId(node.id ?? null);
   }
@@ -875,16 +914,17 @@ export default function BuilderPage() {
   /** Drops a ready-made section in as a top-level block: above the "+"
    * target, else after the section holding the selection, else at the end. */
   function insertSection(key: string) {
-    if (!tree || readOnly) return;
+    if (readOnly) return;
+    const base = tree ?? blankTree();
     const node = buildSection(key);
     if (!node) return;
-    let next: UINode = tree;
-    const after = sectionOf(selectedNodeId);
-    if (insertTarget && findNodeById(tree, insertTarget.id)) next = insertNodeAt(tree, insertTarget.id, insertTarget.position, node);
-    else if (after && after !== tree.id) next = insertNodeAt(tree, after, "after", node);
-    else if (tree.id && CONTAINER_TYPES.has(tree.type)) next = insertNodeAt(tree, tree.id, "inside", node);
-    if (next === tree) return;
-    commitTreeEdit(next);
+    let next: UINode = base;
+    const after = tree ? sectionOf(selectedNodeId) : null;
+    if (insertTarget && findNodeById(base, insertTarget.id)) next = insertNodeAt(base, insertTarget.id, insertTarget.position, node);
+    else if (after && after !== base.id) next = insertNodeAt(base, after, "after", node);
+    else if (base.id && CONTAINER_TYPES.has(base.type)) next = insertNodeAt(base, base.id, "inside", node);
+    if (next === base) return;
+    applyEdit(next);
     setInsertTarget(null);
     setSelectedNodeId(node.id ?? null);
   }
@@ -1848,7 +1888,8 @@ export default function BuilderPage() {
   async function saveToDb(updatedMsgs: ChatMsg[], updatedTree: UINode, isFirst: boolean, currentTabId: string | null) {
     if (!isLoggedIn) return;
     const firstPrompt = updatedMsgs.find(m => m.role === "user")?.content;
-    const autoName = firstPrompt ? shortTitle(firstPrompt) : (updatedMsgs[0]?.label?.replace(/^Started from the /, "").replace(/ template$/, "") || "Untitled");
+    const startLabel = updatedMsgs.find(m => m.label?.startsWith("Started from the "))?.label;
+    const autoName = firstPrompt ? shortTitle(firstPrompt) : startLabel ? startLabel.replace(/^Started from the /, "").replace(/ template$/, "") : "Untitled page";
     try {
       if (isFirst || !dbSessionId) {
         const oldTabId = currentTabId ?? dbSessionId ?? activeTabId; // the draft tab this content was living under
@@ -3059,16 +3100,25 @@ export default function BuilderPage() {
                 </div>
               </div>
               );
-            })() : tree && viewingVersion === null && view === "edit" ? (
+            })() : (tree || !readOnly) && viewingVersion === null && view === "edit" ? (
               <div className="bld-side-panel">
                 <div className="bld-pane-head bld-pane-head--tool"><span className="bld-pane-title">{rail === "layers" ? "Layers" : "Insert"}</span></div>
+                {!isLoggedIn && !authLoading && (
+                  <div className="bld-signin-card">
+                    <p><b>Sign in to save your work</b> and share it with your team.</p>
+                    <div className="bld-signin-card-actions">
+                      <button className="bld-signin-btn" onClick={() => signIn("google")}><GoogleIcon /> Google</button>
+                      <button className="bld-signin-btn" onClick={() => signIn("github")}><GithubIcon /> GitHub</button>
+                    </div>
+                  </div>
+                )}
                 {rail === "layers" ? (
                   <div className="bld-layers">
-                    {renderLayerRow(tree, 0)}
+                    {tree ? renderLayerRow(tree, 0) : <p className="bld-panel-hint">Layers show up once the page has something on it.</p>}
                   </div>
                 ) : (
                   <div className="bld-palette">
-                    {insertTarget && (
+                    {insertTarget && tree && (
                       <div className="bld-insert-target">
                         <span>Adding above <b>{findNodeById(tree, insertTarget.id)?.type ?? "section"}</b></span>
                         <button onClick={() => setInsertTarget(null)}>Cancel</button>
@@ -3140,20 +3190,6 @@ export default function BuilderPage() {
                     <p className="bld-panel-hint">Click to add, or drag onto the canvas.</p>
                   </div>
                 )}
-              </div>
-            ) : !isLoggedIn && !tree ? (
-              <div className="bld-pane bld-welcome">
-                <div className="bld-pane-head"><span className="bld-pane-title">Welcome to Spectra</span></div>
-                <p>Describe a page in the chat and it&apos;s built from Sandhata&apos;s design system components, ready to edit here.</p>
-                <p className="bld-welcome-strong">Sign in to save your pages, group them into projects and share them with your team.</p>
-                <div className="bld-welcome-actions">
-                  <button className="bld-signin-btn" onClick={() => signIn("google")}><GoogleIcon /> Continue with Google</button>
-                  <button className="bld-signin-btn" onClick={() => signIn("github")}><GithubIcon /> Continue with GitHub</button>
-                </div>
-                <p className="bld-welcome-note">
-                  Just trying it? You need your own Anthropic API key to generate. It stays in this browser.{" "}
-                  <button className="bld-setting-link" onClick={openKeyField}>Add an API key</button>
-                </p>
               </div>
             ) : (
               <p className="bld-side-hint">{tree ? "Switch to Edit view (toolbar at the bottom) to add sections and see layers." : "Describe an interface in the chat at the bottom of the canvas to get started."}</p>
@@ -3338,8 +3374,8 @@ export default function BuilderPage() {
               <div className="bld-key-notice">
                 <span>
                   {isLoggedIn
-                    ? "Generating needs an Anthropic API key. Add yours once and it's linked to your account."
-                    : "Generating needs an Anthropic API key. Add yours (it stays in this browser), or sign in to link it to an account."}
+                    ? "Generating from a prompt needs your Anthropic API key (add it once, it's linked to your account). You can build by hand without one."
+                    : "Generating from a prompt needs your Anthropic API key (it stays in this browser). You can build by hand without one."}
                 </span>
                 <span className="bld-key-notice-actions">
                   <button onClick={openKeyField}>Add API key</button>
@@ -3521,8 +3557,32 @@ export default function BuilderPage() {
               );
             })()}
             {!tree && !loading && (
-              <div className="bld-state bld-empty">
-                <span>Your generated interface will appear here. Describe it in the chat below.</span>
+              <div
+                className={`bld-state bld-empty bld-start${draggingPaletteType ? " bld-start--drop" : ""}`}
+                onDragOver={e => { if (!readOnly && draggingPaletteType) e.preventDefault(); }}
+                onDrop={e => {
+                  const d = e.dataTransfer.getData("text/plain");
+                  if (d.startsWith("palette:")) { e.preventDefault(); insertFromPalette(d.slice("palette:".length)); }
+                  setDraggingPaletteType(null);
+                }}
+              >
+                <p className="bld-start-title">Start your page</p>
+                <p className="bld-start-sub">
+                  {readOnly ? "This page is empty." : "Describe it in the chat below, or build it yourself: drag components here from Insert, add a ready-made section, or start from a template. Building by hand doesn't need an API key."}
+                </p>
+                {!readOnly && (
+                  <>
+                    <div className="bld-start-actions">
+                      <button className="bld-start-primary" onClick={() => { setSelectedNodeId(null); setRail("insert"); setPanelOpen(true); }}><PlusIcon /> Add a section</button>
+                    </div>
+                    <p className="bld-start-label">Or start from a template</p>
+                    <div className="bld-start-templates">
+                      {PAGE_TEMPLATES.map(t => (
+                        <button key={t.key} onClick={() => startFromTemplateHere(t.key)}>{t.name}</button>
+                      ))}
+                    </div>
+                  </>
+                )}
               </div>
             )}
             {!tree && loading && (
