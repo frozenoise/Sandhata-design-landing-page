@@ -1,11 +1,10 @@
 // GitHub App integration - server-only helpers.
 //
-// This is a *separate* auth surface from lib/auth.ts's GitHubProvider, which
-// is wired for login only (no `repo` scope) and must stay that way - see
-// CLAUDE.md. A GitHub App gives us installation-scoped tokens (minted
-// on-demand, never stored) with exactly the `contents: write` + `metadata:
-// read` permissions the push flow needs, instead of broadening a user's
-// login OAuth grant.
+// This is a *separate* auth surface from lib/auth.ts's sign-in provider
+// (Microsoft Entra ID SSO, login only). A GitHub App gives us
+// installation-scoped tokens (minted on-demand, never stored) with exactly
+// the `contents: write` + `metadata: read` permissions the push flow needs,
+// instead of broadening a user's login OAuth grant.
 //
 // The app itself has to be registered by a human at
 // github.com/settings/apps/new (Repository permissions: Contents: Read &
