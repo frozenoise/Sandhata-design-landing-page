@@ -51,6 +51,7 @@
     "mysql2": "^3.24.4",
     "esbuild": "^0.28.2",
     "@types/react": "19.3.0",
-    "@types/react-dom": "19.3.0"
+    "@types/react-dom": "19.3.0",
+    "effect": "^3.22.1"
   }
 }
