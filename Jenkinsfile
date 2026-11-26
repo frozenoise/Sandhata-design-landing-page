@@ -34,7 +34,7 @@ pipeline {
 
     environment {
         NODE_VERSION  = '24.13.0'
-        DEPLOY_BRANCH = 'main'                      // only this branch deploys
+        DEPLOY_BRANCH = 'feature/azure_login'                      // only this branch deploys
         APP_BASE      = '/home/sandhata/test-env/sandhata-design'
         SERVICE_NAME  = 'sandhata-design'
         APP_PORT      = '3100'                      // must match deployment/sandhata-design.service
