@@ -1,0 +1,52 @@
+One-time setup for the Jenkins pipeline (see ../Jenkinsfile)
+=============================================================
+
+Paths, user, port and Node version below match the Jenkinsfile and
+sandhata-design.service. Change them in all three places if you change them.
+
+1. Host (server-145), as an admin
+---------------------------------
+  # Node via nvm for the user the Jenkins agent runs as (sandhata)
+  nvm install 24.13.0
+
+  # App folders, owned by the agent user so the pipeline needs no sudo for files
+  sudo mkdir -p /home/sandhata/test-env/sandhata-design/{releases,shared}
+  sudo chown -R sandhata:sandhata /home/sandhata/test-env/sandhata-design
+
+  # Let the agent user manage only this service (visudo -f /etc/sudoers.d/sandhata-design)
+  sandhata ALL=(root) NOPASSWD: /usr/bin/systemctl restart sandhata-design, \
+      /usr/bin/systemctl enable sandhata-design, /usr/bin/systemctl daemon-reload, \
+      /usr/bin/journalctl -u sandhata-design *, \
+      /usr/bin/cp deployment/sandhata-design.service /etc/systemd/system/sandhata-design.service
+
+  # nginx reverse proxy + HTTPS
+  sudo cp deployment/nginx-sandhata-design.conf /etc/nginx/sites-available/sandhata-design
+  sudo ln -s /etc/nginx/sites-available/sandhata-design /etc/nginx/sites-enabled/
+  sudo nginx -t && sudo systemctl reload nginx
+  sudo certbot --nginx -d <your-domain>
+
+  The service unit itself is installed by the first pipeline run.
+
+2. Jenkins
+----------
+  - Credentials -> add a "Secret file" with ID  sandhata-design-env
+    containing the production .env.local (all keys from .env.local.example).
+    Set NEXTAUTH_URL / AUTH_URL to https://<your-domain>.
+  - Credentials -> GitHub token or SSH key for the repo.
+  - New Item -> Multibranch Pipeline -> this repo (finds the Jenkinsfile).
+  - GitHub repo -> Settings -> Webhooks -> https://<jenkins>/github-webhook/ (push events).
+
+3. Other systems
+----------------
+  - Microsoft Entra app registration: add redirect URI
+    https://<your-domain>/api/auth/callback/microsoft-entra-id
+  - GitHub App (if used): callback URL https://<your-domain>/api/github/install/callback
+  - Postgres in DATABASE_URL must be reachable from the host; the pipeline runs
+    `prisma migrate deploy` on every deploy.
+
+Rollback by hand
+----------------
+  ls -1dt /home/sandhata/test-env/sandhata-design/releases/*
+  ln -sfn /home/sandhata/test-env/sandhata-design/releases/<older> /home/sandhata/test-env/sandhata-design/current
+  sudo systemctl restart sandhata-design
+  (Database migrations are not rolled back.)

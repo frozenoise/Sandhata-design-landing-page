@@ -1,0 +1,22 @@
+[Unit]
+Description=Sandhata design site (Next.js)
+After=network.target
+
+[Service]
+Type=simple
+User=sandhata
+Group=sandhata
+# Resolved at each (re)start, so a restart picks up the newest release.
+WorkingDirectory=/home/sandhata/test-env/sandhata-design/current
+# Secrets come from current/.env.local (-> shared/.env.local), which `next start` loads itself.
+Environment=NODE_ENV=production
+Environment=PORT=3100
+Environment=NEXT_TELEMETRY_DISABLED=1
+# Required by NextAuth v5 when not hosted on Vercel (sits behind nginx).
+Environment=AUTH_TRUST_HOST=true
+ExecStart=/home/sandhata/.nvm/versions/node/v24.13.0/bin/node node_modules/next/dist/bin/next start -H 127.0.0.1 -p 3100
+Restart=always
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target
